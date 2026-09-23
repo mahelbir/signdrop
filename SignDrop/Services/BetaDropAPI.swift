@@ -33,6 +33,7 @@ struct BetaDropPublishResult: Equatable {
 
 struct BetaDropAPI {
     static let appURL = "https://betadrop.app"
+    static let uploadBodyPrefix = "signdrop-upload-"
     static let sharedSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.urlCache = nil
@@ -120,8 +121,18 @@ struct BetaDropAPI {
     func publish(file: URL, token: String, progress: @escaping (Double) -> Void) async throws -> BetaDropPublishResult {
         try BetaDropAPI.validateBuild(file)
         let boundary = "----signdrop" + (0..<16).map { _ in String(format: "%02x", UInt8.random(in: .min ... .max)) }.joined()
+        removeStaleUploadBodies()
         let body = try makeMultipartBody(for: file, boundary: boundary)
-        defer { try? FileManager.default.removeItem(at: body) }
+        let bodyLock = open(body.path, O_RDONLY)
+        if bodyLock >= 0 {
+            flock(bodyLock, LOCK_EX)
+        }
+        defer {
+            try? FileManager.default.removeItem(at: body)
+            if bodyLock >= 0 {
+                close(bodyLock)
+            }
+        }
         var request = try makeRequest("/api/cli/publish", method: "POST", token: token, timeout: stallTimeout)
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         var attempt = 0
@@ -221,11 +232,24 @@ struct BetaDropAPI {
         return BetaDropPublishResult(link: link, warnings: warnings)
     }
 
+    private func removeStaleUploadBodies() {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: temporaryDirectory.path)) ?? []
+        for name in names where name.hasPrefix(BetaDropAPI.uploadBodyPrefix) {
+            let path = temporaryDirectory.appendingPathComponent(name).path
+            let descriptor = open(path, O_RDONLY)
+            guard descriptor >= 0 else { continue }
+            if flock(descriptor, LOCK_EX | LOCK_NB) == 0 {
+                unlink(path)
+            }
+            close(descriptor)
+        }
+    }
+
     private func makeMultipartBody(for file: URL, boundary: String) throws -> URL {
         let fileName = file.lastPathComponent.replacingOccurrences(of: "[\"\\\\\r\n]", with: "_", options: .regularExpression)
         let header = "--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\nContent-Type: application/octet-stream\r\n\r\n"
         let footer = "\r\n--\(boundary)--\r\n"
-        let body = temporaryDirectory.appendingPathComponent("signdrop-upload-\(UUID().uuidString)")
+        let body = temporaryDirectory.appendingPathComponent(BetaDropAPI.uploadBodyPrefix + UUID().uuidString)
         guard FileManager.default.createFile(atPath: body.path, contents: Data(header.utf8)) else {
             throw UploadError.invalidFile("Could not prepare the upload in \(temporaryDirectory.path).")
         }
