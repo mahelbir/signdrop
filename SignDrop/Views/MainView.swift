@@ -683,6 +683,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         downloadPath = tempFolder.stringByAppendingPathComponent("download.\(inputFile.pathExtension)")
         
         if inputStartsWithHTTP {
+            // SECURITY: http:// works only via NSAllowsArbitraryLoads in Info.plist; unencrypted IPAs can be tampered with in transit.
             let defaultConfigObject = URLSessionConfiguration.default
             let defaultSession = Foundation.URLSession(configuration: defaultConfigObject, delegate: self, delegateQueue: OperationQueue.main)
             if let url = URL(string: inputFile) {
