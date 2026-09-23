@@ -655,6 +655,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         // Check signing certificate selection
         if signingCertificate == nil {
             setStatus("No signing certificate selected")
+            controlsEnabled(true)
             return
         }
         
@@ -675,6 +676,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         //MARK: Create working temp folder
         guard let tempFolder = makeTempFolder() else {
             setStatus("Error creating temp folder")
+            controlsEnabled(true)
             return
         }
         let workingDirectory = tempFolder.stringByAppendingPathComponent("out")
@@ -1125,6 +1127,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             if zipTask.status != 0 {
                 setStatus("Error packaging IPA")
                 Log.write(zipTask.output)
+                try? fileManager.removeItem(atPath: outputFile!)
                 cleanup(tempFolder); return
             }
         case "appex":
