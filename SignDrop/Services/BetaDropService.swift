@@ -2,6 +2,8 @@ import Cocoa
 
 @MainActor
 final class BetaDropService: UploadService {
+    static let codeExpired = UploadError.server("The code expired. Try again.")
+
     let name = "BetaDrop"
     private let configURL: URL
     private let defaultAPIURL: String
@@ -37,7 +39,7 @@ final class BetaDropService: UploadService {
         var interval = code.interval
         let deadline = Date().addingTimeInterval(code.expiresIn)
         while Date() < deadline {
-            try await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            try await Task.sleep(nanoseconds: UInt64(min(max(interval, 1), 3600) * 1_000_000_000))
             switch try await api.pollDeviceToken(deviceCode: code.deviceCode) {
             case .approved(let token, let user):
                 try await save(token: token, user: user, api: api)
@@ -49,10 +51,10 @@ final class BetaDropService: UploadService {
             case .denied:
                 throw UploadError.server("Sign-in was denied in the browser.")
             case .expired:
-                throw UploadError.server("The code expired. Try again.")
+                throw BetaDropService.codeExpired
             }
         }
-        throw UploadError.server("The code expired. Try again.")
+        throw BetaDropService.codeExpired
     }
 
     func signIn(token rawToken: String) async throws {

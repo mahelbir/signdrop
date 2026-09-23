@@ -91,14 +91,13 @@ extension MainView {
     }
 
     func reportUpload(_ result: UploadResult) {
-        let isWarning = !result.warnings.isEmpty
-        guard let link = result.link else {
-            setStatus((["Uploaded to \(uploadService.name)"] + result.warnings).joined(separator: ". "), isWarning: isWarning)
-            return
+        var headline = "Uploaded to \(uploadService.name)"
+        if let link = result.link {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(link.absoluteString, forType: .string)
+            Log.write("Install link: \(link.absoluteString)")
+            headline += " — link copied"
         }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(link.absoluteString, forType: .string)
-        Log.write("Install link: \(link.absoluteString)")
-        setStatus((["Uploaded to \(uploadService.name) — link copied"] + result.warnings).joined(separator: ". "), isWarning: isWarning, link: link)
+        setStatus(([headline] + result.warnings).joined(separator: ". "), isWarning: !result.warnings.isEmpty, link: result.link)
     }
 }

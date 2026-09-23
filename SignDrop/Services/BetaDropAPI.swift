@@ -93,7 +93,7 @@ struct BetaDropAPI {
             throw UploadError.server("BetaDrop returned an error (HTTP \(status)). Try again, or use an API token.")
         }
         guard let code = try? JSONDecoder().decode(BetaDropDeviceCode.self, from: data) else {
-            throw UploadError.server("Unexpected response from BetaDrop (HTTP \(status)).")
+            throw BetaDropAPI.unexpectedResponse(status)
         }
         return code
     }
@@ -127,17 +127,26 @@ struct BetaDropAPI {
         var attempt = 0
         while true {
             attempt += 1
-            do {
-                let (data, status) = try await perform(request, fromFile: body, delegate: BetaDropUploadProgress(progress))
-                let response: BetaDropPublishResponse? = try decode(data, status: status, fallback: "Upload failed")
-                guard let response else {
-                    throw UploadError.server("Unexpected response from BetaDrop (HTTP \(status)).")
-                }
-                return try result(for: response, status: status)
-            } catch UploadError.server(let message) where attempt - 1 < retries && message.range(of: #"HTTP 5\d\d"#, options: .regularExpression) != nil {
+            let (data, status) = try await perform(request, fromFile: body, delegate: BetaDropUploadProgress(progress))
+            if attempt <= retries && BetaDropAPI.isRetryable(data, status: status) {
                 try await Task.sleep(nanoseconds: UInt64(1_000_000_000) << (attempt - 1))
+                continue
             }
+            let response: BetaDropPublishResponse? = try decode(data, status: status, fallback: "Upload failed")
+            guard let response else {
+                throw BetaDropAPI.unexpectedResponse(status)
+            }
+            return try result(for: response, status: status)
         }
+    }
+
+    private static func isRetryable(_ data: Data, status: Int) -> Bool {
+        guard (500..<600).contains(status) else { return false }
+        return (try? JSONDecoder().decode(BetaDropEnvelope<BetaDropIgnored>.self, from: data))?.hasErrorDetail != true
+    }
+
+    private static func unexpectedResponse(_ status: Int) -> UploadError {
+        UploadError.server("Unexpected response from BetaDrop (HTTP \(status)).")
     }
 
     private func makeRequest(_ path: String, method: String = "GET", token: String? = nil, body: [String: String]? = nil, timeout: TimeInterval = 30) throws -> URLRequest {
@@ -194,9 +203,9 @@ struct BetaDropAPI {
             throw UploadError.sessionExpired
         }
         guard let envelope = try? JSONDecoder().decode(BetaDropEnvelope<Payload>.self, from: data) else {
-            throw UploadError.server("Unexpected response from BetaDrop (HTTP \(status)).")
+            throw BetaDropAPI.unexpectedResponse(status)
         }
-        if !(200..<300).contains(status) || envelope.success == false {
+        if !(200..<300).contains(status) || envelope.isSuccess == false {
             throw UploadError.server(envelope.errorText ?? "\(fallback) (HTTP \(status)).")
         }
         return envelope.data
@@ -206,7 +215,7 @@ struct BetaDropAPI {
         var components = URLComponents(string: BetaDropAPI.appURL + "/install/")
         components?.queryItems = [URLQueryItem(name: "i", value: response.shortId)]
         guard let link = components?.url else {
-            throw UploadError.server("Unexpected response from BetaDrop (HTTP \(status)).")
+            throw BetaDropAPI.unexpectedResponse(status)
         }
         let warnings = response.duplicateOf.map { ["\($0.message) (\($0.url))"] } ?? []
         return BetaDropPublishResult(link: link, warnings: warnings)
@@ -226,8 +235,13 @@ struct BetaDropAPI {
             try output.seekToEnd()
             let input = try FileHandle(forReadingFrom: file)
             defer { try? input.close() }
-            while let chunk = try input.read(upToCount: 1 << 20), !chunk.isEmpty {
-                try output.write(contentsOf: chunk)
+            var hasMoreData = true
+            while hasMoreData {
+                hasMoreData = try autoreleasepool {
+                    guard let chunk = try input.read(upToCount: 1 << 20), !chunk.isEmpty else { return false }
+                    try output.write(contentsOf: chunk)
+                    return true
+                }
             }
             try output.write(contentsOf: Data(footer.utf8))
         } catch {
@@ -239,25 +253,42 @@ struct BetaDropAPI {
 }
 
 private struct BetaDropEnvelope<Payload: Decodable>: Decodable {
-    let success: Bool?
+    let isSuccess: Bool?
     let data: Payload?
     let error: String?
     let message: String?
+    let hasErrorDetail: Bool
 
     enum CodingKeys: String, CodingKey {
-        case success, data, error, message
+        case isSuccess = "success"
+        case data, error, message
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        success = try? container.decodeIfPresent(Bool.self, forKey: .success)
+        isSuccess = try? container.decodeIfPresent(Bool.self, forKey: .isSuccess)
         data = try? container.decodeIfPresent(Payload.self, forKey: .data)
         error = try? container.decodeIfPresent(String.self, forKey: .error)
         message = try? container.decodeIfPresent(String.self, forKey: .message)
+        hasErrorDetail = BetaDropEnvelope.isTruthy(container, .error) || BetaDropEnvelope.isTruthy(container, .message)
     }
 
     var errorText: String? {
         [error, message].compactMap { $0 }.first { !$0.isEmpty }
+    }
+
+    private static func isTruthy(_ container: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Bool {
+        guard container.contains(key), (try? container.decodeNil(forKey: key)) == false else { return false }
+        if let text = try? container.decode(String.self, forKey: key) {
+            return !text.isEmpty
+        }
+        if let flag = try? container.decode(Bool.self, forKey: key) {
+            return flag
+        }
+        if let number = try? container.decode(Double.self, forKey: key) {
+            return number != 0
+        }
+        return true
     }
 }
 
