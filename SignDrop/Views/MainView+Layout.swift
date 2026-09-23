@@ -24,9 +24,11 @@ extension MainView {
             .content(makeOptionsStack()),
             .content(uploadCheckbox)
         ])
-        let statusBar = NSStackView(views: [statusLabel, downloadProgress])
+        let statusBar = NSStackView(views: [statusLabel, progressLabel, busyIndicator, progressBar])
         statusBar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
+        statusBar.distribution = .fill
         statusBar.setHuggingPriority(.defaultLow, for: .horizontal)
+        statusLabel.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
         [form, signButton, statusBar].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             addSubview($0)
@@ -44,7 +46,9 @@ extension MainView {
             statusBar.trailingAnchor.constraint(equalTo: trailingAnchor),
             statusBar.bottomAnchor.constraint(equalTo: bottomAnchor),
             statusBar.heightAnchor.constraint(equalToConstant: 25),
-            downloadProgress.widthAnchor.constraint(equalToConstant: 160)
+            progressBar.widthAnchor.constraint(equalToConstant: 160),
+            busyIndicator.widthAnchor.constraint(equalTo: progressBar.widthAnchor),
+            progressLabel.widthAnchor.constraint(equalToConstant: 34)
         ])
         fitWindowToContent()
     }
@@ -74,10 +78,15 @@ extension MainView {
         statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         statusLabel.lineBreakMode = .byTruncatingMiddle
         statusLabel.addGestureRecognizer(NSClickGestureRecognizer(target: self, action: #selector(statusLabelClick(_:))))
-        downloadProgress.style = .bar
-        downloadProgress.isIndeterminate = false
-        downloadProgress.maxValue = 100
-        downloadProgress.isHidden = true
+        progressBar.style = .bar
+        progressBar.isIndeterminate = false
+        progressBar.maxValue = 100
+        progressBar.isHidden = true
+        busyIndicator.style = .bar
+        busyIndicator.isIndeterminate = true
+        busyIndicator.isHidden = true
+        progressLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+        progressLabel.alignment = .right
         [statusLabel, certificatePopup, profilePopup].forEach {
             $0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         }

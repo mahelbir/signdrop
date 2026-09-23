@@ -75,11 +75,10 @@ extension MainView {
 
     func uploadSignedFile(_ file: URL) async {
         setStatus("Uploading to \(uploadService.name)…")
-        downloadProgress.doubleValue = 0
-        downloadProgress.isHidden = false
+        showProgress(0)
         do {
             let result = try await uploadService.upload(file) { [weak self] fraction in
-                self?.downloadProgress.doubleValue = fraction * 100
+                self?.showProgress(fraction < 1 ? fraction : nil)
             }
             reportUpload(result)
         } catch UploadError.sessionExpired {
@@ -87,7 +86,6 @@ extension MainView {
         } catch {
             setStatus("Upload failed: \(error.localizedDescription)", isWarning: true, link: file)
         }
-        downloadProgress.isHidden = true
         controlsEnabled(true)
     }
 

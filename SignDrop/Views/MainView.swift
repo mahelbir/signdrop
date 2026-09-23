@@ -31,7 +31,9 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     var inputControls: [NSControl] {
         return [inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField, entitlementsButton, appIDField, displayNameField, versionField, buildField, noGetTaskAllowCheckbox, ignorePluginsCheckbox, uploadCheckbox, signButton]
     }
-    let downloadProgress = NSProgressIndicator()
+    let progressBar = NSProgressIndicator()
+    let busyIndicator = NSProgressIndicator()
+    let progressLabel = NSTextField(labelWithString: "")
 
     //MARK: Variables
     var provisioningProfiles:[ProvisioningProfile] = []
@@ -241,7 +243,39 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             Log.write(status)
         }
     }
-    
+
+    func showProgress(_ fraction: Double?){
+        if (!Thread.isMainThread){
+            DispatchQueue.main.sync{
+                showProgress(fraction)
+            }
+        }
+        else{
+            busyIndicator.isHidden = fraction != nil
+            progressBar.isHidden = fraction == nil
+            if let fraction = fraction {
+                busyIndicator.stopAnimation(nil)
+                progressBar.doubleValue = min(max(fraction, 0), 1) * 100
+                progressLabel.stringValue = "\(Int(progressBar.doubleValue))%"
+            } else {
+                busyIndicator.startAnimation(nil)
+                resetProgressBar()
+            }
+        }
+    }
+
+    func hideProgress(){
+        busyIndicator.stopAnimation(nil)
+        busyIndicator.isHidden = true
+        progressBar.isHidden = true
+        resetProgressBar()
+    }
+
+    func resetProgressBar(){
+        progressBar.doubleValue = 0
+        progressLabel.stringValue = ""
+    }
+
     @objc func populateProvisioningProfiles(){
         let zeroWidthSpace = "​"
         self.provisioningProfiles = (ProvisioningProfile.getProfiles() + customProfiles).sorted {
@@ -363,6 +397,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         else{
             isSigning = !enabled
             if(enabled){
+                hideProgress()
                 inputControls.forEach { $0.isEnabled = true }
                 appIDField.isEnabled = isAppIDFieldReenabled
                 appIDField.stringValue = previousAppID
@@ -478,18 +513,13 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
         }
         downloading = false
-        downloadProgress.doubleValue = 0.0
-        downloadProgress.stopAnimation(nil)
-        DispatchQueue.main.async {
-            self.downloadProgress.isHidden = true
-        }
+        showProgress(nil)
     }
     
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         
         //statusLabel.stringValue = "Downloading file: \(bytesToSmallestSi(Double(totalBytesWritten))) / \(bytesToSmallestSi(Double(totalBytesExpectedToWrite)))"
-        let percentDownloaded = (Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)) * 100
-        downloadProgress.doubleValue = percentDownloaded
+        showProgress(totalBytesExpectedToWrite > 0 ? Double(totalBytesWritten) / Double(totalBytesExpectedToWrite) : nil)
     }
     
     //MARK: Codesigning
@@ -603,7 +633,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         var isUploadRequested = false
 
         DispatchQueue.main.sync {
-            downloadProgress.isHidden = true
+            showProgress(nil)
             inputFile = self.inputFileField.stringValue
             signingCertificate = self.certificatePopup.selectedItem?.title
             newApplicationID = self.changedValue(self.appIDField, original: self.inputAppInfo?.bundleID)
@@ -704,10 +734,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 
                 let downloadTask = defaultSession.downloadTask(with: url)
                 setStatus("Downloading file")
-                DispatchQueue.main.async {
-                    self.downloadProgress.isHidden = false
-                }
-                downloadProgress.startAnimation(nil)
+                showProgress(0)
                 downloadTask.resume()
                 defaultSession.finishTasksAndInvalidate()
             }
