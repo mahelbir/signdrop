@@ -22,13 +22,14 @@ extension MainView {
             .pair("Version:", versionField, "Build:", buildField),
             .section("Options"),
             .content(makeOptionsStack()),
-            .content(uploadCheckbox)
+            .field("Upload:", uploadPopup)
         ])
-        let statusBar = NSStackView(views: [statusLabel, progressLabel, busyIndicator, progressBar])
+        let statusSpacer = NSView()
+        statusSpacer.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
+        let statusBar = NSStackView(views: [statusLabel, deleteUploadButton, statusSpacer, progressLabel, busyIndicator, progressBar])
         statusBar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         statusBar.distribution = .fill
         statusBar.setHuggingPriority(.defaultLow, for: .horizontal)
-        statusLabel.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
         [form, signButton, statusBar].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             addSubview($0)
@@ -71,13 +72,18 @@ extension MainView {
         noGetTaskAllowCheckbox.state = .on
         noGetTaskAllowCheckbox.toolTip = "Don't add the get-task-allow entitlement, as it might break some apps"
         ignorePluginsCheckbox.toolTip = "Don't re-sign extension bundles, as they might have their own code signature"
-        configureUploadCheckbox()
+        configureUploadPopup()
         signButton.keyEquivalent = "\r"
         signButton.target = self
         signButton.action = #selector(doSign(_:))
         statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         statusLabel.lineBreakMode = .byTruncatingMiddle
         statusLabel.addGestureRecognizer(NSClickGestureRecognizer(target: self, action: #selector(statusLabelClick(_:))))
+        deleteUploadButton.isBordered = false
+        deleteUploadButton.isHidden = true
+        deleteUploadButton.attributedTitle = NSAttributedString(string: deleteUploadButton.title, attributes: linkAttributes([.font: statusLabel.font as Any]))
+        deleteUploadButton.target = self
+        deleteUploadButton.action = #selector(confirmUploadDeletion(_:))
         progressBar.style = .bar
         progressBar.isIndeterminate = false
         progressBar.maxValue = 100

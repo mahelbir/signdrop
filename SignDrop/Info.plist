@@ -30,7 +30,7 @@
 		<true/>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 Mahmuthan Elbir. Based on iOS App Signer © 2015-2025 Daniel Radtke.</string>
+	<string>Copyright © 2026 Mahmuthan Elbir.</string>
 	<key>NSMainNibFile</key>
 	<string>Application</string>
 	<key>NSPrincipalClass</key>

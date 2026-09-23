@@ -34,14 +34,9 @@ struct BetaDropPublishResult: Equatable {
 struct BetaDropAPI {
     static let appURL = "https://betadrop.app"
     static let uploadBodyPrefix = "signdrop-upload-"
-    static let sharedSession: URLSession = {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.urlCache = nil
-        return URLSession(configuration: configuration)
-    }()
 
     let baseURL: String
-    var session = BetaDropAPI.sharedSession
+    var session = UploadServices.session
     var stallTimeout: TimeInterval = 60
     var retries = 2
     var temporaryDirectory = FileManager.default.temporaryDirectory
@@ -71,7 +66,7 @@ struct BetaDropAPI {
         }
         defer { try? handle.close() }
         guard (try? handle.read(upToCount: 4)) == Data([0x50, 0x4B, 0x03, 0x04]) else {
-            throw UploadError.invalidFile("This file does not appear to be a valid iOS build. Please upload a valid IPA file.")
+            throw UploadError.invalidBuild
         }
     }
 
@@ -187,20 +182,7 @@ struct BetaDropAPI {
             }
             return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
         } catch let error as URLError {
-            throw networkError(error, isUpload: file != nil)
-        }
-    }
-
-    private func networkError(_ error: URLError, isUpload: Bool) -> Error {
-        switch error.code {
-        case .cancelled:
-            return CancellationError()
-        case .timedOut where isUpload:
-            return UploadError.network("Upload stalled — no data for \(Int(stallTimeout))s. Check your connection.")
-        case .timedOut:
-            return UploadError.network("Request timed out. Check your connection or try again.")
-        default:
-            return UploadError.network("Could not reach BetaDrop. Check your connection.")
+            throw UploadError.from(error, service: "BetaDrop", stallTimeout: file != nil ? stallTimeout : nil)
         }
     }
 

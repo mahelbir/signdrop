@@ -25,11 +25,12 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     let buildField = NSTextField()
     let noGetTaskAllowCheckbox = NSButton(checkboxWithTitle: "No get-task-allow", target: nil, action: nil)
     let ignorePluginsCheckbox = NSButton(checkboxWithTitle: "Ignore PlugIns folder", target: nil, action: nil)
-    let uploadCheckbox = NSButton(checkboxWithTitle: "", target: nil, action: nil)
+    let uploadPopup = NSPopUpButton()
     let signButton = NSButton(title: "Sign…", target: nil, action: nil)
     let statusLabel = NSTextField(labelWithString: "")
+    let deleteUploadButton = NSButton(title: "Delete Upload", target: nil, action: nil)
     var inputControls: [NSControl] {
-        return [inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField, entitlementsButton, appIDField, displayNameField, versionField, buildField, noGetTaskAllowCheckbox, ignorePluginsCheckbox, uploadCheckbox, signButton]
+        return [inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField, entitlementsButton, appIDField, displayNameField, versionField, buildField, noGetTaskAllowCheckbox, ignorePluginsCheckbox, uploadPopup, signButton]
     }
     let progressBar = NSProgressIndicator()
     let busyIndicator = NSProgressIndicator()
@@ -59,6 +60,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     }
     var isStatusWarning = false
     var statusLink: URL?
+    var deletableUpload: (serviceName: String, requests: [URLRequest])?
     var isSigning = false
 
     //MARK: Constants
@@ -231,6 +233,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
         }
         else{
+            deletableUpload = nil
+            deleteUploadButton.isHidden = true
             statusLabel.stringValue = status
             statusLabel.textColor = isWarning ? .systemOrange : .labelColor
             isStatusWarning = isWarning
@@ -642,7 +646,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             newBuild = self.changedValue(self.buildField, original: self.inputAppInfo?.build)
             shouldCheckPlugins = ignorePluginsCheckbox.state == .off
             shouldSkipGetTaskAllow = noGetTaskAllowCheckbox.state == .on
-            isUploadRequested = uploadCheckbox.state == .on
+            isUploadRequested = uploadService != nil
         }
 
         let provisioningFile = self.profileFilename
@@ -1232,6 +1236,9 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         super.resetCursorRects()
         if statusLink != nil {
             addCursorRect(statusLabel.convert(statusLabel.bounds, to: self), cursor: .pointingHand)
+        }
+        if !deleteUploadButton.isHidden {
+            addCursorRect(deleteUploadButton.convert(deleteUploadButton.bounds, to: self), cursor: .pointingHand)
         }
     }
 

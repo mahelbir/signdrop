@@ -13,6 +13,7 @@
 		652408CC1BE743D4006FA4C6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CB1BE743D4006FA4C6 /* AppDelegate.swift */; };
 		652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CD1BE743D4006FA4C6 /* MainView.swift */; };
 		652408D01BE743D4006FA4C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 652408CF1BE743D4006FA4C6 /* Assets.xcassets */; };
+		CD681A94B3AA1DA7AB6178B2 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 81B39813D80303983BB5DD4C /* Credits.rtf */; };
 		65311EAE1BF8259000516EFD /* NSMenuLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65311EAD1BF8259000516EFD /* NSMenuLink.swift */; };
 		65311EB01BF835F100516EFD /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65311EAF1BF835F100516EFD /* Log.swift */; };
 		65311EB61BF88EB800516EFD /* Application.xib in Resources */ = {isa = PBXBuildFile; fileRef = 65311EB51BF88EB800516EFD /* Application.xib */; };
@@ -30,6 +31,11 @@
 		EC156D2DDDDE420899C4CAE4 /* UploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4E729C9EE3864CDE5B5B38 /* UploadService.swift */; };
 		C8EAB67E5314AB72E685E1A0 /* BetaDropAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25095D196EB38E0DF5FD1A7D /* BetaDropAPI.swift */; };
 		883BE16B3A7094453C7B608B /* BetaDropService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C203DEC93413E606B71A888 /* BetaDropService.swift */; };
+		CABFFA21BB5D5536E7B669F2 /* AppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0C896200C4408F404C15B7 /* AppInfo.swift */; };
+		41493892A133A906EBA796A1 /* InstallLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950F5CD450C4FD0538E44F6A /* InstallLink.swift */; };
+		7C14947EE0C9D2AC66B7629A /* LinkShortener.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B2D9895341E2A2FB38171F /* LinkShortener.swift */; };
+		002F983F838CB5AB07660E42 /* StreamShareAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */; };
+		B10BF335BF7DAEB525D06EE4 /* StreamShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6734F05E3126EA2E13FB0886 /* StreamShareService.swift */; };
 		D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */; };
 		82C880DBEB2F5BED99510E96 /* MainView+Upload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */; };
 		12272F3FE6AFCF5E6AFFD770 /* UploadAccountMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */; };
@@ -42,6 +48,7 @@
 		652408CB1BE743D4006FA4C6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		652408CD1BE743D4006FA4C6 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		652408CF1BE743D4006FA4C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		81B39813D80303983BB5DD4C /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		652408D41BE743D4006FA4C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		65311EAD1BF8259000516EFD /* NSMenuLink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSMenuLink.swift; sourceTree = "<group>"; };
 		65311EAF1BF835F100516EFD /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -68,6 +75,11 @@
 		9F4E729C9EE3864CDE5B5B38 /* UploadService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadService.swift; sourceTree = "<group>"; };
 		25095D196EB38E0DF5FD1A7D /* BetaDropAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropAPI.swift; sourceTree = "<group>"; };
 		3C203DEC93413E606B71A888 /* BetaDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropService.swift; sourceTree = "<group>"; };
+		0E0C896200C4408F404C15B7 /* AppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppInfo.swift; sourceTree = "<group>"; };
+		950F5CD450C4FD0538E44F6A /* InstallLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallLink.swift; sourceTree = "<group>"; };
+		A7B2D9895341E2A2FB38171F /* LinkShortener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShortener.swift; sourceTree = "<group>"; };
+		1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamShareAPI.swift; sourceTree = "<group>"; };
+		6734F05E3126EA2E13FB0886 /* StreamShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamShareService.swift; sourceTree = "<group>"; };
 		1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropSignInSheet.swift; sourceTree = "<group>"; };
 		5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+Upload.swift"; sourceTree = "<group>"; };
 		3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadAccountMenu.swift; sourceTree = "<group>"; };
@@ -147,6 +159,7 @@
 			children = (
 				655FFFA11BEAD93600D43AD8 /* ProvisioningProfile.swift */,
 				59CA126B00DC35AA1A75C5CA /* BetaDropConfig.swift */,
+				0E0C896200C4408F404C15B7 /* AppInfo.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -159,6 +172,10 @@
 				9F4E729C9EE3864CDE5B5B38 /* UploadService.swift */,
 				25095D196EB38E0DF5FD1A7D /* BetaDropAPI.swift */,
 				3C203DEC93413E606B71A888 /* BetaDropService.swift */,
+				950F5CD450C4FD0538E44F6A /* InstallLink.swift */,
+				A7B2D9895341E2A2FB38171F /* LinkShortener.swift */,
+				1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */,
+				6734F05E3126EA2E13FB0886 /* StreamShareService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -177,6 +194,7 @@
 			children = (
 				652408CF1BE743D4006FA4C6 /* Assets.xcassets */,
 				06AECADAC38DA7499DD63960 /* AppIcon.icon */,
+				81B39813D80303983BB5DD4C /* Credits.rtf */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -283,6 +301,7 @@
 				65311EB61BF88EB800516EFD /* Application.xib in Resources */,
 				652408D01BE743D4006FA4C6 /* Assets.xcassets in Resources */,
 				1F43C2829E7ACBA6A6B9B9DD /* AppIcon.icon in Resources */,
+				CD681A94B3AA1DA7AB6178B2 /* Credits.rtf in Resources */,
 				659734941C65A14300383D2D /* Updates.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -315,6 +334,11 @@
 				EC156D2DDDDE420899C4CAE4 /* UploadService.swift in Sources */,
 				C8EAB67E5314AB72E685E1A0 /* BetaDropAPI.swift in Sources */,
 				883BE16B3A7094453C7B608B /* BetaDropService.swift in Sources */,
+				CABFFA21BB5D5536E7B669F2 /* AppInfo.swift in Sources */,
+				41493892A133A906EBA796A1 /* InstallLink.swift in Sources */,
+				7C14947EE0C9D2AC66B7629A /* LinkShortener.swift in Sources */,
+				002F983F838CB5AB07660E42 /* StreamShareAPI.swift in Sources */,
+				B10BF335BF7DAEB525D06EE4 /* StreamShareService.swift in Sources */,
 				D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

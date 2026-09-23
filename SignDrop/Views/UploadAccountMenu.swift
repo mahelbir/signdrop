@@ -8,7 +8,7 @@ final class UploadAccountMenu: NSObject, NSMenuDelegate {
     init(services: [UploadService], in menu: NSMenu?) {
         super.init()
         guard let menu else { return }
-        accountItems = services.map { service in
+        accountItems = services.filter(\.isSignInRequired).map { service in
             let item = NSMenuItem(title: "", action: #selector(signOut(_:)), keyEquivalent: "")
             item.target = self
             item.representedObject = service

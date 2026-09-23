@@ -5,6 +5,7 @@ final class BetaDropService: UploadService {
     static let codeExpired = UploadError.server("The code expired. Try again.")
 
     let name = "BetaDrop"
+    let isSignInRequired = true
     private let configURL: URL
     private let defaultAPIURL: String
 
