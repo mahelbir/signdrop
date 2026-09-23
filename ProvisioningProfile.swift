@@ -65,7 +65,7 @@ struct ProvisioningProfile {
          let rawXML: String
          if taskOutput.status == 0 {
             if let xmlIndex = taskOutput.output.range(of: "<?xml") {
-                rawXML = taskOutput.output.substring(from: xmlIndex.lowerBound)
+                rawXML = String(taskOutput.output[xmlIndex.lowerBound...])
             } else {
                 Log.write("Unable to find xml start tag in profile")
                 rawXML = taskOutput.output
@@ -83,8 +83,8 @@ struct ProvisioningProfile {
                         self.filename = filename
                         self.expires = expirationDate
                         self.created = creationDate
-                        self.appID = applicationIdentifier.substring(from: applicationIdentifier.index(periodIndex, offsetBy: 1))
-                        self.teamID = applicationIdentifier.substring(to: periodIndex)
+                        self.appID = String(applicationIdentifier[applicationIdentifier.index(after: periodIndex)...])
+                        self.teamID = String(applicationIdentifier[..<periodIndex])
                         self.name = name
                         self.entitlements = entitlements
                 } else {
@@ -121,7 +121,9 @@ struct ProvisioningProfile {
     }
     
     func getEntitlementsPlist() -> String? {
-        let data = PropertyListSerialization.dataFromPropertyList(entitlements, format: PropertyListSerialization.PropertyListFormat.xml, errorDescription: nil)!
+        guard let data = try? PropertyListSerialization.data(fromPropertyList: entitlements, format: .xml, options: 0) else {
+            return nil
+        }
         return String(data: data, encoding: .utf8)
     }
 }

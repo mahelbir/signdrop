@@ -22,14 +22,19 @@ extension Process {
         self.standardOutput = pipe
         self.standardError = pipe
         let pipeFile = pipe.fileHandleForReading
-        self.launch()
-        
+        do {
+            try self.run()
+        } catch {
+            try? pipeFile.close()
+            return SignDropTaskOutput(status: -1, output: error.localizedDescription)
+        }
+
         let data = NSMutableData()
         while self.isRunning {
             data.append(pipeFile.availableData)
         }
         
-        pipeFile.closeFile();
+        try? pipeFile.close()
         self.terminate();
         
         if let output = String.init(data: data as Data, encoding: String.Encoding.utf8) {
@@ -41,12 +46,12 @@ extension Process {
     }
     
     func execute(_ launchPath: String, workingDirectory: String?, arguments: [String]?)->SignDropTaskOutput{
-        self.launchPath = launchPath
+        self.executableURL = URL(fileURLWithPath: launchPath)
         if arguments != nil {
             self.arguments = arguments
         }
         if workingDirectory != nil {
-            self.currentDirectoryPath = workingDirectory!
+            self.currentDirectoryURL = URL(fileURLWithPath: workingDirectory!)
         }
         return self.launchSynchronous()
     }

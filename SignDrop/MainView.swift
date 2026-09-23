@@ -400,8 +400,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     /// check if Mach-O file
     @objc func checkMachOFile(_ path: String) -> Bool {
         if let file = FileHandle(forReadingAtPath: path) {
-            let data = file.readData(ofLength: 4)
-            file.closeFile()
+            let data = (try? file.read(upToCount: 4)) ?? Data()
+            try? file.close()
             var machOFile = data.elementsEqual([0xCE, 0xFA, 0xED, 0xFE]) || data.elementsEqual([0xCF, 0xFA, 0xED, 0xFE]) || data.elementsEqual([0xCA, 0xFE, 0xBA, 0xBE])
             
             if machOFile == false && signableExtensions.contains(path.lastPathComponent.pathExtension.lowercased()) {
@@ -443,7 +443,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         return "\(size)B"
     }
     @objc func getPlistKey(_ plist: String, keyName: String)->String? {
-        let dictionary = NSDictionary(contentsOfFile: plist);
+        let dictionary = try? NSDictionary(contentsOf: URL(fileURLWithPath: plist), error: ())
         return dictionary?[keyName] as? String
     }
     
@@ -602,8 +602,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             shouldSkipGetTaskAllow = noGetTaskAllowCheckbox.state == .on
         }
 
-        var provisioningFile = self.profileFilename
-        let inputStartsWithHTTP = inputFile.lowercased().substring(to: inputFile.index(inputFile.startIndex, offsetBy: 4)) == "http"
+        let provisioningFile = self.profileFilename
+        let inputStartsWithHTTP = inputFile.lowercased().hasPrefix("http")
         var eggCount: Int = 0
         var continueSigning: Bool? = nil
         
@@ -630,10 +630,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
         
         //MARK: Create working temp folder
-        var tempFolder: String! = nil
-        if let tmpFolder = makeTempFolder() {
-            tempFolder = tmpFolder
-        } else {
+        guard let tempFolder = makeTempFolder() else {
             setStatus("Error creating temp folder")
             return
         }
@@ -918,7 +915,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
 
                             let appexPlist = appexFile.stringByAppendingPathComponent("Info.plist")
                             if let appexBundleID = getPlistKey(appexPlist, keyName: "CFBundleIdentifier"){
-                                let newAppexID = "\(newApplicationID)\(appexBundleID.substring(from: oldAppID.endIndex))"
+                                let newAppexID = "\(newApplicationID)\(appexBundleID.dropFirst(oldAppID.count))"
                                 setStatus("Changing \(appexFile) id to \(newAppexID)")
                                 _ = setPlistKey(appexPlist, keyName: "CFBundleIdentifier", value: newAppexID)
                             }
@@ -932,7 +929,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                                 let wkAppBundleIdentifier = attributes["WKAppBundleIdentifier"] as? String{
                                 let newAppesID = wkAppBundleIdentifier.replacingOccurrences(of:oldAppID, with:newApplicationID);
                                 attributes["WKAppBundleIdentifier"] = newAppesID;
-                                pluginInfoPlist!.write(toFile: appexPlist, atomically: true);
+                                try? pluginInfoPlist!.write(to: URL(fileURLWithPath: appexPlist))
                             }
                             recursiveDirectorySearch(appexFile, extensions: ["app"], found: changeAppexID)
                         }
@@ -981,7 +978,11 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                     }
                 }
                 
-                
+
+                func shortName(_ file: String, payloadDirectory: String)->String{
+                    return String(file.dropFirst(payloadDirectory.count))
+                }
+
                 func generateFileSignFunc(_ payloadDirectory:String, entitlementsPath: String, signingCertificate: String)->((_ file:String)->Void){
                     
                     
@@ -994,11 +995,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                         }
                         return false
                     })()
-                    
-                    func shortName(_ file: String, payloadDirectory: String)->String{
-                        return file.substring(from: payloadDirectory.endIndex)
-                    }
-                    
+
                     func beforeFunc(_ file: String, certificate: String, entitlements: String?){
                             setStatus("Codesigning \(shortName(file, payloadDirectory: payloadDirectory))\(useEntitlements ? " with entitlements":"")")
                     }
@@ -1024,15 +1021,15 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                     eggCount += 1
                     
                     let currentEggPath = eggDirectory.stringByAppendingPathComponent("egg\(eggCount)")
-                    let shortName = eggFile.substring(from: payloadDirectory.endIndex)
-                    setStatus("Extracting \(shortName)")
+                    let eggName = shortName(eggFile, payloadDirectory: payloadDirectory)
+                    setStatus("Extracting \(eggName)")
                     if self.unzip(eggFile, outputPath: currentEggPath).status != 0 {
-                        Log.write("Error extracting \(shortName)")
+                        Log.write("Error extracting \(eggName)")
                         return
                     }
                     recursiveDirectorySearch(currentEggPath, extensions: ["egg"], found: signEgg)
                     recursiveDirectorySearch(currentEggPath, extensions: signableExtensions, found: eggSigningFunction)
-                    setStatus("Compressing \(shortName)")
+                    setStatus("Compressing \(eggName)")
                     _ = self.zip(currentEggPath, outputFile: eggFile)                    
                 }
                 

@@ -34,7 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.open(URL(string: sender.url!)!)
     }
     @IBAction func viewLog(_ sender: AnyObject) {
-        NSWorkspace.shared.openFile(Log.logName)
+        NSWorkspace.shared.open(URL(fileURLWithPath: Log.logName))
     }
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
         func updateCheckStatus(_ status: Bool, data: Data?, response: URLResponse?, error: Error?){

@@ -104,10 +104,8 @@ class UpdatesController: NSWindowController {
         
     }
     @objc func setChangelog(_ text: String){
-        changelogText.isEditable = true
-        changelogText.string = ""
-        changelogText.insertText(markdownParser.attributedString(fromMarkdownString: text))
-        changelogText.isEditable = false
+        changelogText.textStorage?.setAttributedString(markdownParser.attributedString(fromMarkdownString: text))
+        changelogText.textColor = .textColor
     }
     
     //MARK: IBActions

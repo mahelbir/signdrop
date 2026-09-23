@@ -7,7 +7,7 @@ struct AppInfo: Equatable {
     let build: String
 
     init?(infoPlist path: String) {
-        guard let info = NSDictionary(contentsOfFile: path), let bundleID = info["CFBundleIdentifier"] as? String else { return nil }
+        guard let info = try? NSDictionary(contentsOf: URL(fileURLWithPath: path), error: ()), let bundleID = info["CFBundleIdentifier"] as? String else { return nil }
         self.bundleID = bundleID
         displayName = info["CFBundleDisplayName"] as? String ?? info["CFBundleName"] as? String ?? ""
         version = info["CFBundleShortVersionString"] as? String ?? ""
