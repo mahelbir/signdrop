@@ -14,7 +14,8 @@ class UpdatesController: NSWindowController {
     @objc var latestVersion: String?
     @objc let prefs = UserDefaults.standard
     @objc static var updatesWindow: UpdatesController?
-    
+    static let releasesURL = URL(string: "https://api.github.com/repos/DanTheMan827/ios-app-signer/releases")!
+
     //MARK: IBOutlets
     @IBOutlet weak var appIcon: NSImageView!
     @IBOutlet var updateWindow: NSWindow!
@@ -22,73 +23,52 @@ class UpdatesController: NSWindowController {
     @IBOutlet weak var versionLabel: NSTextField!
     
     //MARK: Functions
+    static func version(of release: [String: AnyObject]) -> String? {
+        return (release["tag_name"] as? String)?.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
+    }
+
+    static func isVersion(_ version: String, newerThan currentVersion: String) -> Bool {
+        let components = [version, currentVersion].map { $0.split(separator: ".").map { Int($0) ?? 0 } }
+        let length = components.map { $0.count }.max() ?? 0
+        let padded = components.map { $0 + Array(repeating: 0, count: length - $0.count) }
+        return padded[1].lexicographicallyPrecedes(padded[0])
+    }
+
     @objc static func checkForUpdate(
         _ currentVersion: String = Bundle.main.infoDictionary!["CFBundleShortVersionString"] as! String,
         forceShow: Bool = false,
+        releasesURL: URL = UpdatesController.releasesURL,
         callbackFunc: ((_ status: Bool, _ data: Data?, _ response: URLResponse?, _ error: Error?)->Void)? = nil
     ) {
-        let requestURL: URL = URL(string: "https://api.github.com/repos/DanTheMan827/ios-app-signer/releases")!
-        let urlRequest = URLRequest(url: requestURL)
-        
+        let urlRequest = URLRequest(url: releasesURL)
+
         let configuration = URLSessionConfiguration.default
         configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         let session = URLSession(configuration: configuration)
-        
+
         let task = session.dataTask(with: urlRequest, completionHandler: {
             (data, response, error) -> Void in
-            
-            if error == nil {
-                let httpResponse = response as! HTTPURLResponse
-                let statusCode = httpResponse.statusCode
-                
-                if (statusCode == 200) {
-                    do{
-                        
-                        let json = try JSONSerialization.jsonObject(with: data!, options:.allowFragments)
-                        if let releases = json as? [[String: AnyObject]],
-                            let release = releases[0] as? [String: AnyObject],
-                            let name = release["name"] as? String {
-                                let prefs = UserDefaults.standard
-                                if let skipVersion = prefs.string(forKey: "skipVersion"){
-                                    if skipVersion == name && forceShow == false {
-                                        return
-                                    }
-                                }
-                                if name != currentVersion {
-                                    DispatchQueue.main.async {
-                                        // update some UI
-                                        if updatesWindow == nil {
-                                            updatesWindow = UpdatesController(windowNibName: "Updates")
-                                        }
-                                        updatesWindow!.showWindow([currentVersion,releases])
-                                    }
-                                    if let statusFunc = callbackFunc {
-                                        statusFunc(true, data, response, error)
-                                    }
-                                } else {
-                                    if let statusFunc = callbackFunc {
-                                        statusFunc(false, data, response, error)
-                                    }
-                                }
-                        }
-                    }catch {
-                        Log.write("Error with Json: \(error)")
-                    }
-                } else {
-                    if let statusFunc = callbackFunc {
-                        statusFunc(false, data, response, error)
-                    }
-                }
-            } else {
-                if let statusFunc = callbackFunc {
-                    statusFunc(false, data, response, error)
-                }
+
+            let json = data.flatMap { try? JSONSerialization.jsonObject(with: $0, options: .allowFragments) }
+            let releases = (json as? [[String: AnyObject]] ?? []).filter { $0["prerelease"] as? Bool != true }
+            guard error == nil,
+                (response as? HTTPURLResponse)?.statusCode == 200,
+                let latestVersion = releases.first.flatMap(version(of:)),
+                isVersion(latestVersion, newerThan: currentVersion),
+                forceShow || UserDefaults.standard.string(forKey: "skipVersion") != latestVersion else {
+                    callbackFunc?(false, data, response, error)
+                    return
             }
-        }) 
-        
-        
+            DispatchQueue.main.async {
+                if updatesWindow == nil {
+                    updatesWindow = UpdatesController(windowNibName: "Updates")
+                }
+                updatesWindow!.showWindow([currentVersion, releases])
+            }
+            callbackFunc?(true, data, response, error)
+        })
+
         task.resume()
-        
     }
     
     override init(window: NSWindow?) {
@@ -106,12 +86,12 @@ class UpdatesController: NSWindowController {
             if let releases = senderArray[1] as? [[String: AnyObject]],
                 let currentVersion = senderArray[0] as? String {
                 for release in releases {
-                    if let name = release["name"] as? String,
+                    if let name = UpdatesController.version(of: release),
                         let body = release["body"] as? String {
                         if latestVersion == nil {
                             latestVersion = name
                         }
-                        if currentVersion == name {
+                        if !UpdatesController.isVersion(name, newerThan: currentVersion) {
                             break
                         }
                         releaseOutput.append("**Version \(name)**\n\(body)")

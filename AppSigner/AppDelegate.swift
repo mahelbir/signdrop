@@ -42,7 +42,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.openFile(Log.logName)
     }
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
-        UpdatesController.checkForUpdate(forceShow: true)
         func updateCheckStatus(_ status: Bool, data: Data?, response: URLResponse?, error: Error?){
             if status == false {
                 DispatchQueue.main.async {
