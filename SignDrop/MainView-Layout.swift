@@ -12,12 +12,12 @@ extension MainView {
     func setUpLayout() {
         configureControls()
         let form = makeForm([
-            .field("Input File:", NSStackView(views: [inputFileField, browseButton])),
+            .field("Input File:", NSStackView(views: [inputFileField, inputFileButton])),
             .field("App ID:", makeAppIDStack()),
             .section("Signing"),
             .field("Certificate:", certificatePopup),
             .field("Profile:", profilePopup),
-            .field("Entitlements:", entitlementsField),
+            .field("Entitlements:", NSStackView(views: [entitlementsField, entitlementsButton])),
             .section("App changes"),
             .pair("New App ID:", newAppIDField, "Name:", displayNameField),
             .pair("Version:", versionField, "Build:", buildField),
@@ -52,9 +52,11 @@ extension MainView {
     func configureControls() {
         inputFileField.placeholderString = "Path or URL of an .ipa, .app, .appex, .xcarchive or .deb"
         inputFileField.delegate = self
-        browseButton.target = self
-        browseButton.action = #selector(doBrowse(_:))
-        browseButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        inputFileButton.target = self
+        inputFileButton.action = #selector(chooseInputFile(_:))
+        entitlementsButton.target = self
+        entitlementsButton.action = #selector(chooseEntitlementsFile(_:))
+        [inputFileButton, entitlementsButton].forEach { $0.setContentHuggingPriority(.defaultHigh, for: .horizontal) }
         inputAppIDLabel.isSelectable = true
         inputAppIDLabel.lineBreakMode = .byTruncatingMiddle
         profileMatchLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
@@ -64,7 +66,7 @@ extension MainView {
         certificatePopup.action = #selector(chooseSigningCertificate(_:))
         profilePopup.target = self
         profilePopup.action = #selector(chooseProvisioningProfile(_:))
-        entitlementsField.placeholderString = "Optional .entitlements file path"
+        entitlementsField.placeholderString = "Optional, overrides the profile's entitlements"
         [newAppIDField, displayNameField, versionField, buildField].forEach { $0.placeholderString = "Unchanged" }
         noGetTaskAllowCheckbox.state = .on
         noGetTaskAllowCheckbox.toolTip = "Don't add the get-task-allow entitlement, as it might break some apps"

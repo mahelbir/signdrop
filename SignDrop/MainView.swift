@@ -8,17 +8,19 @@
 
 import Cocoa
 import Foundation
+import UniformTypeIdentifiers
 
 class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDownloadDelegate {
     
     //MARK: Controls
     let inputFileField = NSTextField()
-    let browseButton = NSButton(title: "Choose…", target: nil, action: nil)
+    let inputFileButton = NSButton(title: "Choose…", target: nil, action: nil)
     let inputAppIDLabel = NSTextField(labelWithString: "—")
     let profileMatchLabel = NSTextField(labelWithString: "")
     let certificatePopup = NSPopUpButton()
     let profilePopup = NSPopUpButton()
     let entitlementsField = NSTextField()
+    let entitlementsButton = NSButton(title: "Choose…", target: nil, action: nil)
     let newAppIDField = NSTextField()
     let displayNameField = NSTextField()
     let versionField = NSTextField()
@@ -348,7 +350,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         else{
             if(enabled){
                 inputFileField.isEnabled = true
-                browseButton.isEnabled = true
+                inputFileButton.isEnabled = true
                 profilePopup.isEnabled = true
                 certificatePopup.isEnabled = true
                 newAppIDField.isEnabled = isNewAppIDFieldReenabled
@@ -361,7 +363,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 isNewAppIDFieldReenabled = newAppIDField.isEnabled
                 
                 inputFileField.isEnabled = false
-                browseButton.isEnabled = false
+                inputFileButton.isEnabled = false
                 profilePopup.isEnabled = false
                 certificatePopup.isEnabled = false
                 newAppIDField.isEnabled = false
@@ -1121,15 +1123,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
             
         case 1:
-            let openDialog = NSOpenPanel()
-            openDialog.canChooseFiles = true
-            openDialog.canChooseDirectories = false
-            openDialog.allowsMultipleSelection = false
-            openDialog.allowsOtherFileTypes = false
-            openDialog.allowedFileTypes = ["mobileprovision"]
-            openDialog.runModal()
-            if let filename = openDialog.urls.first {
-                selectCustomProfile(filename.path)
+            if let filename = chooseFile(["mobileprovision"]) {
+                selectCustomProfile(filename)
             } else {
                 sender.selectItem(at: 0)
                 chooseProvisioningProfile(sender)
@@ -1156,17 +1151,22 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
         checkProfileID(profile)
     }
-    @objc func doBrowse(_ sender: AnyObject) {
-        let openDialog = NSOpenPanel()
-        openDialog.canChooseFiles = true
-        openDialog.canChooseDirectories = false
-        openDialog.allowsMultipleSelection = false
-        openDialog.allowsOtherFileTypes = false
-        openDialog.allowedFileTypes = MainView.allowedFileTypes + MainView.allowedFileTypes.map({ $0.uppercased() })
-        openDialog.runModal()
-        if let filename = openDialog.urls.first {
-            inputFileField.stringValue = filename.path
+    func chooseFile(_ fileExtensions: [String]) -> String? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = fileExtensions.compactMap { UTType(filenameExtension: $0, conformingTo: .item) }
+        return panel.runModal() == .OK ? panel.url?.path : nil
+    }
+    @objc func chooseInputFile(_ sender: Any) {
+        if let filename = chooseFile(MainView.allowedFileTypes) {
+            inputFileField.stringValue = filename
             refreshInputAppID()
+        }
+    }
+    @objc func chooseEntitlementsFile(_ sender: Any) {
+        if let filename = chooseFile(["entitlements", "plist"]) {
+            entitlementsField.stringValue = filename
         }
     }
     @objc func chooseSigningCertificate(_ sender: NSPopUpButton) {
