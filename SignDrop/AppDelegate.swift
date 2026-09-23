@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  AppSigner
+//  SignDrop
 //
 //  Created by Daniel Radtke on 11/2/15.
 //  Copyright © 2015 Daniel Radtke. All rights reserved.
@@ -29,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     @IBAction func fixSigning(_ sender: NSMenuItem) {
         if let tempFolder = mainView.makeTempFolder() {
-            iASShared.fixSigning(tempFolder)
+            SignDropShared.fixSigning(tempFolder)
             try? fileManager.removeItem(atPath: tempFolder)
             mainView.populateCodesigningCerts()
         }

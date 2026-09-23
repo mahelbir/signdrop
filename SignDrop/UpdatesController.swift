@@ -1,6 +1,6 @@
 //
 //  UpdatesController.swift
-//  iOS App Signer
+//  SignDrop
 //
 //  Created by Daniel Radtke on 2/5/16.
 //  Copyright © 2016 Daniel Radtke. All rights reserved.
@@ -14,7 +14,7 @@ class UpdatesController: NSWindowController {
     @objc var latestVersion: String?
     @objc let prefs = UserDefaults.standard
     @objc static var updatesWindow: UpdatesController?
-    static let releasesURL = URL(string: "https://api.github.com/repos/DanTheMan827/ios-app-signer/releases")!
+    static let releasesURL = URL(string: "https://api.github.com/repos/mahelbir/signdrop/releases")!
 
     //MARK: IBOutlets
     @IBOutlet weak var appIcon: NSImageView!
@@ -120,7 +120,7 @@ class UpdatesController: NSWindowController {
         updateWindow.close()
     }
     @IBAction func visitProjectPage(_ sender: NSButton) {
-        NSWorkspace.shared.open(URL(string: "http://dantheman827.github.io/ios-app-signer/")!)
+        NSWorkspace.shared.open(URL(string: "https://github.com/mahelbir/signdrop/releases")!)
         updateWindow.close()
     }
 }

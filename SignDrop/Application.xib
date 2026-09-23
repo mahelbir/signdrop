@@ -12,7 +12,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="aMe-uV-AHx" customClass="AppDelegate" customModule="iOS_App_Signer" customModuleProvider="target">
+        <customObject id="aMe-uV-AHx" customClass="AppDelegate" customModule="SignDrop" customModuleProvider="target">
             <connections>
                 <outlet property="mainView" destination="se5-gp-TjO" id="Mal-fb-Nqp"/>
             </connections>
@@ -21,18 +21,18 @@
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
         <menu title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
             <items>
-                <menuItem title="iOS App Signer" id="1Xt-HY-uBw">
+                <menuItem title="SignDrop" id="1Xt-HY-uBw">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="iOS App Signer" systemMenu="apple" id="uQy-DD-JDr">
+                    <menu key="submenu" title="SignDrop" systemMenu="apple" id="uQy-DD-JDr">
                         <items>
-                            <menuItem title="About iOS App Signer" id="5kV-Vb-QxS">
+                            <menuItem title="About SignDrop" id="5kV-Vb-QxS">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="orderFrontStandardAboutPanel:" target="-1" id="Exp-CZ-Vem"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="wFC-TO-SCJ"/>
-                            <menuItem title="Hide iOS App Signer" keyEquivalent="h" id="Olw-nP-bQN">
+                            <menuItem title="Hide SignDrop" keyEquivalent="h" id="Olw-nP-bQN">
                                 <connections>
                                     <action selector="hide:" target="-1" id="PnN-Uc-m68"/>
                                 </connections>
@@ -50,7 +50,7 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="kCx-OE-vgT"/>
-                            <menuItem title="Quit iOS App Signer" keyEquivalent="q" id="4sb-4s-VLi">
+                            <menuItem title="Quit SignDrop" keyEquivalent="q" id="4sb-4s-VLi">
                                 <connections>
                                     <action selector="terminate:" target="-1" id="Te7-pn-YzF"/>
                                 </connections>
@@ -110,29 +110,13 @@
                         </items>
                     </menu>
                 </menuItem>
-                <menuItem title="Donate" id="2eI-1V-L75">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="Donate" id="T5I-ob-6B4">
-                        <items>
-                            <menuItem title="Buy Me A Drink" id="vr0-au-9q5" customClass="NSMenuLink" customModule="iOS_App_Signer" customModuleProvider="target">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="string" keyPath="url" value="https://www.paypal.me/DanTheMan827"/>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="nsMenuLinkClick:" target="aMe-uV-AHx" id="JMU-0p-WME"/>
-                                </connections>
-                            </menuItem>
-                        </items>
-                    </menu>
-                </menuItem>
                 <menuItem title="Help" id="wpr-3q-Mcd">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
                         <items>
-                            <menuItem title="GitHub Project Page" keyEquivalent="?" id="FKE-Sm-Kum" customClass="NSMenuLink" customModule="iOS_App_Signer" customModuleProvider="target">
+                            <menuItem title="GitHub Project Page" keyEquivalent="?" id="FKE-Sm-Kum" customClass="NSMenuLink" customModule="SignDrop" customModuleProvider="target">
                                 <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="string" keyPath="url" value="https://github.com/DanTheMan827/ios-app-signer"/>
+                                    <userDefinedRuntimeAttribute type="string" keyPath="url" value="https://github.com/mahelbir/signdrop"/>
                                 </userDefinedRuntimeAttributes>
                                 <connections>
                                     <action selector="nsMenuLinkClick:" target="aMe-uV-AHx" id="kuT-Sl-Lfb"/>
@@ -156,7 +140,7 @@
             </items>
             <point key="canvasLocation" x="140" y="154"/>
         </menu>
-        <window title="iOS App Signer" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="F0z-JX-Cv5">
+        <window title="SignDrop" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="F0z-JX-Cv5">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowCollectionBehavior key="collectionBehavior" fullScreenNone="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
@@ -164,7 +148,7 @@
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1410"/>
             <value key="minSize" type="size" width="550" height="242"/>
             <value key="maxSize" type="size" width="9999" height="242"/>
-            <view key="contentView" id="se5-gp-TjO" customClass="MainView" customModule="iOS_App_Signer" customModuleProvider="target">
+            <view key="contentView" id="se5-gp-TjO" customClass="MainView" customModule="SignDrop" customModuleProvider="target">
                 <rect key="frame" x="0.0" y="0.0" width="550" height="356"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>

@@ -1,13 +1,13 @@
 //
 //  NSTask-execute.swift
-//  AppSigner
+//  SignDrop
 //
 //  Created by Daniel Radtke on 11/3/15.
 //  Copyright © 2015 Daniel Radtke. All rights reserved.
 //
 
 import Foundation
-struct AppSignerTaskOutput {
+struct SignDropTaskOutput {
     var output: String
     var status: Int32
     init(status: Int32, output: String){
@@ -16,7 +16,7 @@ struct AppSignerTaskOutput {
     }
 }
 extension Process {
-    func launchSynchronous() -> AppSignerTaskOutput {
+    func launchSynchronous() -> SignDropTaskOutput {
         self.standardInput = FileHandle.nullDevice
         let pipe = Pipe()
         self.standardOutput = pipe
@@ -33,14 +33,14 @@ extension Process {
         self.terminate();
         
         if let output = String.init(data: data as Data, encoding: String.Encoding.utf8) {
-            return AppSignerTaskOutput(status: self.terminationStatus, output: output)
+            return SignDropTaskOutput(status: self.terminationStatus, output: output)
         } else {
-            return AppSignerTaskOutput(status: self.terminationStatus, output: "")
+            return SignDropTaskOutput(status: self.terminationStatus, output: "")
         }
         
     }
     
-    func execute(_ launchPath: String, workingDirectory: String?, arguments: [String]?)->AppSignerTaskOutput{
+    func execute(_ launchPath: String, workingDirectory: String?, arguments: [String]?)->SignDropTaskOutput{
         self.launchPath = launchPath
         if arguments != nil {
             self.arguments = arguments

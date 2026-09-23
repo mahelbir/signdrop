@@ -1,6 +1,6 @@
 //
-//  ViewController.swift
-//  AppSigner
+//  MainView.swift
+//  SignDrop
 //
 //  Created by Daniel Radtke on 11/2/15.
 //  Copyright © 2015 Daniel Radtke. All rights reserved.
@@ -186,7 +186,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
     }
     
-    func installXcodeCLI() -> AppSignerTaskOutput {
+    func installXcodeCLI() -> SignDropTaskOutput {
         return Process().execute("/usr/bin/xcode-select", workingDirectory: nil, arguments: ["--install"])
     }
     
@@ -291,7 +291,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         alert.addButton(withTitle: "No")
         if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
             if let tempFolder = makeTempFolder() {
-                iASShared.fixSigning(tempFolder)
+                SignDropShared.fixSigning(tempFolder)
                 try? fileManager.removeItem(atPath: tempFolder)
                 populateCodesigningCerts()
             }
@@ -428,10 +428,10 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         return false
     }
     
-    func unzip(_ inputFile: String, outputPath: String)->AppSignerTaskOutput {
+    func unzip(_ inputFile: String, outputPath: String)->SignDropTaskOutput {
         return Process().execute(unzipPath, workingDirectory: nil, arguments: ["-q",inputFile,"-d",outputPath])
     }
-    func zip(_ inputPath: String, outputFile: String)->AppSignerTaskOutput {
+    func zip(_ inputPath: String, outputFile: String)->SignDropTaskOutput {
         return Process().execute(zipPath, workingDirectory: inputPath, arguments: ["-qry", outputFile, "."])
     }
     
@@ -462,7 +462,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         return dictionary?[keyName] as? String
     }
     
-    func setPlistKey(_ plist: String, keyName: String, value: String)->AppSignerTaskOutput {
+    func setPlistKey(_ plist: String, keyName: String, value: String)->SignDropTaskOutput {
         return Process().execute(defaultsPath, workingDirectory: nil, arguments: ["write", plist, keyName, value])
     }
     
@@ -498,7 +498,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     
     //MARK: Codesigning
     @discardableResult
-    func codeSign(_ file: String, certificate: String, entitlements: String?,before:((_ file: String, _ certificate: String, _ entitlements: String?)->Void)?, after: ((_ file: String, _ certificate: String, _ entitlements: String?, _ codesignTask: AppSignerTaskOutput)->Void)?)->AppSignerTaskOutput{
+    func codeSign(_ file: String, certificate: String, entitlements: String?,before:((_ file: String, _ certificate: String, _ entitlements: String?)->Void)?, after: ((_ file: String, _ certificate: String, _ entitlements: String?, _ codesignTask: SignDropTaskOutput)->Void)?)->SignDropTaskOutput{
 
         var needEntitlements: Bool = false
         let filePath: String
@@ -676,7 +676,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                     alert.informativeText = "You appear to have a error with your codesigning certificate, do you want me to try and fix the problem?"
                     let response = alert.runModal()
                     if response == NSApplication.ModalResponse.alertFirstButtonReturn {
-                        iASShared.fixSigning(tempFolder)
+                        SignDropShared.fixSigning(tempFolder)
                         if self.testSigning(signingCertificate!, tempFolder: tempFolder) == false {
                             let errorAlert = NSAlert()
                             errorAlert.messageText = "Unable to Fix"
@@ -1039,7 +1039,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                             setStatus("Codesigning \(shortName(file, payloadDirectory: payloadDirectory))\(useEntitlements ? " with entitlements":"")")
                     }
                     
-                    func afterFunc(_ file: String, certificate: String, entitlements: String?, codesignOutput: AppSignerTaskOutput){
+                    func afterFunc(_ file: String, certificate: String, entitlements: String?, codesignOutput: SignDropTaskOutput){
                         if codesignOutput.status != 0 {
                             setStatus("Error codesigning \(shortName(file, payloadDirectory: payloadDirectory))")
                             Log.write(codesignOutput.output)

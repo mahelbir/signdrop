@@ -1,6 +1,6 @@
 //
 //  StringByAppendingPathComponent.swift
-//  AppSigner
+//  SignDrop
 //
 //  Created by Daniel Radtke on 11/3/15.
 //  Copyright © 2015 Daniel Radtke. All rights reserved.

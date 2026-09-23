@@ -1,6 +1,6 @@
 //
 //  Log.swift
-//  iOS App Signer
+//  SignDrop
 //
 //  Created by Daniel Radtke on 11/14/15.
 //  Copyright © 2015 Daniel Radtke. All rights reserved.

@@ -5,7 +5,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="10117"/>
     </dependencies>
     <objects>
-        <customObject id="-2" userLabel="File's Owner" customClass="UpdatesController" customModule="iOS_App_Signer" customModuleProvider="target">
+        <customObject id="-2" userLabel="File's Owner" customClass="UpdatesController" customModule="SignDrop" customModuleProvider="target">
             <connections>
                 <outlet property="appIcon" destination="96s-Gw-tgu" id="Z8j-QY-wMA"/>
                 <outlet property="changelogText" destination="9oR-gz-UUY" id="UMb-pZ-bbg"/>
@@ -36,7 +36,7 @@
                     </imageView>
                     <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="tYs-JP-zrn">
                         <rect key="frame" x="90" y="307" width="287" height="17"/>
-                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="A new version of iOS App Signer is avaiable!" id="bT6-tv-Uhd">
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="A new version of SignDrop is available!" id="bT6-tv-Uhd">
                             <font key="font" metaFont="systemBold"/>
                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>

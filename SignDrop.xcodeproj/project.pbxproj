@@ -23,13 +23,13 @@
 		659734A11C65B5F600383D2D /* MarkdownTokens.m in Sources */ = {isa = PBXBuildFile; fileRef = 6597349C1C65B5F600383D2D /* MarkdownTokens.m */; };
 		659734A21C65B5F600383D2D /* NSAttributedStringMarkdownParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6597349F1C65B5F600383D2D /* NSAttributedStringMarkdownParser.m */; };
 		659734A71C65B94F00383D2D /* fmemopen.c in Sources */ = {isa = PBXBuildFile; fileRef = 659734A41C65B94F00383D2D /* fmemopen.c */; };
-		65B2EAA21CDE981500D02053 /* iASShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B2EAA11CDE981500D02053 /* iASShared.swift */; };
+		65B2EAA21CDE981500D02053 /* SignDropShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B2EAA11CDE981500D02053 /* SignDropShared.swift */; };
 		65CED3A32D8B6F3E00E9185B /* fix-wwdr.sh in Resources */ = {isa = PBXBuildFile; fileRef = 65CED3A22D8B6F3E00E9185B /* fix-wwdr.sh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		4A714DBA2B5591DB9632FAEA /* MainView-AppID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView-AppID.swift"; sourceTree = "<group>"; };
-		652408C81BE743D4006FA4C6 /* iOS App Signer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "iOS App Signer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		652408C81BE743D4006FA4C6 /* SignDrop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignDrop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		652408CB1BE743D4006FA4C6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		652408CD1BE743D4006FA4C6 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		652408CF1BE743D4006FA4C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -42,7 +42,7 @@
 		655FFFA11BEAD93600D43AD8 /* ProvisioningProfile.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProvisioningProfile.swift; sourceTree = "<group>"; };
 		659734931C65A14300383D2D /* Updates.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Updates.xib; sourceTree = "<group>"; };
 		659734951C65A1E800383D2D /* UpdatesController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UpdatesController.swift; sourceTree = "<group>"; };
-		659734991C65B5F500383D2D /* iOS App Signer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "iOS App Signer-Bridging-Header.h"; sourceTree = "<group>"; };
+		659734991C65B5F500383D2D /* SignDrop-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SignDrop-Bridging-Header.h"; sourceTree = "<group>"; };
 		6597349A1C65B5F600383D2D /* MarkdownTokenizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MarkdownTokenizer.m; path = NimbusKit/markdown/MarkdownTokenizer.m; sourceTree = "<group>"; };
 		6597349B1C65B5F600383D2D /* MarkdownTokens.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkdownTokens.h; path = NimbusKit/markdown/MarkdownTokens.h; sourceTree = "<group>"; };
 		6597349C1C65B5F600383D2D /* MarkdownTokens.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MarkdownTokens.m; path = NimbusKit/markdown/MarkdownTokens.m; sourceTree = "<group>"; };
@@ -52,8 +52,8 @@
 		659734A41C65B94F00383D2D /* fmemopen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fmemopen.c; path = NimbusKit/memorymapping/fmemopen.c; sourceTree = "<group>"; };
 		659734A51C65B94F00383D2D /* fmemopen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fmemopen.h; path = NimbusKit/memorymapping/fmemopen.h; sourceTree = "<group>"; };
 		659734A61C65B94F00383D2D /* NimbusMemoryMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NimbusMemoryMapping.h; path = NimbusKit/memorymapping/NimbusMemoryMapping.h; sourceTree = "<group>"; };
-		65B24E0D1BECB30D005D2068 /* AppSigner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = AppSigner.entitlements; sourceTree = "<group>"; };
-		65B2EAA11CDE981500D02053 /* iASShared.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = iASShared.swift; path = AppSigner/Classes/iASShared.swift; sourceTree = "<group>"; };
+		65B24E0D1BECB30D005D2068 /* SignDrop.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = SignDrop.entitlements; sourceTree = "<group>"; };
+		65B2EAA11CDE981500D02053 /* SignDropShared.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SignDropShared.swift; path = SignDrop/Classes/SignDropShared.swift; sourceTree = "<group>"; };
 		65CED3A22D8B6F3E00E9185B /* fix-wwdr.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "fix-wwdr.sh"; path = "Resources/fix-wwdr.sh"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -72,7 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				659734971C65B5B900383D2D /* NimbusKit */,
-				652408CA1BE743D4006FA4C6 /* AppSigner */,
+				652408CA1BE743D4006FA4C6 /* SignDrop */,
 				652408C91BE743D4006FA4C6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -80,12 +80,12 @@
 		652408C91BE743D4006FA4C6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				652408C81BE743D4006FA4C6 /* iOS App Signer.app */,
+				652408C81BE743D4006FA4C6 /* SignDrop.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		652408CA1BE743D4006FA4C6 /* AppSigner */ = {
+		652408CA1BE743D4006FA4C6 /* SignDrop */ = {
 			isa = PBXGroup;
 			children = (
 				65CED3A12D8B6F1B00E9185B /* Resources */,
@@ -94,14 +94,14 @@
 				65311EB51BF88EB800516EFD /* Application.xib */,
 				659734931C65A14300383D2D /* Updates.xib */,
 				659734951C65A1E800383D2D /* UpdatesController.swift */,
-				65B24E0D1BECB30D005D2068 /* AppSigner.entitlements */,
+				65B24E0D1BECB30D005D2068 /* SignDrop.entitlements */,
 				652408CB1BE743D4006FA4C6 /* AppDelegate.swift */,
 				652408CD1BE743D4006FA4C6 /* MainView.swift */,
 				4A714DBA2B5591DB9632FAEA /* MainView-AppID.swift */,
 				652408CF1BE743D4006FA4C6 /* Assets.xcassets */,
 				652408D41BE743D4006FA4C6 /* Info.plist */,
 			);
-			path = AppSigner;
+			path = SignDrop;
 			sourceTree = "<group>";
 		};
 		655FFFA01BEAD90800D43AD8 /* Classes */ = {
@@ -110,7 +110,7 @@
 				655FFFA11BEAD93600D43AD8 /* ProvisioningProfile.swift */,
 				65311EAF1BF835F100516EFD /* Log.swift */,
 				65311EAD1BF8259000516EFD /* NSMenuLink.swift */,
-				65B2EAA11CDE981500D02053 /* iASShared.swift */,
+				65B2EAA11CDE981500D02053 /* SignDropShared.swift */,
 			);
 			name = Classes;
 			path = ..;
@@ -144,7 +144,7 @@
 				6597349D1C65B5F600383D2D /* NimbusMarkdown.h */,
 				6597349E1C65B5F600383D2D /* NSAttributedStringMarkdownParser.h */,
 				6597349F1C65B5F600383D2D /* NSAttributedStringMarkdownParser.m */,
-				659734991C65B5F500383D2D /* iOS App Signer-Bridging-Header.h */,
+				659734991C65B5F500383D2D /* SignDrop-Bridging-Header.h */,
 			);
 			name = markdown;
 			sourceTree = "<group>";
@@ -170,9 +170,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		652408C71BE743D4006FA4C6 /* iOS App Signer */ = {
+		652408C71BE743D4006FA4C6 /* SignDrop */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 652408ED1BE743D4006FA4C6 /* Build configuration list for PBXNativeTarget "iOS App Signer" */;
+			buildConfigurationList = 652408ED1BE743D4006FA4C6 /* Build configuration list for PBXNativeTarget "SignDrop" */;
 			buildPhases = (
 				652408C41BE743D4006FA4C6 /* Sources */,
 				652408C51BE743D4006FA4C6 /* Frameworks */,
@@ -182,9 +182,9 @@
 			);
 			dependencies = (
 			);
-			name = "iOS App Signer";
-			productName = AppSigner;
-			productReference = 652408C81BE743D4006FA4C6 /* iOS App Signer.app */;
+			name = SignDrop;
+			productName = SignDrop;
+			productReference = 652408C81BE743D4006FA4C6 /* SignDrop.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -195,11 +195,11 @@
 			attributes = {
 				LastSwiftUpdateCheck = 0720;
 				LastUpgradeCheck = 0810;
-				ORGANIZATIONNAME = "Daniel Radtke";
+				ORGANIZATIONNAME = "Mahmuthan Elbir";
 				TargetAttributes = {
 					652408C71BE743D4006FA4C6 = {
 						CreatedOnToolsVersion = 7.1;
-						DevelopmentTeam = 7PM929Z8M2;
+						DevelopmentTeam = 457YG64T5P;
 						LastSwiftMigration = 1020;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
@@ -210,7 +210,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 652408C31BE743D4006FA4C6 /* Build configuration list for PBXProject "iOS App Signer" */;
+			buildConfigurationList = 652408C31BE743D4006FA4C6 /* Build configuration list for PBXProject "SignDrop" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -224,7 +224,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				652408C71BE743D4006FA4C6 /* iOS App Signer */,
+				652408C71BE743D4006FA4C6 /* SignDrop */,
 			);
 		};
 /* End PBXProject section */
@@ -261,7 +261,7 @@
 				655FFF9D1BE9B3E300D43AD8 /* NSTask-execute.swift in Sources */,
 				659734A21C65B5F600383D2D /* NSAttributedStringMarkdownParser.m in Sources */,
 				655FFFA21BEAD93600D43AD8 /* ProvisioningProfile.swift in Sources */,
-				65B2EAA21CDE981500D02053 /* iASShared.swift in Sources */,
+				65B2EAA21CDE981500D02053 /* SignDropShared.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,15 +361,15 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 457YG64T5P;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = AppSigner/Info.plist;
+				INFOPLIST_FILE = SignDrop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.DanTheMan827.AppSigner;
-				PRODUCT_NAME = "iOS App Signer";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mahmuthanelbir.signdrop;
+				PRODUCT_NAME = SignDrop;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "iOS App Signer-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SignDrop-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
@@ -383,15 +383,15 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 457YG64T5P;
 				ENABLE_HARDENED_RUNTIME = YES;
-				INFOPLIST_FILE = AppSigner/Info.plist;
+				INFOPLIST_FILE = SignDrop/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.DanTheMan827.AppSigner;
-				PRODUCT_NAME = "iOS App Signer";
+				PRODUCT_BUNDLE_IDENTIFIER = com.mahmuthanelbir.signdrop;
+				PRODUCT_NAME = SignDrop;
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_OBJC_BRIDGING_HEADER = "iOS App Signer-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SignDrop-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -399,7 +399,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		652408C31BE743D4006FA4C6 /* Build configuration list for PBXProject "iOS App Signer" */ = {
+		652408C31BE743D4006FA4C6 /* Build configuration list for PBXProject "SignDrop" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				652408EB1BE743D4006FA4C6 /* Debug */,
@@ -408,7 +408,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		652408ED1BE743D4006FA4C6 /* Build configuration list for PBXNativeTarget "iOS App Signer" */ = {
+		652408ED1BE743D4006FA4C6 /* Build configuration list for PBXNativeTarget "SignDrop" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				652408EE1BE743D4006FA4C6 /* Debug */,
