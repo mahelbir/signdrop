@@ -24,7 +24,6 @@
 		659734A21C65B5F600383D2D /* NSAttributedStringMarkdownParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 6597349F1C65B5F600383D2D /* NSAttributedStringMarkdownParser.m */; };
 		659734A71C65B94F00383D2D /* fmemopen.c in Sources */ = {isa = PBXBuildFile; fileRef = 659734A41C65B94F00383D2D /* fmemopen.c */; };
 		65B2EAA21CDE981500D02053 /* SignDropShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65B2EAA11CDE981500D02053 /* SignDropShared.swift */; };
-		65CED3A32D8B6F3E00E9185B /* fix-wwdr.sh in Resources */ = {isa = PBXBuildFile; fileRef = 65CED3A22D8B6F3E00E9185B /* fix-wwdr.sh */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,7 +53,6 @@
 		659734A61C65B94F00383D2D /* NimbusMemoryMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NimbusMemoryMapping.h; path = NimbusKit/memorymapping/NimbusMemoryMapping.h; sourceTree = "<group>"; };
 		65B24E0D1BECB30D005D2068 /* SignDrop.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = SignDrop.entitlements; sourceTree = "<group>"; };
 		65B2EAA11CDE981500D02053 /* SignDropShared.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SignDropShared.swift; path = SignDrop/Classes/SignDropShared.swift; sourceTree = "<group>"; };
-		65CED3A22D8B6F3E00E9185B /* fix-wwdr.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "fix-wwdr.sh"; path = "Resources/fix-wwdr.sh"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,7 +86,6 @@
 		652408CA1BE743D4006FA4C6 /* SignDrop */ = {
 			isa = PBXGroup;
 			children = (
-				65CED3A12D8B6F1B00E9185B /* Resources */,
 				655FFFDF1BEB270200D43AD8 /* Extensions */,
 				655FFFA01BEAD90800D43AD8 /* Classes */,
 				65311EB51BF88EB800516EFD /* Application.xib */,
@@ -159,14 +156,6 @@
 			name = memorymapping;
 			sourceTree = "<group>";
 		};
-		65CED3A12D8B6F1B00E9185B /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				65CED3A22D8B6F3E00E9185B /* fix-wwdr.sh */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -234,7 +223,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				65CED3A32D8B6F3E00E9185B /* fix-wwdr.sh in Resources */,
 				65311EB61BF88EB800516EFD /* Application.xib in Resources */,
 				652408D01BE743D4006FA4C6 /* Assets.xcassets in Resources */,
 				659734941C65A14300383D2D /* Updates.xib in Resources */,

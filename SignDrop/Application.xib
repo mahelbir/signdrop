@@ -12,11 +12,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="aMe-uV-AHx" customClass="AppDelegate" customModule="SignDrop" customModuleProvider="target">
-            <connections>
-                <outlet property="mainView" destination="se5-gp-TjO" id="Mal-fb-Nqp"/>
-            </connections>
-        </customObject>
+        <customObject id="aMe-uV-AHx" customClass="AppDelegate" customModule="SignDrop" customModuleProvider="target"/>
         <customObject id="-3" userLabel="Application" customClass="NSButton"/>
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
         <menu title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
@@ -122,10 +118,10 @@
                                     <action selector="nsMenuLinkClick:" target="aMe-uV-AHx" id="kuT-Sl-Lfb"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Update Apple WWDR Certificate" id="yW3-3F-UGM">
+                            <menuItem title="Get Apple WWDR Certificates" id="yW3-3F-UGM">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="fixSigning:" target="aMe-uV-AHx" id="11N-yH-9Q4"/>
+                                    <action selector="openCertificateAuthority:" target="aMe-uV-AHx" id="11N-yH-9Q4"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Check for Updates" id="z6H-Tg-1uh">

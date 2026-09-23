@@ -284,18 +284,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     }
     
     @objc func showCodesignCertsErrorAlert(){
-        let alert = NSAlert()
-        alert.messageText = "No codesigning certificates found"
-        alert.informativeText = "I can attempt to fix this automatically, would you like me to try?"
-        alert.addButton(withTitle: "Yes")
-        alert.addButton(withTitle: "No")
-        if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
-            if let tempFolder = makeTempFolder() {
-                SignDropShared.fixSigning(tempFolder)
-                try? fileManager.removeItem(atPath: tempFolder)
-                populateCodesigningCerts()
-            }
-        }
+        SignDropShared.showCertificateAlert("No codesigning certificates found", informativeText: "Install your signing certificate in Keychain. If it is installed but not listed, install the latest Apple WWDR intermediate certificates, then press Start again.")
     }
     
     @objc func showNewEntitlementsPathErrorAlert(){
@@ -669,27 +658,9 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         DispatchQueue.main.async(execute: {
             if let codesignResult = self.testSigning(signingCertificate!, tempFolder: tempFolder) {
                 if codesignResult == false {
-                    let alert = NSAlert()
-                    alert.messageText = "Codesigning error"
-                    alert.addButton(withTitle: "Yes")
-                    alert.addButton(withTitle: "No")
-                    alert.informativeText = "You appear to have a error with your codesigning certificate, do you want me to try and fix the problem?"
-                    let response = alert.runModal()
-                    if response == NSApplication.ModalResponse.alertFirstButtonReturn {
-                        SignDropShared.fixSigning(tempFolder)
-                        if self.testSigning(signingCertificate!, tempFolder: tempFolder) == false {
-                            let errorAlert = NSAlert()
-                            errorAlert.messageText = "Unable to Fix"
-                            errorAlert.addButton(withTitle: "OK")
-                            errorAlert.informativeText = "I was unable to automatically resolve your codesigning issue ☹\n\nIf you have previously trusted your certificate using Keychain, please set the Trust setting back to the system default."
-                            errorAlert.runModal()
-                            continueSigning = false
-                            return
-                        }
-                    } else {
-                        continueSigning = false
-                        return
-                    }
+                    SignDropShared.showCertificateAlert("Codesigning error", informativeText: "Your signing certificate could not be used. Install the latest Apple WWDR intermediate certificates and make sure the certificate's Trust setting in Keychain is the system default.")
+                    continueSigning = false
+                    return
                 }
             }
             continueSigning = true
@@ -1214,11 +1185,12 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
         }
 
+        if codesigningCerts.count == 0 {
+            populateCodesigningCerts()
+        }
         if codesigningCerts.count > 0 {
             NSApplication.shared.windows[0].makeFirstResponder(self)
             startSigning()
-        } else {
-            showCodesignCertsErrorAlert()
         }
     }
     
