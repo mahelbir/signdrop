@@ -1045,6 +1045,9 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 //MARK: Codesigning - Verification
                 let verificationTask = Process().execute(codesignPath, workingDirectory: nil, arguments: ["-v",appBundlePath])
                 if verificationTask.status != 0 {
+                    setStatus("Error verifying code signature")
+                    Log.write(verificationTask.output)
+                    cleanup(tempFolder)
                     DispatchQueue.main.async(execute: {
                         let alert = NSAlert()
                         alert.addButton(withTitle: "OK")
@@ -1052,10 +1055,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                         alert.informativeText = verificationTask.output
                         alert.alertStyle = .critical
                         alert.runModal()
-                        self.setStatus("Error verifying code signature")
-                        Log.write(verificationTask.output)
-                        self.cleanup(tempFolder); return
                     })
+                    return
                 }
             }
         } catch let error as NSError {
@@ -1083,6 +1084,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             let zipTask = self.zip(workingDirectory, outputFile: outputFile!)
             if zipTask.status != 0 {
                 setStatus("Error packaging IPA")
+                Log.write(zipTask.output)
+                cleanup(tempFolder); return
             }
         case "appex":
             do {
@@ -1090,6 +1093,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             } catch let error as NSError {
                 setStatus("Error copying appex bundle to \(outputFile!)")
                 Log.write(error.localizedDescription)
+                cleanup(tempFolder); return
             }
         default:
             break
