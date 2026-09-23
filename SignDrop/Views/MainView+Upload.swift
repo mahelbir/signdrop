@@ -57,18 +57,19 @@ extension MainView {
     }
 
     func finishSigning(_ output: String, isUploadRequested: Bool) {
+        let outputURL = URL(fileURLWithPath: output)
         guard isUploadRequested else {
-            setStatus("Done, output at \(output)")
+            setStatus("Done, output at \(output)", link: outputURL)
             controlsEnabled(true)
             return
         }
         guard output.pathExtension.lowercased() == "ipa" else {
-            setStatus("Done, output at \(output) (only .ipa files can be uploaded)")
+            setStatus("Done, output at \(output) (only .ipa files can be uploaded)", link: outputURL)
             controlsEnabled(true)
             return
         }
         Task {
-            await uploadSignedFile(URL(fileURLWithPath: output))
+            await uploadSignedFile(outputURL)
         }
     }
 
@@ -82,12 +83,22 @@ extension MainView {
             }
             reportUpload(result)
         } catch UploadError.sessionExpired {
-            setStatus("\(uploadService.name) session expired. Sign in again.", isWarning: true)
+            setStatus("\(uploadService.name) session expired. Sign in again.", isWarning: true, link: file)
         } catch {
-            setStatus("Upload failed: \(error.localizedDescription)", isWarning: true)
+            setStatus("Upload failed: \(error.localizedDescription)", isWarning: true, link: file)
         }
         downloadProgress.isHidden = true
         controlsEnabled(true)
+    }
+
+    func appendStatusLinkTitle() {
+        let status = statusLabel.attributedStringValue
+        let attributes = status.length > 0 ? status.attributes(at: 0, effectiveRange: nil) : [:]
+        let linkAttributes = attributes.merging([.foregroundColor: NSColor.linkColor, .underlineStyle: NSUnderlineStyle.single.rawValue]) { $1 }
+        let text = NSMutableAttributedString(attributedString: status)
+        text.append(NSAttributedString(string: " · ", attributes: attributes))
+        text.append(NSAttributedString(string: statusLink?.isFileURL == true ? "Show in Finder" : "Open Install Page", attributes: linkAttributes))
+        statusLabel.attributedStringValue = text
     }
 
     func reportUpload(_ result: UploadResult) {

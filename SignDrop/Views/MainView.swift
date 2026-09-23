@@ -233,6 +233,11 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             statusLabel.textColor = isWarning ? .systemOrange : .labelColor
             isStatusWarning = isWarning
             statusLink = link
+            statusLabel.toolTip = link.map { $0.isFileURL ? $0.path : $0.absoluteString }
+            if link != nil {
+                appendStatusLinkTitle()
+            }
+            window?.invalidateCursorRects(for: self)
             Log.write(status)
         }
     }
@@ -1193,13 +1198,19 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
     }
 
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        if statusLink != nil {
+            addCursorRect(statusLabel.convert(statusLabel.bounds, to: self), cursor: .pointingHand)
+        }
+    }
+
     @objc func statusLabelClick(_ sender: Any) {
-        if let statusLink = statusLink {
+        guard let statusLink = statusLink else { return }
+        if !statusLink.isFileURL {
             NSWorkspace.shared.open(statusLink)
-        } else if let outputFile = self.outputFile {
-            if fileManager.fileExists(atPath: outputFile) {
-                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: outputFile)])
-            }
+        } else if fileManager.fileExists(atPath: statusLink.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([statusLink])
         }
     }
 
