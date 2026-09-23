@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		13C33FAA9D2FFACC5E6DE749 /* MainView-AppID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A714DBA2B5591DB9632FAEA /* MainView-AppID.swift */; };
+		13C33FAA9D2FFACC5E6DE749 /* MainView-AppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A714DBA2B5591DB9632FAEA /* MainView-AppInfo.swift */; };
 		3E14F4510B01BCABD25FA539 /* MainView-Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB8F1BFB6D19B16420F4CAA /* MainView-Layout.swift */; };
 		652408CC1BE743D4006FA4C6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CB1BE743D4006FA4C6 /* AppDelegate.swift */; };
 		652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CD1BE743D4006FA4C6 /* MainView.swift */; };
@@ -28,7 +28,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4A714DBA2B5591DB9632FAEA /* MainView-AppID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView-AppID.swift"; sourceTree = "<group>"; };
+		4A714DBA2B5591DB9632FAEA /* MainView-AppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView-AppInfo.swift"; sourceTree = "<group>"; };
 		652408C81BE743D4006FA4C6 /* SignDrop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignDrop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		652408CB1BE743D4006FA4C6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		652408CD1BE743D4006FA4C6 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
@@ -96,7 +96,7 @@
 				65B24E0D1BECB30D005D2068 /* SignDrop.entitlements */,
 				652408CB1BE743D4006FA4C6 /* AppDelegate.swift */,
 				652408CD1BE743D4006FA4C6 /* MainView.swift */,
-				4A714DBA2B5591DB9632FAEA /* MainView-AppID.swift */,
+				4A714DBA2B5591DB9632FAEA /* MainView-AppInfo.swift */,
 				7AB8F1BFB6D19B16420F4CAA /* MainView-Layout.swift */,
 				652408CF1BE743D4006FA4C6 /* Assets.xcassets */,
 				652408D41BE743D4006FA4C6 /* Info.plist */,
@@ -241,7 +241,7 @@
 			files = (
 				659734A01C65B5F600383D2D /* MarkdownTokenizer.m in Sources */,
 				652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */,
-				13C33FAA9D2FFACC5E6DE749 /* MainView-AppID.swift in Sources */,
+				13C33FAA9D2FFACC5E6DE749 /* MainView-AppInfo.swift in Sources */,
 				3E14F4510B01BCABD25FA539 /* MainView-Layout.swift in Sources */,
 				659734A71C65B94F00383D2D /* fmemopen.c in Sources */,
 				65311EB01BF835F100516EFD /* Log.swift in Sources */,

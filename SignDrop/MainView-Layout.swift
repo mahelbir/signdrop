@@ -13,13 +13,12 @@ extension MainView {
         configureControls()
         let form = makeForm([
             .field("Input File:", NSStackView(views: [inputFileField, inputFileButton])),
-            .field("App ID:", makeAppIDStack()),
             .section("Signing"),
             .field("Certificate:", certificatePopup),
             .field("Profile:", profilePopup),
             .field("Entitlements:", NSStackView(views: [entitlementsField, entitlementsButton])),
-            .section("App changes"),
-            .pair("New App ID:", newAppIDField, "Name:", displayNameField),
+            .section("App Info"),
+            .pair("App ID:", appIDField, "Name:", displayNameField),
             .pair("Version:", versionField, "Build:", buildField),
             .section("Options"),
             .content(makeOptionsStack())
@@ -36,7 +35,7 @@ extension MainView {
             form.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             form.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
             form.widthAnchor.constraint(greaterThanOrEqualToConstant: 520),
-            newAppIDField.widthAnchor.constraint(equalTo: displayNameField.widthAnchor),
+            appIDField.widthAnchor.constraint(equalTo: displayNameField.widthAnchor),
             signButton.topAnchor.constraint(equalTo: form.bottomAnchor, constant: 20),
             signButton.trailingAnchor.constraint(equalTo: form.trailingAnchor),
             statusBar.topAnchor.constraint(equalTo: signButton.bottomAnchor, constant: 20),
@@ -57,17 +56,13 @@ extension MainView {
         entitlementsButton.target = self
         entitlementsButton.action = #selector(chooseEntitlementsFile(_:))
         [inputFileButton, entitlementsButton].forEach { $0.setContentHuggingPriority(.defaultHigh, for: .horizontal) }
-        inputAppIDLabel.isSelectable = true
-        inputAppIDLabel.lineBreakMode = .byTruncatingMiddle
-        profileMatchLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        profileMatchLabel.textColor = .secondaryLabelColor
-        profileMatchLabel.lineBreakMode = .byTruncatingTail
+        appIDField.delegate = self
         certificatePopup.target = self
         certificatePopup.action = #selector(chooseSigningCertificate(_:))
         profilePopup.target = self
         profilePopup.action = #selector(chooseProvisioningProfile(_:))
         entitlementsField.placeholderString = "Optional, overrides the profile's entitlements"
-        [newAppIDField, displayNameField, versionField, buildField].forEach { $0.placeholderString = "Unchanged" }
+        [appIDField, displayNameField, versionField, buildField].forEach { $0.placeholderString = "Unchanged" }
         noGetTaskAllowCheckbox.state = .on
         noGetTaskAllowCheckbox.toolTip = "Don't add the get-task-allow entitlement, as it might break some apps"
         ignorePluginsCheckbox.toolTip = "Don't re-sign extension bundles, as they might have their own code signature"
@@ -81,7 +76,7 @@ extension MainView {
         downloadProgress.isIndeterminate = false
         downloadProgress.maxValue = 100
         downloadProgress.isHidden = true
-        [inputAppIDLabel, profileMatchLabel, statusLabel, certificatePopup, profilePopup].forEach {
+        [statusLabel, certificatePopup, profilePopup].forEach {
             $0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         }
     }
@@ -139,14 +134,6 @@ extension MainView {
         header.distribution = .fill
         header.setHuggingPriority(.defaultLow, for: .horizontal)
         return header
-    }
-
-    func makeAppIDStack() -> NSStackView {
-        let stack = NSStackView(views: [inputAppIDLabel, profileMatchLabel])
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 2
-        return stack
     }
 
     func makeOptionsStack() -> NSStackView {

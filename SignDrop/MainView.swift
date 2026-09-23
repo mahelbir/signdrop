@@ -15,13 +15,11 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     //MARK: Controls
     let inputFileField = NSTextField()
     let inputFileButton = NSButton(title: "Choose…", target: nil, action: nil)
-    let inputAppIDLabel = NSTextField(labelWithString: "—")
-    let profileMatchLabel = NSTextField(labelWithString: "")
     let certificatePopup = NSPopUpButton()
     let profilePopup = NSPopUpButton()
     let entitlementsField = NSTextField()
     let entitlementsButton = NSButton(title: "Choose…", target: nil, action: nil)
-    let newAppIDField = NSTextField()
+    let appIDField = NSTextField()
     let displayNameField = NSTextField()
     let versionField = NSTextField()
     let buildField = NSTextField()
@@ -36,20 +34,24 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     var customProfiles: [ProvisioningProfile] = []
     @objc var codesigningCerts: [String] = []
     @objc var profileFilename: String?
-    @objc var isNewAppIDFieldReenabled = false
-    @objc var previousNewAppID = ""
+    @objc var isAppIDFieldReenabled = false
+    @objc var previousAppID = ""
     @objc var outputFile: String?
     var startSize: CGFloat?
     @objc var NibLoaded = false
     var shouldCheckPlugins: Bool!
     var shouldSkipGetTaskAllow: Bool!
     @objc var newEntitlementsPath: String!
-    var inputAppID: String? {
-        didSet { updateAppIDLabels() }
+    var inputAppInfo: AppInfo? {
+        didSet {
+            fillAppChanges()
+            updateProfileWarning()
+        }
     }
     var selectedProfileAppID: String? {
-        didSet { updateAppIDLabels() }
+        didSet { updateProfileWarning() }
     }
+    var isStatusWarning = false
 
     //MARK: Constants
     let signableExtensions = ["dylib","so","0","vis","pvr","framework","appex","app"]
@@ -214,14 +216,16 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         return tempTask.output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
     }
     
-    @objc func setStatus(_ status: String){
+    @objc func setStatus(_ status: String, isWarning: Bool = false){
         if (!Thread.isMainThread){
             DispatchQueue.main.sync{
-                setStatus(status)
+                setStatus(status, isWarning: isWarning)
             }
         }
         else{
             statusLabel.stringValue = status
+            statusLabel.textColor = isWarning ? .systemOrange : .labelColor
+            isStatusWarning = isWarning
             Log.write(status)
         }
     }
@@ -235,9 +239,9 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         profilePopup.removeAllItems()
         profilePopup.addItems(withTitles: [
             "Re-Sign Only",
-            "Choose Custom File",
-            "––––––––––––––––––––––"
+            "Choose Custom File…"
         ])
+        profilePopup.menu?.addItem(.separator())
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .medium
@@ -315,8 +319,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     func checkProfileID(_ profile: ProvisioningProfile?){
         if let profile = profile {
             self.profileFilename = profile.filename
-            selectedProfileAppID = profile.appID
             setStatus("Selected provisioning profile \(profile.appID)")
+            selectedProfileAppID = profile.appID
             if profile.expires.timeIntervalSince1970 < Date().timeIntervalSince1970 {
                 profilePopup.selectItem(at: 0)
                 setStatus("Provisioning profile expired")
@@ -324,14 +328,11 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
             if profile.appID.firstIndex(of: "*") == nil {
                 // Not a wildcard profile
-                newAppIDField.stringValue = profile.appID
-                newAppIDField.isEnabled = false
+                appIDField.stringValue = profile.appID
+                appIDField.isEnabled = false
             } else {
                 // Wildcard profile
-                if newAppIDField.isEnabled == false {
-                    newAppIDField.stringValue = ""
-                    newAppIDField.isEnabled = true
-                }
+                releaseAppIDField()
             }
         } else {
             profilePopup.selectItem(at: 0)
@@ -353,20 +354,20 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 inputFileButton.isEnabled = true
                 profilePopup.isEnabled = true
                 certificatePopup.isEnabled = true
-                newAppIDField.isEnabled = isNewAppIDFieldReenabled
-                newAppIDField.stringValue = previousNewAppID
+                appIDField.isEnabled = isAppIDFieldReenabled
+                appIDField.stringValue = previousAppID
                 signButton.isEnabled = true
                 displayNameField.isEnabled = true
             } else {
                 // Backup previous values
-                previousNewAppID = newAppIDField.stringValue
-                isNewAppIDFieldReenabled = newAppIDField.isEnabled
+                previousAppID = appIDField.stringValue
+                isAppIDFieldReenabled = appIDField.isEnabled
                 
                 inputFileField.isEnabled = false
                 inputFileButton.isEnabled = false
                 profilePopup.isEnabled = false
                 certificatePopup.isEnabled = false
-                newAppIDField.isEnabled = false
+                appIDField.isEnabled = false
                 signButton.isEnabled = false
                 displayNameField.isEnabled = false
             }
@@ -602,10 +603,10 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             downloadProgress.isHidden = true
             inputFile = self.inputFileField.stringValue
             signingCertificate = self.certificatePopup.selectedItem?.title
-            newApplicationID = self.newAppIDField.stringValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            newDisplayName = self.displayNameField.stringValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            newVersion = self.versionField.stringValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            newBuild = self.buildField.stringValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+            newApplicationID = self.changedValue(self.appIDField, original: self.inputAppInfo?.bundleID)
+            newDisplayName = self.changedValue(self.displayNameField, original: self.inputAppInfo?.displayName)
+            newVersion = self.changedValue(self.versionField, original: self.inputAppInfo?.version)
+            newBuild = self.changedValue(self.buildField, original: self.inputAppInfo?.build)
             shouldCheckPlugins = ignorePluginsCheckbox.state == .off
             shouldSkipGetTaskAllow = noGetTaskAllowCheckbox.state == .on
         }
@@ -1117,10 +1118,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         case 0:
             self.profileFilename = nil
             selectedProfileAppID = nil
-            if newAppIDField.isEnabled == false {
-                newAppIDField.isEnabled = true
-                newAppIDField.stringValue = ""
-            }
+            releaseAppIDField()
             
         case 1:
             if let filename = chooseFile(["mobileprovision"]) {
@@ -1129,10 +1127,6 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 sender.selectItem(at: 0)
                 chooseProvisioningProfile(sender)
             }
-            
-        case 2:
-            sender.selectItem(at: 0)
-            chooseProvisioningProfile(sender)
             
         default:
             let profile = provisioningProfiles[sender.indexOfSelectedItem - 3]
