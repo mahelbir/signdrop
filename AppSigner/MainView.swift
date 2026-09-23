@@ -25,12 +25,15 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     @IBOutlet var appVersion: NSTextField!
     @IBOutlet var ignorePluginsCheckbox: NSButton!
     @IBOutlet var noGetTaskAllowCheckbox: NSButton!
+    @IBOutlet var inputAppIDLabel: NSTextField!
+    @IBOutlet var profileMatchLabel: NSTextField!
 
     
     @IBOutlet var NewEntitlementsTextField: NSTextField!
     
     //MARK: Variables
     var provisioningProfiles:[ProvisioningProfile] = []
+    var customProfiles: [ProvisioningProfile] = []
     @objc var codesigningCerts: [String] = []
     @objc var profileFilename: String?
     @objc var ReEnableNewApplicationID = false
@@ -41,6 +44,12 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     var shouldCheckPlugins: Bool!
     var shouldSkipGetTaskAllow: Bool!
     @objc var newEntitlementsPath: String!
+    var inputAppID: String? {
+        didSet { updateAppIDLabels() }
+    }
+    var selectedProfileAppID: String? {
+        didSet { updateAppIDLabels() }
+    }
 
     //MARK: Constants
     let signableExtensions = ["dylib","so","0","vis","pvr","framework","appex","app"]
@@ -68,9 +77,9 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         switch filename.pathExtension.lowercased() {
         case let ext where MainView.allowedFileTypes.contains(ext):
             InputFileText.stringValue = filename
+            refreshInputAppID()
         case "mobileprovision":
-            ProvisioningProfilesPopup.selectItem(at: 1)
-            checkProfileID(ProvisioningProfile(filename: filename))
+            selectCustomProfile(filename)
         default:
             break
         }
@@ -79,6 +88,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     @objc func urlDropped(_ url: NSURL){
         if let urlString = url.absoluteString {
             InputFileText.stringValue = urlString
+            refreshInputAppID()
         }
     }
     
@@ -217,7 +227,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     
     @objc func populateProvisioningProfiles(){
         let zeroWidthSpace = "​"
-        self.provisioningProfiles = ProvisioningProfile.getProfiles().sorted {
+        self.provisioningProfiles = (ProvisioningProfile.getProfiles() + customProfiles).sorted {
             ($0.name == $1.name && $0.created.timeIntervalSince1970 > $1.created.timeIntervalSince1970) || $0.name < $1.name
         }
         setStatus("Found \(provisioningProfiles.count) Provisioning Profile\(provisioningProfiles.count>1 || provisioningProfiles.count<1 ? "s":"")")
@@ -237,11 +247,12 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             if profile.expires.timeIntervalSince1970 > Date().timeIntervalSince1970 {
                 newProfiles.append(profile)
                 
-                ProvisioningProfilesPopup.addItem(withTitle: "\(profile.name)\(zeroWidthPadding) (\(profile.teamID))")
+                ProvisioningProfilesPopup.addItem(withTitle: "\(profile.name)\(zeroWidthPadding) — \(profile.appID) (\(profile.teamID))")
                 
                 let toolTipItems = [
                     "\(profile.name)",
                     "",
+                    "App ID: \(profile.appID)",
                     "Team ID: \(profile.teamID)",
                     "Created: \(formatter.string(from: profile.created as Date))",
                     "Expires: \(formatter.string(from: profile.expires as Date))"
@@ -314,6 +325,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     func checkProfileID(_ profile: ProvisioningProfile?){
         if let profile = profile {
             self.profileFilename = profile.filename
+            selectedProfileAppID = profile.appID
             setStatus("Selected provisioning profile \(profile.appID)")
             if profile.expires.timeIntervalSince1970 < Date().timeIntervalSince1970 {
                 ProvisioningProfilesPopup.selectItem(at: 0)
@@ -1132,6 +1144,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         switch(sender.indexOfSelectedItem){
         case 0:
             self.profileFilename = nil
+            selectedProfileAppID = nil
             if NewApplicationIDTextField.isEnabled == false {
                 NewApplicationIDTextField.isEnabled = true
                 NewApplicationIDTextField.stringValue = ""
@@ -1146,7 +1159,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             openDialog.allowedFileTypes = ["mobileprovision"]
             openDialog.runModal()
             if let filename = openDialog.urls.first {
-                checkProfileID(ProvisioningProfile(filename: filename.path))
+                selectCustomProfile(filename.path)
             } else {
                 sender.selectItem(at: 0)
                 chooseProvisioningProfile(sender)
@@ -1162,6 +1175,17 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
         
     }
+    func selectCustomProfile(_ filename: String) {
+        let profile = ProvisioningProfile(filename: filename)
+        if let profile = profile, profile.expires > Date(), !provisioningProfiles.contains(where: { $0.filename == filename }) {
+            customProfiles.append(profile)
+            populateProvisioningProfiles()
+        }
+        if let index = provisioningProfiles.firstIndex(where: { $0.filename == filename }) {
+            ProvisioningProfilesPopup.selectItem(at: index + 3)
+        }
+        checkProfileID(profile)
+    }
     @IBAction func doBrowse(_ sender: AnyObject) {
         let openDialog = NSOpenPanel()
         openDialog.canChooseFiles = true
@@ -1172,6 +1196,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         openDialog.runModal()
         if let filename = openDialog.urls.first {
             InputFileText.stringValue = filename.path
+            refreshInputAppID()
         }
     }
     @IBAction func chooseSigningCertificate(_ sender: NSPopUpButton) {
