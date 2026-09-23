@@ -1,0 +1,166 @@
+import Cocoa
+
+extension MainView {
+
+    enum FormRow {
+        case section(String)
+        case field(String, NSView)
+        case pair(String, NSView, String, NSView)
+        case content(NSView)
+    }
+
+    func setUpLayout() {
+        configureControls()
+        let form = makeForm([
+            .field("Input File:", NSStackView(views: [inputFileField, browseButton])),
+            .field("App ID:", makeAppIDStack()),
+            .section("Signing"),
+            .field("Certificate:", certificatePopup),
+            .field("Profile:", profilePopup),
+            .field("Entitlements:", entitlementsField),
+            .section("App changes"),
+            .pair("New App ID:", newAppIDField, "Name:", displayNameField),
+            .pair("Version:", versionField, "Build:", buildField),
+            .section("Options"),
+            .content(makeOptionsStack())
+        ])
+        let statusBar = NSStackView(views: [statusLabel, downloadProgress])
+        statusBar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
+        statusBar.setHuggingPriority(.defaultLow, for: .horizontal)
+        [form, signButton, statusBar].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            addSubview($0)
+        }
+        NSLayoutConstraint.activate([
+            form.topAnchor.constraint(equalTo: topAnchor, constant: 20),
+            form.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            form.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            form.widthAnchor.constraint(greaterThanOrEqualToConstant: 520),
+            newAppIDField.widthAnchor.constraint(equalTo: displayNameField.widthAnchor),
+            signButton.topAnchor.constraint(equalTo: form.bottomAnchor, constant: 20),
+            signButton.trailingAnchor.constraint(equalTo: form.trailingAnchor),
+            statusBar.topAnchor.constraint(equalTo: signButton.bottomAnchor, constant: 20),
+            statusBar.leadingAnchor.constraint(equalTo: leadingAnchor),
+            statusBar.trailingAnchor.constraint(equalTo: trailingAnchor),
+            statusBar.bottomAnchor.constraint(equalTo: bottomAnchor),
+            statusBar.heightAnchor.constraint(equalToConstant: 25),
+            downloadProgress.widthAnchor.constraint(equalToConstant: 160)
+        ])
+        fitWindowToContent()
+    }
+
+    func configureControls() {
+        inputFileField.placeholderString = "Path or URL of an .ipa, .app, .appex, .xcarchive or .deb"
+        inputFileField.delegate = self
+        browseButton.target = self
+        browseButton.action = #selector(doBrowse(_:))
+        browseButton.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        inputAppIDLabel.isSelectable = true
+        inputAppIDLabel.lineBreakMode = .byTruncatingMiddle
+        profileMatchLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        profileMatchLabel.textColor = .secondaryLabelColor
+        profileMatchLabel.lineBreakMode = .byTruncatingTail
+        certificatePopup.target = self
+        certificatePopup.action = #selector(chooseSigningCertificate(_:))
+        profilePopup.target = self
+        profilePopup.action = #selector(chooseProvisioningProfile(_:))
+        entitlementsField.placeholderString = "Optional .entitlements file path"
+        [newAppIDField, displayNameField, versionField, buildField].forEach { $0.placeholderString = "Unchanged" }
+        noGetTaskAllowCheckbox.state = .on
+        noGetTaskAllowCheckbox.toolTip = "Don't add the get-task-allow entitlement, as it might break some apps"
+        ignorePluginsCheckbox.toolTip = "Don't re-sign extension bundles, as they might have their own code signature"
+        signButton.keyEquivalent = "\r"
+        signButton.target = self
+        signButton.action = #selector(doSign(_:))
+        statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        statusLabel.lineBreakMode = .byTruncatingMiddle
+        statusLabel.addGestureRecognizer(NSClickGestureRecognizer(target: self, action: #selector(statusLabelClick(_:))))
+        downloadProgress.style = .bar
+        downloadProgress.isIndeterminate = false
+        downloadProgress.maxValue = 100
+        downloadProgress.isHidden = true
+        [inputAppIDLabel, profileMatchLabel, statusLabel, certificatePopup, profilePopup].forEach {
+            $0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        }
+    }
+
+    func makeForm(_ rows: [FormRow]) -> NSGridView {
+        let empty = NSGridCell.emptyContentView
+        let grid = NSGridView(numberOfColumns: 4, rows: 0)
+        grid.rowSpacing = 8
+        grid.columnSpacing = 8
+        grid.rowAlignment = .firstBaseline
+        grid.xPlacement = .fill
+        for row in rows {
+            switch row {
+            case .section(let title):
+                let gridRow = grid.addRow(with: [makeSectionHeader(title), empty, empty, empty])
+                gridRow.mergeCells(in: NSRange(location: 0, length: 4))
+                gridRow.topPadding = 12
+            case .field(let title, let control):
+                grid.addRow(with: [makeFormLabel(title, for: control), makeStretchable(control), empty, empty]).mergeCells(in: NSRange(location: 1, length: 3))
+            case .pair(let title, let control, let secondTitle, let secondControl):
+                grid.addRow(with: [makeFormLabel(title, for: control), makeStretchable(control), makeFormLabel(secondTitle, for: secondControl), makeStretchable(secondControl)])
+            case .content(let view):
+                let gridRow = grid.addRow(with: [empty, view, empty, empty])
+                gridRow.mergeCells(in: NSRange(location: 1, length: 3))
+                gridRow.cell(at: 1).xPlacement = .leading
+            }
+        }
+        return grid
+    }
+
+    func makeStretchable(_ view: NSView) -> NSView {
+        if let stack = view as? NSStackView {
+            stack.setHuggingPriority(.defaultLow, for: .horizontal)
+        } else {
+            view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        }
+        return view
+    }
+
+    func makeFormLabel(_ title: String, for control: NSView) -> NSTextField {
+        let label = NSTextField(labelWithString: title)
+        label.alignment = .right
+        label.setContentHuggingPriority(NSLayoutConstraint.Priority(NSLayoutConstraint.Priority.defaultHigh.rawValue - 1), for: .horizontal)
+        (control as? NSControl)?.setAccessibilityTitleUIElement(label)
+        return label
+    }
+
+    func makeSectionHeader(_ title: String) -> NSView {
+        let label = NSTextField(labelWithString: title)
+        label.font = .preferredFont(forTextStyle: .headline)
+        label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        let separator = NSBox()
+        separator.boxType = .separator
+        let header = NSStackView(views: [label, separator])
+        header.distribution = .fill
+        header.setHuggingPriority(.defaultLow, for: .horizontal)
+        return header
+    }
+
+    func makeAppIDStack() -> NSStackView {
+        let stack = NSStackView(views: [inputAppIDLabel, profileMatchLabel])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 2
+        return stack
+    }
+
+    func makeOptionsStack() -> NSStackView {
+        let stack = NSStackView(views: [noGetTaskAllowCheckbox, ignorePluginsCheckbox])
+        stack.spacing = 20
+        return stack
+    }
+
+    func fitWindowToContent() {
+        guard let window = window else { return }
+        let width = frame.width
+        layoutSubtreeIfNeeded()
+        let size = fittingSize
+        window.setContentSize(NSSize(width: max(width, size.width), height: size.height))
+        window.contentMinSize = size
+        window.contentMaxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: size.height)
+        window.center()
+    }
+}

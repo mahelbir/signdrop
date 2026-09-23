@@ -3,18 +3,18 @@ import Cocoa
 extension MainView: NSTextFieldDelegate {
 
     func controlTextDidChange(_ obj: Notification) {
-        if obj.object as? NSTextField === InputFileText {
+        if obj.object as? NSTextField === inputFileField {
             refreshInputAppID()
         }
     }
 
     func refreshInputAppID() {
-        let inputFile = InputFileText.stringValue
+        let inputFile = inputFileField.stringValue
         inputAppID = nil
         DispatchQueue.global(qos: .userInitiated).async {
             let appID = self.readAppID(inputFile)
             DispatchQueue.main.async {
-                if self.InputFileText.stringValue == inputFile {
+                if self.inputFileField.stringValue == inputFile {
                     self.inputAppID = appID
                 }
             }

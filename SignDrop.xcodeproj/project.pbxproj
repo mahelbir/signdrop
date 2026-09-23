@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13C33FAA9D2FFACC5E6DE749 /* MainView-AppID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A714DBA2B5591DB9632FAEA /* MainView-AppID.swift */; };
+		3E14F4510B01BCABD25FA539 /* MainView-Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB8F1BFB6D19B16420F4CAA /* MainView-Layout.swift */; };
 		652408CC1BE743D4006FA4C6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CB1BE743D4006FA4C6 /* AppDelegate.swift */; };
 		652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CD1BE743D4006FA4C6 /* MainView.swift */; };
 		652408D01BE743D4006FA4C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 652408CF1BE743D4006FA4C6 /* Assets.xcassets */; };
@@ -53,6 +54,7 @@
 		659734A61C65B94F00383D2D /* NimbusMemoryMapping.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NimbusMemoryMapping.h; path = NimbusKit/memorymapping/NimbusMemoryMapping.h; sourceTree = "<group>"; };
 		65B24E0D1BECB30D005D2068 /* SignDrop.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = SignDrop.entitlements; sourceTree = "<group>"; };
 		65B2EAA11CDE981500D02053 /* SignDropShared.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SignDropShared.swift; path = SignDrop/Classes/SignDropShared.swift; sourceTree = "<group>"; };
+		7AB8F1BFB6D19B16420F4CAA /* MainView-Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView-Layout.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +97,7 @@
 				652408CB1BE743D4006FA4C6 /* AppDelegate.swift */,
 				652408CD1BE743D4006FA4C6 /* MainView.swift */,
 				4A714DBA2B5591DB9632FAEA /* MainView-AppID.swift */,
+				7AB8F1BFB6D19B16420F4CAA /* MainView-Layout.swift */,
 				652408CF1BE743D4006FA4C6 /* Assets.xcassets */,
 				652408D41BE743D4006FA4C6 /* Info.plist */,
 			);
@@ -239,6 +242,7 @@
 				659734A01C65B5F600383D2D /* MarkdownTokenizer.m in Sources */,
 				652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */,
 				13C33FAA9D2FFACC5E6DE749 /* MainView-AppID.swift in Sources */,
+				3E14F4510B01BCABD25FA539 /* MainView-Layout.swift in Sources */,
 				659734A71C65B94F00383D2D /* fmemopen.c in Sources */,
 				65311EB01BF835F100516EFD /* Log.swift in Sources */,
 				655FFF9F1BE9BA9D00D43AD8 /* StringByAppendingPathComponent.swift in Sources */,
