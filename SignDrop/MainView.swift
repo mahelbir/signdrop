@@ -573,13 +573,10 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         } else {
             //MARK: Get output filename
             let saveDialog = NSSavePanel()
-            saveDialog.allowedFileTypes = ["ipa"]
-            saveDialog.nameFieldStringValue = inputFile.lastPathComponent.stringByDeletingPathExtension
-            if saveDialog.runModal().rawValue == NSFileHandlingPanelOKButton {
-                outputFile = saveDialog.url!.path
-            } else {
-                outputFile = nil
-            }
+            saveDialog.identifier = .signedOutputPanel
+            saveDialog.allowedContentTypes = contentTypes(["ipa"])
+            saveDialog.nameFieldStringValue = "\(inputFile.lastPathComponent.stringByDeletingPathExtension)-signed"
+            outputFile = saveDialog.runModal() == .OK ? saveDialog.url?.path : nil
         }
         if outputFile != nil {
             controlsEnabled(false)
@@ -1121,7 +1118,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             releaseAppIDField()
             
         case 1:
-            if let filename = chooseFile(["mobileprovision"]) {
+            if let filename = chooseFile(["mobileprovision"], identifier: .provisioningProfilePanel) {
                 selectCustomProfile(filename)
             } else {
                 sender.selectItem(at: 0)
@@ -1145,21 +1142,25 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
         checkProfileID(profile)
     }
-    func chooseFile(_ fileExtensions: [String]) -> String? {
+    func contentTypes(_ fileExtensions: [String]) -> [UTType] {
+        return fileExtensions.compactMap { UTType(filenameExtension: $0, conformingTo: .item) }
+    }
+    func chooseFile(_ fileExtensions: [String], identifier: NSUserInterfaceItemIdentifier) -> String? {
         let panel = NSOpenPanel()
+        panel.identifier = identifier
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = fileExtensions.compactMap { UTType(filenameExtension: $0, conformingTo: .item) }
+        panel.allowedContentTypes = contentTypes(fileExtensions)
         return panel.runModal() == .OK ? panel.url?.path : nil
     }
     @objc func chooseInputFile(_ sender: Any) {
-        if let filename = chooseFile(MainView.allowedFileTypes) {
+        if let filename = chooseFile(MainView.allowedFileTypes, identifier: .inputFilePanel) {
             inputFileField.stringValue = filename
             refreshInputAppID()
         }
     }
     @objc func chooseEntitlementsFile(_ sender: Any) {
-        if let filename = chooseFile(["entitlements", "plist"]) {
+        if let filename = chooseFile(["entitlements", "plist"], identifier: .entitlementsPanel) {
             entitlementsField.stringValue = filename
         }
     }
@@ -1192,6 +1193,13 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
         }
     }
-    
+
+}
+
+extension NSUserInterfaceItemIdentifier {
+    static let inputFilePanel = NSUserInterfaceItemIdentifier("inputFilePanel")
+    static let entitlementsPanel = NSUserInterfaceItemIdentifier("entitlementsPanel")
+    static let provisioningProfilePanel = NSUserInterfaceItemIdentifier("provisioningProfilePanel")
+    static let signedOutputPanel = NSUserInterfaceItemIdentifier("signedOutputPanel")
 }
 
