@@ -27,6 +27,9 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     let ignorePluginsCheckbox = NSButton(checkboxWithTitle: "Ignore PlugIns folder", target: nil, action: nil)
     let signButton = NSButton(title: "Sign…", target: nil, action: nil)
     let statusLabel = NSTextField(labelWithString: "")
+    var inputControls: [NSControl] {
+        return [inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField, entitlementsButton, appIDField, displayNameField, versionField, buildField, noGetTaskAllowCheckbox, ignorePluginsCheckbox, signButton]
+    }
     let downloadProgress = NSProgressIndicator()
 
     //MARK: Variables
@@ -52,6 +55,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         didSet { updateProfileWarning() }
     }
     var isStatusWarning = false
+    var isSigning = false
 
     //MARK: Constants
     let signableExtensions = ["dylib","so","0","vis","pvr","framework","appex","app"]
@@ -95,7 +99,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     }
     
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if checkExtension(sender) == true {
+        if !isSigning && checkExtension(sender) == true {
             self.fileTypeIsOk = true
             return .copy
         } else {
@@ -349,27 +353,17 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
         }
         else{
+            isSigning = !enabled
             if(enabled){
-                inputFileField.isEnabled = true
-                inputFileButton.isEnabled = true
-                profilePopup.isEnabled = true
-                certificatePopup.isEnabled = true
+                inputControls.forEach { $0.isEnabled = true }
                 appIDField.isEnabled = isAppIDFieldReenabled
                 appIDField.stringValue = previousAppID
-                signButton.isEnabled = true
-                displayNameField.isEnabled = true
             } else {
                 // Backup previous values
                 previousAppID = appIDField.stringValue
                 isAppIDFieldReenabled = appIDField.isEnabled
-                
-                inputFileField.isEnabled = false
-                inputFileButton.isEnabled = false
-                profilePopup.isEnabled = false
-                certificatePopup.isEnabled = false
-                appIDField.isEnabled = false
-                signButton.isEnabled = false
-                displayNameField.isEnabled = false
+
+                inputControls.forEach { $0.isEnabled = false }
             }
         }
     }
