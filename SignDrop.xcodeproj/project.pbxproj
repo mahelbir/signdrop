@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13C33FAA9D2FFACC5E6DE749 /* MainView-AppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A714DBA2B5591DB9632FAEA /* MainView-AppInfo.swift */; };
+		1F43C2829E7ACBA6A6B9B9DD /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 06AECADAC38DA7499DD63960 /* AppIcon.icon */; };
 		3E14F4510B01BCABD25FA539 /* MainView-Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB8F1BFB6D19B16420F4CAA /* MainView-Layout.swift */; };
 		652408CC1BE743D4006FA4C6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CB1BE743D4006FA4C6 /* AppDelegate.swift */; };
 		652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CD1BE743D4006FA4C6 /* MainView.swift */; };
@@ -28,6 +29,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		06AECADAC38DA7499DD63960 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4A714DBA2B5591DB9632FAEA /* MainView-AppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView-AppInfo.swift"; sourceTree = "<group>"; };
 		652408C81BE743D4006FA4C6 /* SignDrop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignDrop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		652408CB1BE743D4006FA4C6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 				4A714DBA2B5591DB9632FAEA /* MainView-AppInfo.swift */,
 				7AB8F1BFB6D19B16420F4CAA /* MainView-Layout.swift */,
 				652408CF1BE743D4006FA4C6 /* Assets.xcassets */,
+				06AECADAC38DA7499DD63960 /* AppIcon.icon */,
 				652408D41BE743D4006FA4C6 /* Info.plist */,
 			);
 			path = SignDrop;
@@ -228,6 +231,7 @@
 			files = (
 				65311EB61BF88EB800516EFD /* Application.xib in Resources */,
 				652408D01BE743D4006FA4C6 /* Assets.xcassets in Resources */,
+				1F43C2829E7ACBA6A6B9B9DD /* AppIcon.icon in Resources */,
 				659734941C65A14300383D2D /* Updates.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
