@@ -90,7 +90,7 @@ final class BetaDropService: UploadService {
     }
 
     private func makeAPI() -> BetaDropAPI {
-        BetaDropAPI(baseURL: BetaDropConfig.read(from: configURL)?.apiUrl ?? defaultAPIURL)
+        BetaDropAPI(baseURL: BetaDropConfig.storedAPIURL(from: configURL) ?? defaultAPIURL)
     }
 
     private func save(token: String, user: BetaDropConfig.User?, api: BetaDropAPI) async throws {

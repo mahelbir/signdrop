@@ -57,6 +57,13 @@ struct BetaDropConfig: Codable, Equatable {
         return config
     }
 
+    static func storedAPIURL(from url: URL = fileURL()) -> String? {
+        guard let data = try? Data(contentsOf: url), let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], let apiUrl = json["apiUrl"] as? String, !apiUrl.isEmpty else {
+            return nil
+        }
+        return apiUrl
+    }
+
     static func clear(at url: URL = fileURL()) {
         try? FileManager.default.removeItem(at: url)
     }
