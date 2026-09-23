@@ -32,6 +32,7 @@
 		883BE16B3A7094453C7B608B /* BetaDropService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C203DEC93413E606B71A888 /* BetaDropService.swift */; };
 		D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */; };
 		82C880DBEB2F5BED99510E96 /* MainView+Upload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */; };
+		12272F3FE6AFCF5E6AFFD770 /* UploadAccountMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -69,6 +70,7 @@
 		3C203DEC93413E606B71A888 /* BetaDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropService.swift; sourceTree = "<group>"; };
 		1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropSignInSheet.swift; sourceTree = "<group>"; };
 		5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+Upload.swift"; sourceTree = "<group>"; };
+		3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadAccountMenu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +137,7 @@
 				659734931C65A14300383D2D /* Updates.xib */,
 				65311EAD1BF8259000516EFD /* NSMenuLink.swift */,
 				1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */,
+				3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -295,6 +298,7 @@
 				652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */,
 				13C33FAA9D2FFACC5E6DE749 /* MainView+AppInfo.swift in Sources */,
 				82C880DBEB2F5BED99510E96 /* MainView+Upload.swift in Sources */,
+				12272F3FE6AFCF5E6AFFD770 /* UploadAccountMenu.swift in Sources */,
 				3E14F4510B01BCABD25FA539 /* MainView+Layout.swift in Sources */,
 				659734A71C65B94F00383D2D /* fmemopen.c in Sources */,
 				65311EB01BF835F100516EFD /* Log.swift in Sources */,

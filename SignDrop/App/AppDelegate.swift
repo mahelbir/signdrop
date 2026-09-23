@@ -12,10 +12,10 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc let fileManager = FileManager.default
-    
-    
+    var uploadAccountMenu: UploadAccountMenu?
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
+        uploadAccountMenu = UploadAccountMenu(services: UploadServices.all, in: NSApp.mainMenu?.items.first?.submenu)
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
