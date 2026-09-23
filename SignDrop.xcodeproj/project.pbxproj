@@ -31,6 +31,7 @@
 		C8EAB67E5314AB72E685E1A0 /* BetaDropAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25095D196EB38E0DF5FD1A7D /* BetaDropAPI.swift */; };
 		883BE16B3A7094453C7B608B /* BetaDropService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C203DEC93413E606B71A888 /* BetaDropService.swift */; };
 		D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */; };
+		82C880DBEB2F5BED99510E96 /* MainView+Upload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -67,6 +68,7 @@
 		25095D196EB38E0DF5FD1A7D /* BetaDropAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropAPI.swift; sourceTree = "<group>"; };
 		3C203DEC93413E606B71A888 /* BetaDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropService.swift; sourceTree = "<group>"; };
 		1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropSignInSheet.swift; sourceTree = "<group>"; };
+		5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+Upload.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -128,6 +130,7 @@
 				652408CD1BE743D4006FA4C6 /* MainView.swift */,
 				7AB8F1BFB6D19B16420F4CAA /* MainView+Layout.swift */,
 				4A714DBA2B5591DB9632FAEA /* MainView+AppInfo.swift */,
+				5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */,
 				659734951C65A1E800383D2D /* UpdatesController.swift */,
 				659734931C65A14300383D2D /* Updates.xib */,
 				65311EAD1BF8259000516EFD /* NSMenuLink.swift */,
@@ -291,6 +294,7 @@
 				659734A01C65B5F600383D2D /* MarkdownTokenizer.m in Sources */,
 				652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */,
 				13C33FAA9D2FFACC5E6DE749 /* MainView+AppInfo.swift in Sources */,
+				82C880DBEB2F5BED99510E96 /* MainView+Upload.swift in Sources */,
 				3E14F4510B01BCABD25FA539 /* MainView+Layout.swift in Sources */,
 				659734A71C65B94F00383D2D /* fmemopen.c in Sources */,
 				65311EB01BF835F100516EFD /* Log.swift in Sources */,

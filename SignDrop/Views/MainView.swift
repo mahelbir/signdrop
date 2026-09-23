@@ -25,10 +25,11 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     let buildField = NSTextField()
     let noGetTaskAllowCheckbox = NSButton(checkboxWithTitle: "No get-task-allow", target: nil, action: nil)
     let ignorePluginsCheckbox = NSButton(checkboxWithTitle: "Ignore PlugIns folder", target: nil, action: nil)
+    let uploadCheckbox = NSButton(checkboxWithTitle: "", target: nil, action: nil)
     let signButton = NSButton(title: "Sign…", target: nil, action: nil)
     let statusLabel = NSTextField(labelWithString: "")
     var inputControls: [NSControl] {
-        return [inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField, entitlementsButton, appIDField, displayNameField, versionField, buildField, noGetTaskAllowCheckbox, ignorePluginsCheckbox, signButton]
+        return [inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField, entitlementsButton, appIDField, displayNameField, versionField, buildField, noGetTaskAllowCheckbox, ignorePluginsCheckbox, uploadCheckbox, signButton]
     }
     let downloadProgress = NSProgressIndicator()
 
@@ -55,6 +56,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         didSet { updateProfileWarning() }
     }
     var isStatusWarning = false
+    var statusLink: URL?
     var isSigning = false
 
     //MARK: Constants
@@ -220,16 +222,17 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         return tempTask.output.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
     }
     
-    @objc func setStatus(_ status: String, isWarning: Bool = false){
+    @objc func setStatus(_ status: String, isWarning: Bool = false, link: URL? = nil){
         if (!Thread.isMainThread){
             DispatchQueue.main.sync{
-                setStatus(status, isWarning: isWarning)
+                setStatus(status, isWarning: isWarning, link: link)
             }
         }
         else{
             statusLabel.stringValue = status
             statusLabel.textColor = isWarning ? .systemOrange : .labelColor
             isStatusWarning = isWarning
+            statusLink = link
             Log.write(status)
         }
     }
@@ -421,6 +424,10 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     }
     
     @objc func cleanup(_ tempFolder: String){
+        removeTempFolder(tempFolder)
+        controlsEnabled(true)
+    }
+    @objc func removeTempFolder(_ tempFolder: String){
         do {
             Log.write("Deleting: \(tempFolder)")
             try fileManager.removeItem(atPath: tempFolder)
@@ -428,7 +435,6 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             setStatus("Unable to delete temp folder")
             Log.write(error.localizedDescription)
         }
-        controlsEnabled(true)
     }
     @objc func bytesToSmallestSi(_ size: Double) -> String {
         let prefixes = ["","K","M","G","T","P","E","Z","Y"]
@@ -589,6 +595,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         var newDisplayName : String = ""
         var newVersion : String = ""
         var newBuild : String = ""
+        var isUploadRequested = false
 
         DispatchQueue.main.sync {
             downloadProgress.isHidden = true
@@ -600,6 +607,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             newBuild = self.changedValue(self.buildField, original: self.inputAppInfo?.build)
             shouldCheckPlugins = ignorePluginsCheckbox.state == .off
             shouldSkipGetTaskAllow = noGetTaskAllowCheckbox.state == .on
+            isUploadRequested = uploadCheckbox.state == .on
         }
 
         let provisioningFile = self.profileFilename
@@ -1100,8 +1108,11 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
 
         //MARK: Cleanup
-        cleanup(tempFolder)
-        setStatus("Done, output at \(outputFile!)")
+        removeTempFolder(tempFolder)
+        let output = outputFile!
+        DispatchQueue.main.async {
+            self.finishSigning(output, isUploadRequested: isUploadRequested)
+        }
     }
 
     //MARK: IBActions
@@ -1178,12 +1189,14 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
         if codesigningCerts.count > 0 {
             NSApplication.shared.windows[0].makeFirstResponder(self)
-            startSigning()
+            startSigningWhenUploadReady()
         }
     }
-    
+
     @objc func statusLabelClick(_ sender: Any) {
-        if let outputFile = self.outputFile {
+        if let statusLink = statusLink {
+            NSWorkspace.shared.open(statusLink)
+        } else if let outputFile = self.outputFile {
             if fileManager.fileExists(atPath: outputFile) {
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: outputFile)])
             }

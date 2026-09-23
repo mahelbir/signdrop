@@ -21,7 +21,8 @@ extension MainView {
             .pair("App ID:", appIDField, "Name:", displayNameField),
             .pair("Version:", versionField, "Build:", buildField),
             .section("Options"),
-            .content(makeOptionsStack())
+            .content(makeOptionsStack()),
+            .content(uploadCheckbox)
         ])
         let statusBar = NSStackView(views: [statusLabel, downloadProgress])
         statusBar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
@@ -66,6 +67,7 @@ extension MainView {
         noGetTaskAllowCheckbox.state = .on
         noGetTaskAllowCheckbox.toolTip = "Don't add the get-task-allow entitlement, as it might break some apps"
         ignorePluginsCheckbox.toolTip = "Don't re-sign extension bundles, as they might have their own code signature"
+        configureUploadCheckbox()
         signButton.keyEquivalent = "\r"
         signButton.target = self
         signButton.action = #selector(doSign(_:))
