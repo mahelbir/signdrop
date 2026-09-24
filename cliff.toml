@@ -1,0 +1,20 @@
+[changelog]
+body = """
+{% for entry in commits | commit_groups(groups=commit_parsers_groups) %}\
+{% for commit in entry.commits %}\
+- {{ commit.message | upper_first }}
+{% endfor %}\
+{% endfor %}
+"""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+filter_commits = true
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^perf", group = "Improvements" },
+  { message = "^fix", group = "Fixes" },
+  { message = ".*", skip = true },
+]

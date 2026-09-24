@@ -70,8 +70,6 @@ jobs:
         uses: orhun/git-cliff-action@v4
         with:
           args: --latest --strip all --skip-commit ${{ github.sha }}
-        env:
-          GIT_CLIFF__GIT__FILTER_UNCONVENTIONAL: false
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
