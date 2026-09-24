@@ -149,6 +149,12 @@ extension MainView {
         }
     }
 
+    @objc func copyDeletionCommand(_ sender: Any) {
+        guard let upload = deletableUpload else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(UploadServices.deletionCommand(upload.requests), forType: .string)
+    }
+
     func deleteUpload() {
         guard let upload = deletableUpload else { return }
         controlsEnabled(false)

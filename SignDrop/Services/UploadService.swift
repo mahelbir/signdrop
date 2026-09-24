@@ -66,6 +66,17 @@ enum UploadServices {
             }
         }
     }
+
+    static func deletionCommand(_ requests: [URLRequest]) -> String {
+        requests.map { request in
+            let headers = (request.allHTTPHeaderFields ?? [:]).sorted { $0.key < $1.key }.map { "-H \(shellQuoted("\($0.key): \($0.value)"))" }
+            return (["curl", "-X", request.httpMethod ?? "GET"] + headers + [shellQuoted(request.url?.absoluteString ?? "")]).joined(separator: " ")
+        }.joined(separator: " && ")
+    }
+
+    private static func shellQuoted(_ text: String) -> String {
+        "'" + text.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
 }
 
 extension URLSession {

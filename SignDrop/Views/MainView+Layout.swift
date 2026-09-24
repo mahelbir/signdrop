@@ -84,6 +84,9 @@ extension MainView {
         deleteUploadButton.attributedTitle = NSAttributedString(string: deleteUploadButton.title, attributes: linkAttributes([.font: statusLabel.font as Any]))
         deleteUploadButton.target = self
         deleteUploadButton.action = #selector(confirmUploadDeletion(_:))
+        deleteUploadButton.toolTip = "Right-click to copy a Terminal command that deletes this upload"
+        deleteUploadButton.menu = NSMenu()
+        deleteUploadButton.menu?.addItem(withTitle: "Copy Delete Command", action: #selector(copyDeletionCommand(_:)), keyEquivalent: "").target = self
         progressBar.style = .bar
         progressBar.isIndeterminate = false
         progressBar.maxValue = 100
