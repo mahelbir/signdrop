@@ -14,7 +14,7 @@ final class UploadAccountMenu: NSObject, NSMenuDelegate {
             item.representedObject = service
             return item
         }
-        let insertionIndex = min(2, menu.numberOfItems)
+        let insertionIndex = menu.items.firstIndex(where: \.isSeparatorItem).map { $0 + 1 } ?? menu.numberOfItems
         (accountItems + [separator]).reversed().forEach { menu.insertItem($0, at: insertionIndex) }
         menu.delegate = self
         menuNeedsUpdate(menu)

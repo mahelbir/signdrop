@@ -3,13 +3,17 @@ import Cocoa
 extension MainView {
 
     var uploadService: UploadService? {
-        let index = uploadPopup.indexOfSelectedItem - 1
-        return UploadServices.all.indices.contains(index) ? UploadServices.all[index] : nil
+        uploadPopup.selectedItem?.representedObject as? UploadService
     }
 
     func configureUploadPopup() {
         uploadPopup.removeAllItems()
-        uploadPopup.addItems(withTitles: ["Don't Upload"] + UploadServices.all.map(\.name))
+        uploadPopup.addItem(withTitle: "None")
+        uploadPopup.menu?.addItem(.separator())
+        for service in UploadServices.all {
+            uploadPopup.addItem(withTitle: service.name)
+            uploadPopup.lastItem?.representedObject = service
+        }
         uploadPopup.target = self
         uploadPopup.action = #selector(chooseUploadService(_:))
         refreshUploadAccount()

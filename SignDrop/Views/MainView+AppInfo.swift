@@ -12,6 +12,7 @@ extension MainView: NSTextFieldDelegate {
 
     func refreshInputAppID() {
         let inputFile = inputFileField.stringValue
+        setStatus("Ready")
         inputAppInfo = nil
         DispatchQueue.global(qos: .userInitiated).async {
             let appInfo = self.readAppInfo(inputFile)
