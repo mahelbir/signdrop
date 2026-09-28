@@ -4,6 +4,7 @@ struct UploadResult: Equatable {
     let link: URL?
     let warnings: [String]
     var deletionRequests: [URLRequest] = []
+    var liveShare: LiveShare?
 }
 
 enum UploadError: LocalizedError, Equatable {
@@ -45,13 +46,72 @@ protocol UploadService: AnyObject {
     var name: String { get }
     var accountName: String? { get }
     var isSignInRequired: Bool { get }
+    var isReadyToUpload: Bool { get }
+    var isLiveShare: Bool { get }
     func signIn(in window: NSWindow) async -> Bool
+    func prepareToUpload(in window: NSWindow) async -> Bool
     func signOut() async
     func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> UploadResult
 }
 
+extension UploadService {
+    var isReadyToUpload: Bool {
+        !isSignInRequired || accountName != nil
+    }
+
+    var isLiveShare: Bool {
+        false
+    }
+
+    func prepareToUpload(in window: NSWindow) async -> Bool {
+        await signIn(in: window)
+    }
+}
+
+@MainActor
+final class LiveShare: Equatable {
+    private(set) static var current: LiveShare?
+    var onEnd: (@MainActor (String) -> Void)?
+    private var stopHandler: (@MainActor () -> Void)?
+    private var activity: NSObjectProtocol?
+
+    init(stop: @escaping @MainActor () -> Void) {
+        stopHandler = stop
+        activity = ProcessInfo.processInfo.beginActivity(options: .userInitiated, reason: "Sharing an app from this Mac")
+        LiveShare.current?.stop()
+        LiveShare.current = self
+    }
+
+    var isActive: Bool {
+        stopHandler != nil
+    }
+
+    func stop() {
+        guard let stopHandler else { return }
+        self.stopHandler = nil
+        if let activity {
+            ProcessInfo.processInfo.endActivity(activity)
+            self.activity = nil
+        }
+        if LiveShare.current === self {
+            LiveShare.current = nil
+        }
+        stopHandler()
+    }
+
+    func end(_ reason: String) {
+        guard isActive else { return }
+        stop()
+        onEnd?(reason)
+    }
+
+    nonisolated static func == (lhs: LiveShare, rhs: LiveShare) -> Bool {
+        lhs === rhs
+    }
+}
+
 enum UploadServices {
-    @MainActor static let all: [UploadService] = [BetaDropService(), StreamShareService()]
+    @MainActor static let all: [UploadService] = [BetaDropService(), StreamShareService(), TunnelShareService(tunnel: CommandLineTunnel.cloudflare())]
     static let session: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.urlCache = nil

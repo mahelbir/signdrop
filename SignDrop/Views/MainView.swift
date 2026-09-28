@@ -29,6 +29,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     let signButton = NSButton(title: "Sign…", target: nil, action: nil)
     let statusLabel = NSTextField(labelWithString: "")
     let deleteUploadButton = NSButton(title: "Delete Upload", target: nil, action: nil)
+    let stopSharingButton = NSButton(title: "Stop Sharing", target: nil, action: nil)
     var inputControls: [NSControl] {
         return [inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField, entitlementsButton, appIDField, displayNameField, versionField, buildField, noGetTaskAllowCheckbox, ignorePluginsCheckbox, uploadPopup, signButton]
     }
@@ -175,6 +176,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
 
             // Do any additional setup after loading the view.
             setUpLayout()
+            window?.delegate = self
             populateProvisioningProfiles()
             populateCodesigningCerts()
             if let defaultCert = defaults.string(forKey: "signingCertificate") {
@@ -1237,8 +1239,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         if statusLink != nil {
             addCursorRect(statusLabel.convert(statusLabel.bounds, to: self), cursor: .pointingHand)
         }
-        if !deleteUploadButton.isHidden {
-            addCursorRect(deleteUploadButton.convert(deleteUploadButton.bounds, to: self), cursor: .pointingHand)
+        for button in [deleteUploadButton, stopSharingButton] where !button.isHidden {
+            addCursorRect(button.convert(button.bounds, to: self), cursor: .pointingHand)
         }
     }
 

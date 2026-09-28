@@ -36,6 +36,10 @@
 		7C14947EE0C9D2AC66B7629A /* LinkShortener.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B2D9895341E2A2FB38171F /* LinkShortener.swift */; };
 		002F983F838CB5AB07660E42 /* StreamShareAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */; };
 		B10BF335BF7DAEB525D06EE4 /* StreamShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6734F05E3126EA2E13FB0886 /* StreamShareService.swift */; };
+		E3382DA8DED018D7C83D2BE6 /* TunnelShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1676410CD6E10D21C2CEA9 /* TunnelShareService.swift */; };
+		4108AF95F2E07EFA876D68D3 /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42DB3F9F8FE55CB13866E055 /* Tunnel.swift */; };
+		24CB716B5C139EF6CC584823 /* CloudflareTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F00158675222D055BF9CB9 /* CloudflareTunnel.swift */; };
+		EFABD11C977599CD7B3FA460 /* LocalFileServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC9DF38AFCE788C59B08A52 /* LocalFileServer.swift */; };
 		D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */; };
 		82C880DBEB2F5BED99510E96 /* MainView+Upload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */; };
 		12272F3FE6AFCF5E6AFFD770 /* UploadAccountMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */; };
@@ -80,6 +84,10 @@
 		A7B2D9895341E2A2FB38171F /* LinkShortener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShortener.swift; sourceTree = "<group>"; };
 		1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamShareAPI.swift; sourceTree = "<group>"; };
 		6734F05E3126EA2E13FB0886 /* StreamShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamShareService.swift; sourceTree = "<group>"; };
+		7C1676410CD6E10D21C2CEA9 /* TunnelShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelShareService.swift; sourceTree = "<group>"; };
+		42DB3F9F8FE55CB13866E055 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
+		D4F00158675222D055BF9CB9 /* CloudflareTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudflareTunnel.swift; sourceTree = "<group>"; };
+		6DC9DF38AFCE788C59B08A52 /* LocalFileServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileServer.swift; sourceTree = "<group>"; };
 		1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropSignInSheet.swift; sourceTree = "<group>"; };
 		5A01E59B07D1B730531AFD3D /* MainView+Upload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+Upload.swift"; sourceTree = "<group>"; };
 		3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadAccountMenu.swift; sourceTree = "<group>"; };
@@ -176,6 +184,10 @@
 				A7B2D9895341E2A2FB38171F /* LinkShortener.swift */,
 				1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */,
 				6734F05E3126EA2E13FB0886 /* StreamShareService.swift */,
+				7C1676410CD6E10D21C2CEA9 /* TunnelShareService.swift */,
+				42DB3F9F8FE55CB13866E055 /* Tunnel.swift */,
+				D4F00158675222D055BF9CB9 /* CloudflareTunnel.swift */,
+				6DC9DF38AFCE788C59B08A52 /* LocalFileServer.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -339,6 +351,10 @@
 				7C14947EE0C9D2AC66B7629A /* LinkShortener.swift in Sources */,
 				002F983F838CB5AB07660E42 /* StreamShareAPI.swift in Sources */,
 				B10BF335BF7DAEB525D06EE4 /* StreamShareService.swift in Sources */,
+				E3382DA8DED018D7C83D2BE6 /* TunnelShareService.swift in Sources */,
+				4108AF95F2E07EFA876D68D3 /* Tunnel.swift in Sources */,
+				24CB716B5C139EF6CC584823 /* CloudflareTunnel.swift in Sources */,
+				EFABD11C977599CD7B3FA460 /* LocalFileServer.swift in Sources */,
 				D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -32,30 +32,30 @@ extension MainView {
     }
 
     @objc func chooseUploadService(_ sender: NSPopUpButton) {
-        guard let service = uploadService, service.isSignInRequired, service.accountName == nil else {
+        guard let service = uploadService, !service.isReadyToUpload else {
             refreshUploadAccount()
             return
         }
         Task {
-            if !(await signIn(to: service)) {
+            if !(await prepareUpload(for: service)) {
                 sender.selectItem(at: 0)
             }
             refreshUploadAccount()
         }
     }
 
-    func signIn(to service: UploadService) async -> Bool {
+    func prepareUpload(for service: UploadService) async -> Bool {
         guard let window = window else { return false }
-        return await service.signIn(in: window)
+        return await service.prepareToUpload(in: window)
     }
 
     func startSigningWhenUploadReady() {
-        guard let service = uploadService, service.isSignInRequired, service.accountName == nil else {
+        guard let service = uploadService, !service.isReadyToUpload else {
             startSigning()
             return
         }
         Task {
-            if await signIn(to: service) {
+            if await prepareUpload(for: service) {
                 startSigning()
             } else {
                 uploadPopup.selectItem(at: 0)
@@ -82,17 +82,21 @@ extension MainView {
     }
 
     func uploadSignedFile(_ file: URL, to service: UploadService) async {
-        setStatus("Uploading to \(service.name)…")
-        showProgress(0)
+        setStatus(service.isLiveShare ? "Starting \(service.name)…" : "Uploading to \(service.name)…")
+        showProgress(service.isLiveShare ? nil : 0)
         do {
             let result = try await service.upload(file) { [weak self] fraction in
                 self?.showProgress(fraction < 1 ? fraction : nil)
             }
             reportUpload(result, from: service)
+            if let share = result.liveShare, share.isActive {
+                watchSharing(share, file: file)
+                return
+            }
         } catch UploadError.sessionExpired {
             setStatus("\(service.name) session expired. Sign in again.", isWarning: true, link: file)
         } catch {
-            setStatus("Upload failed: \(error.localizedDescription)", isWarning: true, link: file)
+            setStatus("\(service.isLiveShare ? "Sharing" : "Upload") failed: \(error.localizedDescription)", isWarning: true, link: file)
         }
         controlsEnabled(true)
     }
@@ -111,7 +115,7 @@ extension MainView {
     }
 
     func reportUpload(_ result: UploadResult, from service: UploadService) {
-        var headline = "Uploaded to \(service.name)"
+        var headline = result.liveShare == nil ? "Uploaded to \(service.name)" : "Sharing from this Mac"
         if let link = result.link {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(link.absoluteString, forType: .string)
@@ -170,5 +174,43 @@ extension MainView {
             }
             controlsEnabled(true)
         }
+    }
+
+    func watchSharing(_ share: LiveShare, file: URL) {
+        hideProgress()
+        stopSharingButton.isHidden = false
+        window?.invalidateCursorRects(for: self)
+        share.onEnd = { [weak self] reason in
+            Log.write(reason)
+            self?.finishSharing("Sharing stopped: the tunnel closed unexpectedly.", isWarning: true, link: file)
+        }
+    }
+
+    @objc func stopSharing(_ sender: Any) {
+        LiveShare.current?.stop()
+        finishSharing("Stopped sharing")
+    }
+
+    func finishSharing(_ status: String, isWarning: Bool = false, link: URL? = nil) {
+        stopSharingButton.isHidden = true
+        setStatus(status, isWarning: isWarning, link: link)
+        controlsEnabled(true)
+    }
+
+    static func makeQuitWhileSharingAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = "Stop sharing and quit?"
+        alert.informativeText = "The install link will stop working."
+        alert.addButton(withTitle: "Quit")
+        alert.addButton(withTitle: "Cancel")
+        return alert
+    }
+}
+
+extension MainView: NSWindowDelegate {
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard LiveShare.current != nil else { return true }
+        NSApp.terminate(sender)
+        return false
     }
 }

@@ -26,7 +26,7 @@ extension MainView {
         ])
         let statusSpacer = NSView()
         statusSpacer.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
-        let statusBar = NSStackView(views: [statusLabel, deleteUploadButton, statusSpacer, progressLabel, busyIndicator, progressBar])
+        let statusBar = NSStackView(views: [statusLabel, deleteUploadButton, stopSharingButton, statusSpacer, progressLabel, busyIndicator, progressBar])
         statusBar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         statusBar.distribution = .fill
         statusBar.setHuggingPriority(.defaultLow, for: .horizontal)
@@ -79,14 +79,11 @@ extension MainView {
         statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         statusLabel.lineBreakMode = .byTruncatingMiddle
         statusLabel.addGestureRecognizer(NSClickGestureRecognizer(target: self, action: #selector(statusLabelClick(_:))))
-        deleteUploadButton.isBordered = false
-        deleteUploadButton.isHidden = true
-        deleteUploadButton.attributedTitle = NSAttributedString(string: deleteUploadButton.title, attributes: linkAttributes([.font: statusLabel.font as Any]))
-        deleteUploadButton.target = self
-        deleteUploadButton.action = #selector(confirmUploadDeletion(_:))
+        configureStatusButton(deleteUploadButton, action: #selector(confirmUploadDeletion(_:)))
         deleteUploadButton.toolTip = "Right-click to copy a Terminal command that deletes this upload"
         deleteUploadButton.menu = NSMenu()
         deleteUploadButton.menu?.addItem(withTitle: "Copy Delete Command", action: #selector(copyDeletionCommand(_:)), keyEquivalent: "").target = self
+        configureStatusButton(stopSharingButton, action: #selector(stopSharing(_:)))
         progressBar.style = .bar
         progressBar.isIndeterminate = false
         progressBar.maxValue = 100
@@ -99,6 +96,14 @@ extension MainView {
         [statusLabel, certificatePopup, profilePopup].forEach {
             $0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         }
+    }
+
+    func configureStatusButton(_ button: NSButton, action: Selector) {
+        button.isBordered = false
+        button.isHidden = true
+        button.attributedTitle = NSAttributedString(string: button.title, attributes: linkAttributes([.font: statusLabel.font as Any]))
+        button.target = self
+        button.action = action
     }
 
     func makeForm(_ rows: [FormRow]) -> NSGridView {

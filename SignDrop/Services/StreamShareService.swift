@@ -29,13 +29,8 @@ final class StreamShareService: UploadService {
             let manifest = try await api.upload(InstallLink.manifest(for: app, package: api.downloadURL(for: files[0])), name: "manifest.plist")
             files.append(manifest)
             let webLink = try InstallLink.webLink(manifest: api.downloadURL(for: manifest))
-            let deletionRequests = files.map(api.deletionRequest(for:))
-            do {
-                let shortLink = try await InstallLink.shorten(webLink, with: shorteners, session: api.session)
-                return UploadResult(link: shortLink, warnings: [], deletionRequests: deletionRequests)
-            } catch let error as UploadError {
-                return UploadResult(link: webLink, warnings: [error.localizedDescription], deletionRequests: deletionRequests)
-            }
+            let shared = try await InstallLink.shortenOrKeep(webLink, with: shorteners, session: api.session)
+            return UploadResult(link: shared.link, warnings: shared.warnings, deletionRequests: files.map(api.deletionRequest(for:)))
         } catch {
             for uploaded in files {
                 try? await api.delete(uploaded)

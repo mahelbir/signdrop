@@ -15,8 +15,12 @@ enum InstallLink {
         return try PropertyListSerialization.data(fromPropertyList: ["items": [item]], format: .xml, options: 0)
     }
 
+    static func itmsLink(manifest: URL) -> String {
+        "itms-services://?action=download-manifest&url=" + encodeQueryValue(manifest.absoluteString)
+    }
+
     static func webLink(manifest: URL) throws -> URL {
-        let installLink = "itms-services://?action=download-manifest&url=" + encodeQueryValue(manifest.absoluteString)
+        let installLink = itmsLink(manifest: manifest)
         let code = Data(installLink.utf8).base64EncodedString()
         guard !code.contains("/"), let link = URL(string: maskerURL + code) else {
             throw UploadError.server("Could not build a web link for \(installLink)")
@@ -31,6 +35,14 @@ enum InstallLink {
             }
         }
         throw UploadError.server("Could not shorten the link (\(shorteners.map(\.name).joined(separator: ", "))).")
+    }
+
+    static func shortenOrKeep(_ link: URL, with shorteners: [LinkShortener] = LinkShortener.all, session: URLSession = UploadServices.session) async throws -> (link: URL, warnings: [String]) {
+        do {
+            return (try await shorten(link, with: shorteners, session: session), [])
+        } catch let error as UploadError {
+            return (link, [error.localizedDescription])
+        }
     }
 
     static func encodeQueryValue(_ value: String) -> String {

@@ -23,6 +23,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try? fileManager.removeItem(atPath: Log.logName)
     }
     
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let share = LiveShare.current else { return .terminateNow }
+        guard MainView.makeQuitWhileSharingAlert().runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+        share.stop()
+        return .terminateNow
+    }
+
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
     }
