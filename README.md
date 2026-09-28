@@ -16,7 +16,7 @@ install link.
 - Overrides the profile's entitlements with your own file
 - Changes the App ID, display name, version and build before signing
 - Signs extensions, frameworks and libraries inside out, then verifies the result
-- Uploads the signed IPA and provides the installation link
+- Uploads the signed IPA, or shares it straight from your Mac, and provides the installation link
 
 ## How to Install
 
@@ -39,10 +39,11 @@ scripts/run.sh
 
 ## Uploads
 
-| Service     | Account                               | Link                                     |
-|-------------|---------------------------------------|------------------------------------------|
-| BetaDrop    | Required, sign in from SignDrop       | BetaDrop install page                    |
-| StreamShare | Not needed                            | Short link that opens the install prompt |
+| Service           | Requirements                              | Link                                            |
+|-------------------|-------------------------------------------|-------------------------------------------------|
+| BetaDrop          | BetaDrop account, sign in from SignDrop   | BetaDrop install page                           |
+| StreamShare       | None                                      | Short link that opens the install prompt        |
+| Cloudflare Tunnel | `cloudflared` installed on your Mac       | Link served from your Mac that opens the prompt |
 
 **BetaDrop** signs you in through your browser, or with a pasted API token. SignDrop shares its session with the
 [BetaDrop CLI](https://github.com/betadrop-app/betadrop-cli), so signing in to one signs in the other. Sign out from
@@ -53,6 +54,13 @@ iPad listed in the provisioning profile to install the app.
 
 > **Important:** StreamShare uploads are public to anyone with the link. Click **Delete Upload** in the status bar to
 > remove them.
+
+**Cloudflare Tunnel** keeps the IPA on your Mac and serves it through a temporary public address, so nothing is
+uploaded. It needs `cloudflared`; SignDrop shows how to install it if it is missing. Open
+the link in Safari on an iPhone or iPad listed in the provisioning profile to install the app.
+
+> **Important:** The link works only while SignDrop is sharing. Your Mac stays awake and the form stays locked until
+> you click **Stop Sharing** in the status bar; quitting SignDrop also stops sharing.
 
 ## How to Update
 
@@ -67,7 +75,8 @@ follow the official [BetaDrop CLI](https://github.com/betadrop-app/betadrop-cli)
 Install links are hosted by [StreamShare](https://streamshare.wireway.ch), turned into web links by
 [Urlmskr](https://axorax.github.io/urlmskr/), and shortened by [Ulvis](https://ulvis.net),
 [Spoo.me](https://spoo.me), [CleanURI](https://cleanuri.com) or [TinyURL](https://tinyurl.com), tried in that order.
-SignDrop is not affiliated with these services.
+Shares from your Mac run through [Cloudflare Tunnel](https://try.cloudflare.com). SignDrop is not affiliated with these
+services.
 
 ## Support
 
