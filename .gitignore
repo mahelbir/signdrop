@@ -391,6 +391,7 @@ $RECYCLE.BIN/
 *.swp
 /icon/
 buildServer.json
+/TODO.txt
 .compile
 .reference/
 .env.development

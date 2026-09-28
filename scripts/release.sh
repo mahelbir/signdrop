@@ -8,7 +8,8 @@ OUT=$ROOT/build/release
 ARCHIVE=$OUT/SignDrop.xcarchive
 APP=$OUT/export/SignDrop.app
 STAGE=$OUT/dmg
-DMG=$OUT/SignDrop-$VERSION.dmg
+ARCHS="arm64 x86_64"
+DMG=$OUT/SignDrop-$VERSION-universal.dmg
 LOG=$OUT/build.log
 
 if [[ -n $NOTARY_KEY ]]; then
@@ -46,8 +47,9 @@ fi
 rm -rf $OUT
 mkdir -p $STAGE
 
-echo "Archiving SignDrop $VERSION…"
+echo "Archiving SignDrop $VERSION ($ARCHS)…"
 xcodebuild -project SignDrop.xcodeproj -scheme SignDrop -configuration Release -archivePath $ARCHIVE archive \
+  ARCHS="$ARCHS" ONLY_ACTIVE_ARCH=NO \
   CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$IDENTITY" > $LOG 2>&1 || fail "Archive failed."
 xcodebuild -exportArchive -archivePath $ARCHIVE -exportPath $OUT/export \
   -exportOptionsPlist scripts/ExportOptions.plist >> $LOG 2>&1 || fail "Export failed."
