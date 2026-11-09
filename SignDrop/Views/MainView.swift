@@ -173,6 +173,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         
         if NibLoaded == false {
             NibLoaded = true
+            guard !SignDropShared.isRunningTests else { return }
 
             // Do any additional setup after loading the view.
             setUpLayout()

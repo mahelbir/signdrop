@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -45,7 +45,18 @@
 		12272F3FE6AFCF5E6AFFD770 /* UploadAccountMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7E5A10000000000000000006 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 652408C01BE743D4006FA4C6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 652408C71BE743D4006FA4C6;
+			remoteInfo = SignDrop;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		7E5A10000000000000000001 /* SignDropTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SignDropTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		06AECADAC38DA7499DD63960 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		4A714DBA2B5591DB9632FAEA /* MainView+AppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+AppInfo.swift"; sourceTree = "<group>"; };
 		652408C81BE743D4006FA4C6 /* SignDrop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SignDrop.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -93,8 +104,23 @@
 		3D81186D1098EB931AF550DA /* UploadAccountMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadAccountMenu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		7E5A10000000000000000002 /* SignDropTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SignDropTests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		652408C51BE743D4006FA4C6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E5A10000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -109,6 +135,7 @@
 			children = (
 				659734971C65B5B900383D2D /* NimbusKit */,
 				652408CA1BE743D4006FA4C6 /* SignDrop */,
+				7E5A10000000000000000002 /* SignDropTests */,
 				652408C91BE743D4006FA4C6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -117,6 +144,7 @@
 			isa = PBXGroup;
 			children = (
 				652408C81BE743D4006FA4C6 /* SignDrop.app */,
+				7E5A10000000000000000001 /* SignDropTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -263,6 +291,26 @@
 			productReference = 652408C81BE743D4006FA4C6 /* SignDrop.app */;
 			productType = "com.apple.product-type.application";
 		};
+		7E5A10000000000000000005 /* SignDropTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E5A1000000000000000000A /* Build configuration list for PBXNativeTarget "SignDropTests" */;
+			buildPhases = (
+				7E5A10000000000000000004 /* Sources */,
+				7E5A10000000000000000003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E5A10000000000000000007 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7E5A10000000000000000002 /* SignDropTests */,
+			);
+			name = SignDropTests;
+			productName = SignDropTests;
+			productReference = 7E5A10000000000000000001 /* SignDropTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -284,6 +332,10 @@
 							};
 						};
 					};
+					7E5A10000000000000000005 = {
+						CreatedOnToolsVersion = 27.2;
+						TestTargetID = 652408C71BE743D4006FA4C6;
+					};
 				};
 			};
 			buildConfigurationList = 652408C31BE743D4006FA4C6 /* Build configuration list for PBXProject "SignDrop" */;
@@ -301,6 +353,7 @@
 			projectRoot = "";
 			targets = (
 				652408C71BE743D4006FA4C6 /* SignDrop */,
+				7E5A10000000000000000005 /* SignDropTests */,
 			);
 		};
 /* End PBXProject section */
@@ -359,7 +412,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7E5A10000000000000000004 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7E5A10000000000000000007 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 652408C71BE743D4006FA4C6 /* SignDrop */;
+			targetProxy = 7E5A10000000000000000006 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		652408EB1BE743D4006FA4C6 /* Debug */ = {
@@ -490,6 +558,37 @@
 			};
 			name = Release;
 		};
+		7E5A10000000000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mahmuthanelbir.signdrop.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SignDrop.app/Contents/MacOS/SignDrop";
+			};
+			name = Debug;
+		};
+		7E5A10000000000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mahmuthanelbir.signdrop.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SignDrop.app/Contents/MacOS/SignDrop";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -507,6 +606,15 @@
 			buildConfigurations = (
 				652408EE1BE743D4006FA4C6 /* Debug */,
 				652408EF1BE743D4006FA4C6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E5A1000000000000000000A /* Build configuration list for PBXNativeTarget "SignDropTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E5A10000000000000000008 /* Debug */,
+				7E5A10000000000000000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

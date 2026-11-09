@@ -11,6 +11,67 @@ STAGE=$OUT/dmg
 ARCHS="arm64 x86_64"
 DMG=$OUT/SignDrop-$VERSION-universal.dmg
 LOG=$OUT/build.log
+DMG_IDENTIFIER=com.mahmuthanelbir.signdrop.dmg
+FAILURES=0
+
+check() {
+  if [[ $2 == 1 ]]; then
+    print "PASS $1"
+  else
+    print "FAIL $1 ${3:-}"
+    FAILURES=$((FAILURES + 1))
+  fi
+}
+
+passes() {
+  "$@" >/dev/null 2>&1 && print 1 || print 0
+}
+
+verify_dmg() {
+  local dmg=$1
+  check release.dmg.exists $([[ -f $dmg ]] && print 1 || print 0) "$dmg"
+  if [[ ! -f $dmg ]]; then
+    print "$FAILURES FAILED"
+    exit 1
+  fi
+
+  local signature=$(codesign -dvv $dmg 2>&1)
+  check release.dmg.signed $([[ $signature == *"Authority=$IDENTITY"* && $signature == *"Timestamp="* ]] && print 1 || print 0)
+  check release.dmg.identifier $([[ $signature == *"Identifier=$DMG_IDENTIFIER"* ]] && print 1 || print 0)
+  check release.dmg.stapled $(passes xcrun stapler validate $dmg)
+  local assessment=$(spctl -a -t open --context context:primary-signature -vv $dmg 2>&1)
+  check release.dmg.gatekeeper $([[ $assessment == *"accepted"* && $assessment == *"Notarized Developer ID"* ]] && print 1 || print 0) "$assessment"
+
+  local mount=$(mktemp -d -t signdrop-release-check)
+  hdiutil attach -nobrowse -readonly -mountpoint $mount $dmg >/dev/null
+  local app=$mount/SignDrop.app
+  check release.layout.app $([[ -d $app ]] && print 1 || print 0)
+  check release.layout.applications $([[ -L $mount/Applications && $(readlink $mount/Applications) == /Applications ]] && print 1 || print 0)
+  local app_signature=$(codesign -dvv $app 2>&1)
+  check release.app.signed $([[ $app_signature == *"Authority=$IDENTITY"* && $app_signature == *"Timestamp="* ]] && print 1 || print 0)
+  check release.app.hardenedRuntime $([[ $app_signature == *"(runtime)"* ]] && print 1 || print 0)
+  check release.app.valid $(passes codesign --verify --deep --strict $app)
+  local app_assessment=$(spctl -a -t exec -vv $app 2>&1)
+  check release.app.gatekeeper $([[ $app_assessment == *"accepted"* && $app_assessment == *"Notarized Developer ID"* ]] && print 1 || print 0) "$app_assessment"
+  local app_version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" $app/Contents/Info.plist 2>/dev/null)
+  check release.app.version $([[ $app_version == $VERSION ]] && print 1 || print 0) "$app_version"
+  local app_archs=$(lipo -archs $app/Contents/MacOS/SignDrop 2>/dev/null)
+  check release.app.universal $([[ ${(j: :)${(o)${(z)app_archs}}} == "$ARCHS" ]] && print 1 || print 0) "$app_archs"
+  check release.app.release $([[ -z $(codesign -d --entitlements - --xml $app 2>/dev/null | grep get-task-allow) ]] && print 1 || print 0)
+  hdiutil detach $mount -quiet || hdiutil detach $mount -force -quiet || true
+  rmdir $mount 2>/dev/null || true
+
+  if [[ $FAILURES != 0 ]]; then
+    print "$FAILURES FAILED"
+    exit 1
+  fi
+  print "ALL PASSED"
+}
+
+if [[ $1 == --verify ]]; then
+  verify_dmg ${2:-$DMG}
+  exit 0
+fi
 
 if [[ -n $NOTARY_KEY ]]; then
   NOTARY=(--key $NOTARY_KEY --key-id $NOTARY_KEY_ID --issuer $NOTARY_ISSUER)
@@ -58,7 +119,8 @@ echo "Creating the disk image…"
 ditto $APP $STAGE/SignDrop.app
 ln -s /Applications $STAGE/Applications
 hdiutil create -volname SignDrop -srcfolder $STAGE -ov -format UDZO $DMG >> $LOG 2>&1 || fail "Disk image failed."
-codesign --sign "$IDENTITY" --timestamp -i com.mahmuthanelbir.signdrop.dmg $DMG
+codesign --sign "$IDENTITY" --timestamp -i $DMG_IDENTIFIER $DMG
 notarize $DMG
 xcrun stapler staple $DMG >/dev/null
+verify_dmg $DMG
 echo "Done: $DMG"
