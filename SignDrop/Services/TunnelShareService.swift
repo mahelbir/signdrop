@@ -13,6 +13,7 @@ final class TunnelShareService: UploadService {
     let isLiveShare = true
     var linkStyle = LinkStyle.installRedirect
     var readyTimeout: TimeInterval = 30
+    let linkCheckTimeout: TimeInterval = 5
     var log: (String) -> Void = { Log.write($0) }
     private let shorteners: [LinkShortener]
     private let session: URLSession
@@ -71,7 +72,7 @@ final class TunnelShareService: UploadService {
             let manifest = try InstallLink.manifest(for: app, package: folder.appendingPathComponent("app.ipa"))
             server.setRoute("/\(token)/manifest.plist", .init(content: .data(manifest), contentType: "text/xml"))
             server.setRoute("/\(token)/install", .init(content: .redirect(InstallLink.itmsLink(manifest: manifestURL)), contentType: "text/plain"))
-            try await waitUntilReachable(manifestURL) { closeReason }
+            try await waitUntilReachable(manifestURL, addresses: opened.resolvedAddresses) { closeReason }
             let liveShare = LiveShare {
                 opened.close()
                 server.stop()
@@ -100,20 +101,50 @@ final class TunnelShareService: UploadService {
         }
     }
 
-    private func waitUntilReachable(_ url: URL, closeReason: () -> String?) async throws {
-        var request = URLRequest(url: url)
-        request.httpMethod = "HEAD"
-        request.timeoutInterval = 5
-        let deadline = Date().addingTimeInterval(readyTimeout)
+    private func waitUntilReachable(_ url: URL, addresses: [String], closeReason: () -> String?) async throws {
+        let started = Date()
+        let deadline = started.addingTimeInterval(readyTimeout)
+        var lastFailure: String?
+        func elapsed() -> String {
+            String(format: "%.1f", Date().timeIntervalSince(started))
+        }
         repeat {
             if let reason = closeReason() {
                 throw UploadError.server(reason)
             }
-            if let response = try? await session.response(for: request, service: name), response.status == 200 {
+            guard let failure = await (addresses.isEmpty ? linkFailure(url) : linkFailure(url, pinnedTo: addresses)) else {
+                log("\(name): link check passed after \(elapsed())s")
                 return
+            }
+            if failure != lastFailure {
+                lastFailure = failure
+                log("\(name): link check failed (\(failure)) after \(elapsed())s")
             }
             try await Task.sleep(nanoseconds: 1_000_000_000)
         } while Date() < deadline
         throw UploadError.server("The link did not become reachable.")
+    }
+
+    private func linkFailure(_ url: URL) async -> String? {
+        var request = URLRequest(url: url)
+        request.httpMethod = "HEAD"
+        request.timeoutInterval = linkCheckTimeout
+        do {
+            let (_, response) = try await session.data(for: request)
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            return status == 200 ? nil : "HTTP \(status)"
+        } catch {
+            let nsError = error as NSError
+            return "\(nsError.domain) \(nsError.code) \(nsError.localizedDescription)"
+        }
+    }
+
+    private func linkFailure(_ url: URL, pinnedTo addresses: [String]) async -> String? {
+        let arguments = ["--head", "--silent", "--max-time", "\(Int(linkCheckTimeout))", "--output", "/dev/null", "--write-out", "%{http_code}", "--resolve", "\(url.host ?? ""):\(url.port ?? 443):\(addresses.joined(separator: ","))", url.absoluteString]
+        return await Task.detached { () -> String? in
+            let result = Process().execute("/usr/bin/curl", workingDirectory: nil, arguments: arguments)
+            guard result.status == 0 else { return "curl exit \(result.status)" }
+            return result.output == "200" ? nil : "HTTP \(result.output)"
+        }.value
     }
 }

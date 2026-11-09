@@ -387,15 +387,13 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,dotenv,windows,sublimetext,jetbrains+all,visualstudiocode,xcode,swift,objective-c,c++
 
+*.local.*
+!*.example
+!*.sample
+/.reference/
 
 *.swp
 /icon/
 buildServer.json
 /TODO.txt
 .compile
-.reference/
-.env.development
-.env.production
-*.local.*
-!*.example
-!*.sample

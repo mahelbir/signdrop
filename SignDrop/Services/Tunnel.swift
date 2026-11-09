@@ -1,4 +1,5 @@
 import Cocoa
+import Network
 
 @MainActor
 protocol Tunnel: AnyObject {
@@ -11,6 +12,7 @@ protocol Tunnel: AnyObject {
 @MainActor
 final class OpenTunnel {
     let publicURL: URL
+    var resolvedAddresses: [String] = []
     var onUnexpectedClose: (@MainActor (String) -> Void)?
     private(set) var isClosed = false
     private let closeHandler: @MainActor () -> Void
@@ -35,8 +37,8 @@ final class OpenTunnel {
 }
 
 enum AuthoritativeDNS {
-    enum Answer {
-        case published
+    enum Answer: Equatable {
+        case published([String])
         case missing
         case unreachable
     }
@@ -45,19 +47,28 @@ enum AuthoritativeDNS {
         await Task.detached {
             let zone = host.split(separator: ".").dropFirst().joined(separator: ".")
             guard let servers = dig(["+short", "+time=2", "+tries=1", "NS", zone]), !servers.isEmpty else { return .unreachable }
-            var answer = Answer.published
+            var isMissing = false
+            var found: [String] = []
             for server in servers {
                 guard let records = dig(["+short", "+norecurse", "+time=2", "+tries=1", "@\(server)", host, "A"]) else { return .unreachable }
-                if records.isEmpty {
-                    answer = .missing
+                isMissing = isMissing || records.isEmpty
+                if found.isEmpty {
+                    found = addresses(in: records)
                 }
             }
-            return answer
+            if isMissing {
+                return .missing
+            }
+            return found.isEmpty ? .unreachable : .published(found)
         }.value
     }
 
     static func records(in output: String) -> [String] {
         output.split(whereSeparator: \.isNewline).map(String.init).filter { !$0.hasPrefix(";") && !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+    }
+
+    static func addresses(in records: [String]) -> [String] {
+        records.filter { IPv4Address($0) != nil }
     }
 
     private static func dig(_ arguments: [String]) -> [String]? {
@@ -81,6 +92,7 @@ final class CommandLineTunnel: Tunnel {
     var loginShell: String? = "/bin/zsh"
     var startTimeout: TimeInterval = 30
     var unreachableDNSDelay: TimeInterval = 8
+    var unreachableDNSAttempts = 3
     var hostnameAnswer: (String) async -> AuthoritativeDNS.Answer = { await AuthoritativeDNS.answer(for: $0) }
     var log: (String) -> Void = { Log.write($0) }
     private var shellFoundPath: String?
@@ -216,6 +228,7 @@ final class CommandLineTunnel: Tunnel {
         let host = tunnel.publicURL.host ?? ""
         let started = Date()
         var lastAnswer: AuthoritativeDNS.Answer?
+        var unreachableLookups = 0
         do {
             while true {
                 if let closeReason {
@@ -227,14 +240,18 @@ final class CommandLineTunnel: Tunnel {
                     log("\(name): DNS \(answer) for \(host) after \(String(format: "%.1f", Date().timeIntervalSince(started)))s")
                 }
                 switch answer {
-                case .published:
+                case .published(let addresses):
+                    tunnel.resolvedAddresses = addresses
                     return
                 case .unreachable:
-                    try await Task.sleep(nanoseconds: UInt64(max(0, min(unreachableDNSDelay, deadline.timeIntervalSinceNow)) * 1_000_000_000))
-                    if let closeReason {
-                        throw UploadError.server(closeReason)
+                    unreachableLookups += 1
+                    if unreachableLookups >= unreachableDNSAttempts || Date() >= deadline {
+                        try await Task.sleep(nanoseconds: UInt64(max(0, min(unreachableDNSDelay, deadline.timeIntervalSinceNow)) * 1_000_000_000))
+                        if let closeReason {
+                            throw UploadError.server(closeReason)
+                        }
+                        return
                     }
-                    return
                 case .missing:
                     break
                 }
