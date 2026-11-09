@@ -30,15 +30,17 @@ final class StreamShareService: ShareService {
                 InstallLink.manifest(for: app, package: api.downloadURL(for: files[0])),
                 name: "manifest.plist")
             files.append(manifest)
-            let webLink = try InstallLink.webLink(manifest: api.downloadURL(for: manifest))
+            let manifestURL = api.downloadURL(for: manifest)
+            let webLink = try InstallLink.webLink(manifest: manifestURL)
             let shared = try await InstallLink.shortenOrKeep(
                 webLink, with: shorteners, session: api.session)
             return ShareResult(
                 link: shared.link, warnings: shared.warnings,
+                itmsLink: InstallLink.itmsLink(manifest: manifestURL),
                 deletionRequests: files.map(api.deletionRequest(for:)))
         } catch {
             for uploaded in files {
-                try? await api.delete(uploaded)
+                await api.deleteIgnoringCancellation(uploaded)
             }
             throw error
         }

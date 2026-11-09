@@ -68,7 +68,9 @@ struct BetaDropAPI {
         }
         defer { try? handle.close() }
         guard (try? handle.read(upToCount: 4)) == Data([0x50, 0x4B, 0x03, 0x04]) else {
-            throw ShareError.invalidBuild
+            throw ShareError.invalidFile(
+                "This file does not appear to be a valid iOS build. Please upload a valid IPA file."
+            )
         }
     }
 

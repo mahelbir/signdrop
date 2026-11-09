@@ -17,6 +17,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         shareAccountMenu = ShareAccountMenu(
             services: ShareServices.all, in: NSApp.mainMenu?.items.first?.submenu)
+        if let mainMenu = NSApp.mainMenu,
+            let mainView = NSApp.windows.compactMap({ $0.contentView as? MainView }).first
+        {
+            AppMenus.install(in: mainMenu, shareTarget: mainView)
+            NSApp.windowsMenu = mainMenu.item(withTitle: "Window")?.submenu
+            if let window = mainView.window {
+                NSApp.addWindowsItem(window, title: window.title, filename: false)
+            }
+        }
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
@@ -25,12 +34,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let share = LiveShare.current else { return .terminateNow }
-        guard MainView.makeQuitWhileSharingAlert().runModal() == .alertFirstButtonReturn else {
+        let windows = ShareWindows.shared
+        guard windows.hasActiveWork else { return .terminateNow }
+        guard ShareWindows.makeQuitAlert().runModal() == .alertFirstButtonReturn else {
             return .terminateCancel
         }
-        share.stop()
+        windows.stopAll()
         return .terminateNow
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        guard !hasVisibleWindows else { return true }
+        sender.windows.filter(\.isMiniaturized).forEach { $0.deminiaturize(nil) }
+        return false
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

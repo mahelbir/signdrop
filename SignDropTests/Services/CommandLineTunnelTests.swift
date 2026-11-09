@@ -137,6 +137,17 @@ extension SerialTests {
             #expect(await hasStopped(marker), "tunnel.timeoutStops")
         }
 
+        @Test func cancellingAStartingTunnelStopsTheTool() async {
+            let marker = newMarker()
+            let tunnel = mockTunnel("silent", marker: marker, timeout: 20)
+            let opening = Task { try await tunnel.open(port: 1) }
+            #expect(await isEventuallyTrue(3) { isAlive(marker) }, "tunnel.cancelStarted")
+            opening.cancel()
+            let outcome = await opening.result
+            #expect(throws: CancellationError.self, "tunnel.cancelThrows") { try outcome.get() }
+            #expect(await hasStopped(marker), "tunnel.cancelStops")
+        }
+
         @Test func keepsTheLastLineOnTimeout() async {
             let message = await openError(
                 mockTunnel("chatty-silent", marker: newMarker(), timeout: 1))

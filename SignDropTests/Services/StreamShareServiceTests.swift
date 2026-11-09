@@ -49,6 +49,7 @@ extension SerialTests {
             let expected = ShareResult(
                 link: URL(string: "https://ulvis.net/mock-ok~service"),
                 warnings: [],
+                itmsLink: InstallLink.itmsLink(manifest: api.downloadURL(for: manifestFile)),
                 deletionRequests: [
                     api.deletionRequest(for: ipaFile), api.deletionRequest(for: manifestFile),
                 ]
@@ -110,11 +111,32 @@ extension SerialTests {
                 "service.manifestFails.deletesIPA")
         }
 
+        @Test func cancellingWhileShorteningDeletesTheUploadedFiles() async {
+            let ipa = ipa()
+            let cancelling = LinkShortener(
+                name: "Cancelling",
+                makeRequest: { _ in
+                    withUnsafeCurrentTask { $0?.cancel() }
+                    return URLRequest(url: URL(string: "https://example.invalid/")!)
+                }, readShortLink: { _ in nil })
+            let service = StreamShareService(api: mock.api("ok~cancel"), shorteners: [cancelling])
+            await #expect(throws: CancellationError.self, "service.cancelThrows") {
+                try await service.share(ipa) { _ in }
+            }
+            _ = await isEventuallyTrue(3) {
+                (mock.stats["ok~cancel"]["deleted"] as? [String])?.count == 2
+            }
+            #expect(
+                mock.stats["ok~cancel"]["deleted"] as? [String] == [
+                    "ok~cancel-1/tok1", "ok~cancel-2/tok2",
+                ], "service.cancelDeletes")
+        }
+
         @Test func rejectsAnInvalidIPABeforeUploading() async {
             let fake = work.file("NotAnApp.ipa", Data("hello world".utf8))
             await #expect(
                 throws: ShareError.invalidFile(
-                    "This file does not appear to be a valid iOS build. Please upload a valid IPA file."
+                    "This file does not appear to be a valid iOS build. Please choose a valid IPA file."
                 ),
                 "service.invalidIPA"
             ) {

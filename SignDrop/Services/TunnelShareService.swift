@@ -2,28 +2,17 @@ import Cocoa
 
 @MainActor
 final class TunnelShareService: ShareService {
-    enum LinkStyle {
-        case installRedirect
-        case shortened
-    }
-
     let tunnel: Tunnel
     let accountName: String? = nil
     let isSignInRequired = false
     let isLiveShare = true
-    var linkStyle = LinkStyle.installRedirect
     var readyTimeout: TimeInterval = 30
     let linkCheckTimeout: TimeInterval = 5
     var log: (String) -> Void = { Log.write($0) }
-    private let shorteners: [LinkShortener]
     private let session: URLSession
 
-    init(
-        tunnel: Tunnel, shorteners: [LinkShortener] = LinkShortener.all,
-        session: URLSession = ShareServices.session
-    ) {
+    init(tunnel: Tunnel, session: URLSession = ShareServices.session) {
         self.tunnel = tunnel
-        self.shorteners = shorteners
         self.session = session
     }
 
@@ -80,11 +69,10 @@ final class TunnelShareService: ShareService {
             server.setRoute(
                 "/\(token)/manifest.plist", .init(content: .data(manifest), contentType: "text/xml")
             )
+            let itmsLink = InstallLink.itmsLink(manifest: manifestURL)
             server.setRoute(
                 "/\(token)/install",
-                .init(
-                    content: .redirect(InstallLink.itmsLink(manifest: manifestURL)),
-                    contentType: "text/plain"))
+                .init(content: .redirect(itmsLink), contentType: "text/plain"))
             try await waitUntilReachable(manifestURL, addresses: opened.resolvedAddresses) {
                 closeReason
             }
@@ -97,19 +85,12 @@ final class TunnelShareService: ShareService {
                 closeReason = reason
                 liveShare?.end(reason)
             }
-            let shared: (link: URL, warnings: [String])
-            switch linkStyle {
-            case .installRedirect:
-                shared = (folder.appendingPathComponent("install"), [])
-            case .shortened:
-                shared = try await InstallLink.shortenOrKeep(
-                    try InstallLink.webLink(manifest: manifestURL), with: shorteners,
-                    session: session)
-            }
             if let closeReason {
                 throw ShareError.server(closeReason)
             }
-            return ShareResult(link: shared.link, warnings: shared.warnings, liveShare: liveShare)
+            return ShareResult(
+                link: folder.appendingPathComponent("install"), warnings: [], itmsLink: itmsLink,
+                liveShare: liveShare)
         } catch {
             share?.stop()
             openTunnel?.close()

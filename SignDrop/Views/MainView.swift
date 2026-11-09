@@ -27,21 +27,20 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         checkboxWithTitle: "No get-task-allow", target: nil, action: nil)
     let ignorePluginsCheckbox = NSButton(
         checkboxWithTitle: "Ignore PlugIns folder", target: nil, action: nil)
-    let uploadPopup = NSPopUpButton()
+    let shareButton = NSButton(title: "Share…", target: nil, action: nil)
     let signButton = NSButton(title: "Sign…", target: nil, action: nil)
     let statusLabel = NSTextField(labelWithString: "")
-    let deleteUploadButton = NSButton(title: "Delete Upload", target: nil, action: nil)
-    let stopSharingButton = NSButton(title: "Stop Sharing", target: nil, action: nil)
     var inputControls: [NSControl] {
         return [
             inputFileField, inputFileButton, certificatePopup, profilePopup, entitlementsField,
             entitlementsButton, appIDField, displayNameField, versionField, buildField,
-            noGetTaskAllowCheckbox, ignorePluginsCheckbox, uploadPopup, signButton,
+            noGetTaskAllowCheckbox, ignorePluginsCheckbox, signButton,
         ]
     }
-    let progressBar = NSProgressIndicator()
-    let busyIndicator = NSProgressIndicator()
-    let progressLabel = NSTextField(labelWithString: "")
+    let progressSlot = ProgressSlot()
+    var progressBar: NSProgressIndicator { progressSlot.bar }
+    var busyIndicator: NSProgressIndicator { progressSlot.busyIndicator }
+    var progressLabel: NSTextField { progressSlot.label }
 
     //MARK: Variables
     var provisioningProfiles: [ProvisioningProfile] = []
@@ -67,8 +66,15 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
     }
     var isStatusWarning = false
     var statusLink: URL?
-    var deletableUpload: (serviceName: String, requests: [URLRequest])?
+    var signedFile: URL? {
+        didSet { refreshShareButton() }
+    }
+    var shareWindows = ShareWindows.shared
+    var terminateApp: (Any?) -> Void = { NSApp.terminate($0) }
     var isSigning = false
+    var isInputSignedInPlace: Bool {
+        inputFileField.stringValue.pathExtension.lowercased() == "appex"
+    }
 
     //MARK: Constants
     let signableExtensions = ["dylib", "so", "0", "vis", "pvr", "framework", "appex", "app"]
@@ -263,8 +269,6 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 setStatus(status, isWarning: isWarning, link: link)
             }
         } else {
-            deletableUpload = nil
-            deleteUploadButton.isHidden = true
             statusLabel.stringValue = status
             statusLabel.textColor = isWarning ? .systemOrange : .labelColor
             isStatusWarning = isWarning
@@ -284,29 +288,12 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 showProgress(fraction)
             }
         } else {
-            busyIndicator.isHidden = fraction != nil
-            progressBar.isHidden = fraction == nil
-            if let fraction = fraction {
-                busyIndicator.stopAnimation(nil)
-                progressBar.doubleValue = min(max(fraction, 0), 1) * 100
-                progressLabel.stringValue = "\(Int(progressBar.doubleValue))%"
-            } else {
-                busyIndicator.startAnimation(nil)
-                resetProgressBar()
-            }
+            progressSlot.show(fraction)
         }
     }
 
     func hideProgress() {
-        busyIndicator.stopAnimation(nil)
-        busyIndicator.isHidden = true
-        progressBar.isHidden = true
-        resetProgressBar()
-    }
-
-    func resetProgressBar() {
-        progressBar.doubleValue = 0
-        progressLabel.stringValue = ""
+        progressSlot.hide()
     }
 
     @objc func populateProvisioningProfiles() {
@@ -458,6 +445,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
 
                 inputControls.forEach { $0.isEnabled = false }
             }
+            refreshShareButton()
         }
     }
 
@@ -686,18 +674,10 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             return
         }
 
-        if inputFile.pathExtension.lowercased() == "appex" {
-            outputFile = inputFile
-        } else {
-            //MARK: Get output filename
-            let saveDialog = NSSavePanel()
-            saveDialog.identifier = .signedOutputPanel
-            saveDialog.allowedContentTypes = contentTypes(["ipa"])
-            saveDialog.nameFieldStringValue =
-                "\(inputFile.lastPathComponent.stringByDeletingPathExtension)-signed"
-            outputFile = saveDialog.runModal() == .OK ? saveDialog.url?.path : nil
-        }
+        outputFile = isInputSignedInPlace ? inputFile : askForOutputFile(for: inputFile)
         if outputFile != nil {
+            signedFile = nil
+            shareWindows.beginNewSigning()
             controlsEnabled(false)
             Thread.detachNewThreadSelector(#selector(self.signingThread), toTarget: self, with: nil)
         }
@@ -713,7 +693,6 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         var newDisplayName: String = ""
         var newVersion: String = ""
         var newBuild: String = ""
-        var isUploadRequested = false
 
         DispatchQueue.main.sync {
             showProgress(nil)
@@ -727,7 +706,6 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             newBuild = self.changedValue(self.buildField, original: self.inputAppInfo?.build)
             shouldCheckPlugins = ignorePluginsCheckbox.state == .off
             shouldSkipGetTaskAllow = noGetTaskAllowCheckbox.state == .on
-            isUploadRequested = uploadService != nil
         }
 
         let provisioningFile = self.profileFilename
@@ -1332,7 +1310,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         removeTempFolder(tempFolder)
         let output = outputFile!
         DispatchQueue.main.async {
-            self.finishSigning(output, isUploadRequested: isUploadRequested)
+            self.finishSigning(output)
         }
     }
 
@@ -1417,7 +1395,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         }
         if codesigningCerts.count > 0 {
             NSApplication.shared.windows[0].makeFirstResponder(self)
-            startSigningWhenUploadReady()
+            startSigning()
         }
     }
 
@@ -1426,18 +1404,13 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
         if statusLink != nil {
             addCursorRect(statusLabel.convert(statusLabel.bounds, to: self), cursor: .pointingHand)
         }
-        for button in [deleteUploadButton, stopSharingButton] where !button.isHidden {
-            addCursorRect(button.convert(button.bounds, to: self), cursor: .pointingHand)
-        }
     }
 
     @objc func statusLabelClick(_ sender: Any) {
-        guard let statusLink = statusLink else { return }
-        if !statusLink.isFileURL {
-            NSWorkspace.shared.open(statusLink)
-        } else if fileManager.fileExists(atPath: statusLink.path) {
-            NSWorkspace.shared.activateFileViewerSelecting([statusLink])
+        guard let statusLink = statusLink, fileManager.fileExists(atPath: statusLink.path) else {
+            return
         }
+        NSWorkspace.shared.activateFileViewerSelecting([statusLink])
     }
 
 }

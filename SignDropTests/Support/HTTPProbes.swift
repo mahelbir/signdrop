@@ -46,6 +46,11 @@ func isAlive(_ pattern: String) -> Bool {
         == 0
 }
 
+func isSleepBlocked() -> Bool {
+    Process().execute("/usr/bin/pmset", workingDirectory: nil, arguments: ["-g", "assertions"])
+        .output.contains("Sharing an app from this Mac")
+}
+
 func newMarker() -> String {
     "mk-\(UUID().uuidString)"
 }

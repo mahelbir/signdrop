@@ -22,18 +22,16 @@ extension MainView {
             .pair("Version:", versionField, "Build:", buildField),
             .section("Options"),
             .content(makeOptionsStack()),
-            .field("Upload:", uploadPopup),
         ])
         let statusSpacer = NSView()
         statusSpacer.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
         let statusBar = NSStackView(views: [
-            statusLabel, deleteUploadButton, stopSharingButton, statusSpacer, progressLabel,
-            busyIndicator, progressBar,
+            statusLabel, statusSpacer, progressLabel, busyIndicator, progressBar,
         ])
         statusBar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         statusBar.distribution = .fill
         statusBar.setHuggingPriority(.defaultLow, for: .horizontal)
-        [form, signButton, statusBar].forEach {
+        [form, shareButton, signButton, statusBar].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             addSubview($0)
         }
@@ -45,6 +43,8 @@ extension MainView {
             appIDField.widthAnchor.constraint(equalTo: displayNameField.widthAnchor),
             signButton.topAnchor.constraint(equalTo: form.bottomAnchor, constant: 20),
             signButton.trailingAnchor.constraint(equalTo: form.trailingAnchor),
+            shareButton.centerYAnchor.constraint(equalTo: signButton.centerYAnchor),
+            shareButton.trailingAnchor.constraint(equalTo: signButton.leadingAnchor, constant: -8),
             statusBar.topAnchor.constraint(equalTo: signButton.bottomAnchor, constant: 20),
             statusBar.leadingAnchor.constraint(equalTo: leadingAnchor),
             statusBar.trailingAnchor.constraint(equalTo: trailingAnchor),
@@ -86,7 +86,9 @@ extension MainView {
             $0.target = self
             $0.action = #selector(saveOptionChoices(_:))
         }
-        configureUploadPopup()
+        shareButton.target = self
+        shareButton.action = #selector(shareSignedFile(_:))
+        shareButton.isEnabled = false
         signButton.keyEquivalent = "\r"
         signButton.target = self
         signButton.action = #selector(doSign(_:))
@@ -94,37 +96,9 @@ extension MainView {
         statusLabel.lineBreakMode = .byTruncatingMiddle
         statusLabel.addGestureRecognizer(
             NSClickGestureRecognizer(target: self, action: #selector(statusLabelClick(_:))))
-        configureStatusButton(deleteUploadButton, action: #selector(confirmUploadDeletion(_:)))
-        deleteUploadButton.toolTip =
-            "Right-click to copy a Terminal command that deletes this upload"
-        deleteUploadButton.menu = NSMenu()
-        deleteUploadButton.menu?.addItem(
-            withTitle: "Copy Delete Command", action: #selector(copyDeletionCommand(_:)),
-            keyEquivalent: ""
-        ).target = self
-        configureStatusButton(stopSharingButton, action: #selector(stopSharing(_:)))
-        progressBar.style = .bar
-        progressBar.isIndeterminate = false
-        progressBar.maxValue = 100
-        progressBar.isHidden = true
-        busyIndicator.style = .bar
-        busyIndicator.isIndeterminate = true
-        busyIndicator.isHidden = true
-        progressLabel.font = .monospacedDigitSystemFont(
-            ofSize: NSFont.smallSystemFontSize, weight: .regular)
-        progressLabel.alignment = .right
         [statusLabel, certificatePopup, profilePopup].forEach {
             $0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         }
-    }
-
-    func configureStatusButton(_ button: NSButton, action: Selector) {
-        button.isBordered = false
-        button.isHidden = true
-        button.attributedTitle = NSAttributedString(
-            string: button.title, attributes: linkAttributes([.font: statusLabel.font as Any]))
-        button.target = self
-        button.action = action
     }
 
     func makeForm(_ rows: [FormRow]) -> NSGridView {

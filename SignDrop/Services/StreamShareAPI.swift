@@ -51,6 +51,11 @@ struct StreamShareAPI {
             [deletionRequest(for: file)], service: StreamShareAPI.serviceName, session: session)
     }
 
+    func deleteIgnoringCancellation(_ file: StreamShareFile) async {
+        let api = self
+        await Task.detached { try? await api.delete(file) }.value
+    }
+
     private func upload(
         _ stream: InputStream, name: String, size: Int, progress: @escaping (Double) -> Void
     ) async throws -> StreamShareFile {
@@ -83,7 +88,7 @@ struct StreamShareAPI {
             return file
         } catch {
             socket.cancel(with: .goingAway, reason: nil)
-            try? await delete(file)
+            await deleteIgnoringCancellation(file)
             throw ShareError.from(
                 error, service: StreamShareAPI.serviceName, stallTimeout: stallTimeout)
         }
@@ -103,11 +108,15 @@ struct StreamShareAPI {
                 return nil
             }
             defer { group.cancelAll() }
-            guard let reply = try await group.next() ?? nil else {
+            do {
+                guard let reply = try await group.next() ?? nil else {
+                    throw URLError(.timedOut)
+                }
+                return reply
+            } catch {
                 socket.cancel(with: .goingAway, reason: nil)
-                throw URLError(.timedOut)
+                throw error
             }
-            return reply
         }
     }
 

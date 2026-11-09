@@ -192,8 +192,9 @@ extension SerialTests {
 
         @Test func doesNotRetryServerAnswers() async {
             let file = ipa()
-            await #expect(throws: ShareError.server("Storage is down"), "publish.json5xx.noRetry")
-            { try await api("json5xx").publish(file: file, token: "t") { _ in } }
+            await #expect(throws: ShareError.server("Storage is down"), "publish.json5xx.noRetry") {
+                try await api("json5xx").publish(file: file, token: "t") { _ in }
+            }
             #expect(mock.stats["json5xx"]["publish"] as? Int == 1, "publish.json5xx.count")
             await #expect(
                 throws: ShareError.server("Upload failed (HTTP 500)."),
@@ -215,8 +216,9 @@ extension SerialTests {
                 throws: ShareError.server("Unexpected response from BetaDrop (HTTP 200)."),
                 "publish.notJSON"
             ) { try await api("not-json").publish(file: file, token: "t") { _ in } }
-            await #expect(throws: ShareError.server("Plan limit reached"), "publish.successFalse")
-            { try await api("success-false").publish(file: file, token: "t") { _ in } }
+            await #expect(throws: ShareError.server("Plan limit reached"), "publish.successFalse") {
+                try await api("success-false").publish(file: file, token: "t") { _ in }
+            }
             await #expect(
                 throws: ShareError.server("Upload failed (HTTP 422)."), "publish.errorNoMessage"
             ) { try await api("error-no-message").publish(file: file, token: "t") { _ in } }

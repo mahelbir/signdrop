@@ -2,112 +2,45 @@ import Cocoa
 
 extension MainView {
 
-    var uploadService: ShareService? {
-        uploadPopup.selectedItem?.representedObject as? ShareService
+    func refreshShareButton() {
+        shareButton.isEnabled = !isSigning && signedFile != nil
     }
 
-    func configureUploadPopup() {
-        uploadPopup.removeAllItems()
-        uploadPopup.addItem(withTitle: "None")
-        uploadPopup.menu?.addItem(.separator())
-        for service in ShareServices.all {
-            uploadPopup.addItem(withTitle: service.name)
-            uploadPopup.lastItem?.representedObject = service
-        }
-        uploadPopup.target = self
-        uploadPopup.action = #selector(chooseShareService(_:))
-        refreshUploadAccount()
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(shareAccountDidChange(_:)), name: .shareAccountDidChange,
-            object: nil)
+    @objc func shareSignedFile(_ sender: Any) {
+        guard !isSigning, let signedFile else { return }
+        shareWindows.show(file: signedFile)
     }
 
-    @objc func shareAccountDidChange(_ notification: Notification) {
-        refreshUploadAccount()
-    }
-
-    func refreshUploadAccount() {
-        if let service = uploadService, service.isSignInRequired, service.accountName == nil {
-            uploadPopup.selectItem(at: 0)
-        }
-        uploadPopup.toolTip =
-            uploadService?.accountName.map { "Signed in as \($0)" }
-            ?? "Uploads the signed IPA and copies its install link"
-    }
-
-    @objc func chooseShareService(_ sender: NSPopUpButton) {
-        guard let service = uploadService, !service.isReadyToShare else {
-            refreshUploadAccount()
-            return
-        }
-        Task {
-            if !(await prepareUpload(for: service)) {
-                sender.selectItem(at: 0)
-            }
-            refreshUploadAccount()
-        }
-    }
-
-    func prepareUpload(for service: ShareService) async -> Bool {
-        guard let window = window else { return false }
-        return await service.prepareToShare(in: window)
-    }
-
-    func startSigningWhenUploadReady() {
-        guard let service = uploadService, !service.isReadyToShare else {
-            startSigning()
-            return
-        }
-        Task {
-            if await prepareUpload(for: service) {
-                startSigning()
-            } else {
-                uploadPopup.selectItem(at: 0)
-                refreshUploadAccount()
-            }
-        }
-    }
-
-    func finishSigning(_ output: String, isUploadRequested: Bool) {
+    func finishSigning(_ output: String) {
         let outputURL = URL(fileURLWithPath: output)
-        guard isUploadRequested, let service = uploadService else {
-            setStatus("Done, output at \(output)", link: outputURL)
-            controlsEnabled(true)
-            return
-        }
-        guard output.pathExtension.lowercased() == "ipa" else {
-            setStatus(
-                "Done, output at \(output) (only .ipa files can be uploaded)", link: outputURL)
-            controlsEnabled(true)
-            return
-        }
-        Task {
-            await uploadSignedFile(outputURL, to: service)
+        signedFile = output.pathExtension.lowercased() == "ipa" ? outputURL : nil
+        setStatus("Done, output at \(output)", link: outputURL)
+        controlsEnabled(true)
+    }
+
+    func askForOutputFile(for inputFile: String) -> String? {
+        while true {
+            let saveDialog = NSSavePanel()
+            saveDialog.identifier = .signedOutputPanel
+            saveDialog.allowedContentTypes = contentTypes(["ipa"])
+            saveDialog.nameFieldStringValue =
+                "\(inputFile.lastPathComponent.stringByDeletingPathExtension)-signed"
+            guard saveDialog.runModal() == .OK, let path = saveDialog.url?.path else { return nil }
+            guard isOutputBeingShared(path) else { return path }
+            MainView.makeFileBeingSharedAlert().runModal()
         }
     }
 
-    func uploadSignedFile(_ file: URL, to service: ShareService) async {
-        setStatus(
-            service.isLiveShare ? "Starting \(service.name)…" : "Uploading to \(service.name)…")
-        showProgress(service.isLiveShare ? nil : 0)
-        do {
-            let result = try await service.share(file) { [weak self] fraction in
-                self?.showProgress(fraction < 1 ? fraction : nil)
-            }
-            reportUpload(result, from: service)
-            if let share = result.liveShare, share.isActive {
-                watchSharing(share, file: file)
-                return
-            }
-        } catch ShareError.sessionExpired {
-            setStatus(
-                "\(service.name) session expired. Sign in again.", isWarning: true, link: file)
-        } catch {
-            setStatus(
-                "\(service.isLiveShare ? "Sharing" : "Upload") failed: \(error.localizedDescription)",
-                isWarning: true, link: file)
-        }
-        controlsEnabled(true)
+    func isOutputBeingShared(_ path: String) -> Bool {
+        shareWindows.isSharing(file: URL(fileURLWithPath: path))
+    }
+
+    static func makeFileBeingSharedAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = "This file is being shared."
+        alert.informativeText = "Stop sharing it first, or choose a different name."
+        alert.addButton(withTitle: "OK")
+        return alert
     }
 
     func appendStatusLinkTitle() {
@@ -117,8 +50,7 @@ extension MainView {
         text.append(NSAttributedString(string: " · ", attributes: attributes))
         text.append(
             NSAttributedString(
-                string: statusLink?.isFileURL == true ? "Show in Finder" : "Open Install Page",
-                attributes: linkAttributes(attributes)))
+                string: "Show in Finder", attributes: linkAttributes(attributes)))
         statusLabel.attributedStringValue = text
     }
 
@@ -129,110 +61,18 @@ extension MainView {
             .foregroundColor: NSColor.linkColor, .underlineStyle: NSUnderlineStyle.single.rawValue,
         ]) { $1 }
     }
-
-    func reportUpload(_ result: ShareResult, from service: ShareService) {
-        var headline =
-            result.liveShare == nil ? "Uploaded to \(service.name)" : "Sharing from this Mac"
-        if let link = result.link {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(link.absoluteString, forType: .string)
-            Log.write("Install link: \(link.absoluteString)")
-            headline += " — link copied"
-        }
-        setStatus(
-            ([headline] + result.warnings).joined(separator: ". "),
-            isWarning: !result.warnings.isEmpty, link: result.link)
-        if !result.deletionRequests.isEmpty {
-            showUploadDeletion((service.name, result.deletionRequests))
-        }
-    }
-
-    func showUploadDeletion(_ upload: (serviceName: String, requests: [URLRequest])) {
-        deletableUpload = upload
-        deleteUploadButton.isHidden = false
-        window?.invalidateCursorRects(for: self)
-    }
-
-    func makeDeleteUploadAlert() -> NSAlert? {
-        guard let upload = deletableUpload else { return nil }
-        let alert = NSAlert()
-        alert.messageText = "Delete this upload from \(upload.serviceName)?"
-        alert.informativeText = "The install link will stop working. This can't be undone."
-        alert.addButton(withTitle: "Delete")
-        alert.addButton(withTitle: "Cancel")
-        return alert
-    }
-
-    @objc func confirmUploadDeletion(_ sender: Any) {
-        guard let alert = makeDeleteUploadAlert(), let window = window else { return }
-        alert.beginSheetModal(for: window) { [weak self] response in
-            if response == .alertFirstButtonReturn {
-                self?.deleteUpload()
-            }
-        }
-    }
-
-    @objc func copyDeletionCommand(_ sender: Any) {
-        guard let upload = deletableUpload else { return }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(
-            ShareServices.deletionCommand(upload.requests), forType: .string)
-    }
-
-    func deleteUpload() {
-        guard let upload = deletableUpload else { return }
-        controlsEnabled(false)
-        setStatus("Deleting the upload from \(upload.serviceName)…")
-        showProgress(nil)
-        Task {
-            do {
-                try await ShareServices.delete(upload.requests, service: upload.serviceName)
-                setStatus("Deleted the upload from \(upload.serviceName)")
-            } catch {
-                setStatus(
-                    "Could not delete the upload: \(error.localizedDescription)", isWarning: true)
-                showUploadDeletion(upload)
-            }
-            controlsEnabled(true)
-        }
-    }
-
-    func watchSharing(_ share: LiveShare, file: URL) {
-        hideProgress()
-        stopSharingButton.isHidden = false
-        window?.invalidateCursorRects(for: self)
-        share.onEnd = { [weak self] reason in
-            Log.write(reason)
-            self?.finishSharing(
-                "Sharing stopped: the tunnel closed unexpectedly.", isWarning: true, link: file)
-        }
-    }
-
-    @objc func stopSharing(_ sender: Any) {
-        LiveShare.current?.stop()
-        finishSharing("Stopped sharing")
-    }
-
-    func finishSharing(_ status: String, isWarning: Bool = false, link: URL? = nil) {
-        stopSharingButton.isHidden = true
-        setStatus(status, isWarning: isWarning, link: link)
-        controlsEnabled(true)
-    }
-
-    static func makeQuitWhileSharingAlert() -> NSAlert {
-        let alert = NSAlert()
-        alert.messageText = "Stop sharing and quit?"
-        alert.informativeText = "The install link will stop working."
-        alert.addButton(withTitle: "Quit")
-        alert.addButton(withTitle: "Cancel")
-        return alert
-    }
 }
 
 extension MainView: NSWindowDelegate {
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        guard LiveShare.current != nil else { return true }
-        NSApp.terminate(sender)
+        guard shareWindows.hasActiveWork || shareWindows.hasOpenWindows else { return true }
+        terminateApp(sender)
         return false
+    }
+}
+
+extension MainView: NSMenuItemValidation {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        menuItem.action == #selector(shareSignedFile(_:)) ? shareButton.isEnabled : true
     }
 }

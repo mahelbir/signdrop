@@ -124,6 +124,24 @@ extension SerialTests {
                 "streamshare.upload.stallDeletes")
         }
 
+        @Test func cancellingStopsPromptlyAndRemovesTheFile() async {
+            let ipa = bigIPA()
+            let upload = Task { try await mock.api("stall~cancel").upload(ipa) { _ in } }
+            _ = await isEventuallyTrue(3) { mock.stats["stall~cancel"]["create"] != nil }
+            await pause(0.2)
+            let started = Date()
+            upload.cancel()
+            let outcome = await upload.result
+            #expect(Date().timeIntervalSince(started) < 1.5, "streamshare.cancelIsPrompt")
+            #expect(throws: CancellationError.self, "streamshare.cancelThrows") {
+                try outcome.get()
+            }
+            _ = await isEventuallyTrue(3) { mock.stats["stall~cancel"]["deleted"] != nil }
+            #expect(
+                mock.stats["stall~cancel"]["deleted"] as? [String] == ["stall~cancel-1/tok1"],
+                "streamshare.cancelDeletes")
+        }
+
         @Test func missingFileCreatesNothing() async {
             await #expect(
                 throws: ShareError.invalidFile("Could not read file: \(work.path)/absent.ipa"),

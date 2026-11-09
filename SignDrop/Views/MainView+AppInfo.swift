@@ -12,6 +12,7 @@ extension MainView: NSTextFieldDelegate {
 
     func refreshInputAppID() {
         let inputFile = inputFileField.stringValue
+        signButton.title = isInputSignedInPlace ? "Sign" : "Sign…"
         setStatus("Ready")
         inputAppInfo = nil
         DispatchQueue.global(qos: .userInitiated).async {

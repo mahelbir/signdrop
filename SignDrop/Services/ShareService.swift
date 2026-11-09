@@ -3,6 +3,7 @@ import Cocoa
 struct ShareResult: Equatable {
     let link: URL?
     let warnings: [String]
+    var itmsLink: String?
     var deletionRequests: [URLRequest] = []
     var liveShare: LiveShare?
 }
@@ -14,7 +15,7 @@ enum ShareError: LocalizedError, Equatable {
     case network(String)
 
     static let invalidBuild = ShareError.invalidFile(
-        "This file does not appear to be a valid iOS build. Please upload a valid IPA file.")
+        "This file does not appear to be a valid iOS build. Please choose a valid IPA file.")
 
     var errorDescription: String? {
         switch self {
@@ -72,7 +73,7 @@ extension ShareService {
 
 @MainActor
 final class LiveShare: Equatable {
-    private(set) static var current: LiveShare?
+    static let activityReason = "Sharing an app from this Mac"
     var onEnd: (@MainActor (String) -> Void)?
     private var stopHandler: (@MainActor () -> Void)?
     private var activity: NSObjectProtocol?
@@ -80,9 +81,7 @@ final class LiveShare: Equatable {
     init(stop: @escaping @MainActor () -> Void) {
         stopHandler = stop
         activity = ProcessInfo.processInfo.beginActivity(
-            options: .userInitiated, reason: "Sharing an app from this Mac")
-        LiveShare.current?.stop()
-        LiveShare.current = self
+            options: .userInitiated, reason: LiveShare.activityReason)
     }
 
     var isActive: Bool {
@@ -95,9 +94,6 @@ final class LiveShare: Equatable {
         if let activity {
             ProcessInfo.processInfo.endActivity(activity)
             self.activity = nil
-        }
-        if LiveShare.current === self {
-            LiveShare.current = nil
         }
         stopHandler()
     }

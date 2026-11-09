@@ -106,88 +106,33 @@ extension SerialTests {
                 "progress.hiddenWhenDone")
         }
 
-        @Test func uploadsTheSignedIPA() async throws {
-            let link = "https://betadrop.app/install/?i=abc123"
-            let modes = Collector<Bool>()
-            let shown = Collector<String>()
-            let modeObservation = view.progressBar.observe(\.isIndeterminate) { bar, _ in
-                modes.append(bar.isIndeterminate)
-            }
-            let busy = view.busyIndicator.observe(\.isHidden) { indicator, _ in
-                if !indicator.isHidden { shown.append("busy") }
-            }
-            let bar = view.progressBar.observe(\.isHidden) { bar, _ in
-                if !bar.isHidden { shown.append("bar") }
-            }
+        @Test func sharesTheSignedIPAFromItsWindow() async throws {
             try harness.signIn("ok~harness")
-            view.uploadPopup.selectItem(withTitle: "BetaDrop")
-            view.refreshUploadAccount()
-            await harness.sign("new-upload", input: sampleIPA)
-            modeObservation.invalidate()
-            busy.invalidate()
-            bar.invalidate()
-
+            await harness.sign("new-share", input: sampleIPA)
+            view.shareSignedFile(view.shareButton)
+            let controller = try #require(view.shareWindows.current)
+            defer { controller.window?.close() }
+            let row = controller.rows[0]
+            row.shareButton.performClick(nil)
+            _ = await isEventuallyTrue(20) { !row.copyLinkButton.isHidden }
             #expect(
-                shown.all.contains("bar") && shown.all.last == "busy", "upload.progressSwitchesBars"
-            )
-            #expect(
-                !view.progressBar.isIndeterminate && !modes.all.contains(true),
-                "progress.determinateBarNeverIndeterminate")
-            #expect(
-                view.statusLabel.stringValue
-                    == "Uploaded to BetaDrop — link copied · Open Install Page", "upload.status")
-            #expect(view.statusLink?.absoluteString == link, "upload.link")
-            #expect(
-                isLinkStyled(
-                    view.statusLabel.attributedStringValue.attributes(ofText: "Open Install Page")),
-                "upload.linkStyled")
-            #expect(view.statusLabel.toolTip == link, "upload.linkTooltip")
-            #expect(NSPasteboard.general.string(forType: .string) == link, "upload.pasteboard")
-            #expect(
-                !view.isSigning && view.uploadPopup.isEnabled && view.signButton.isEnabled,
-                "upload.unlocked")
-            #expect(view.progressBar.isHidden, "upload.progressHidden")
+                row.linkLabel.stringValue == "https://betadrop.app/install/?i=abc123",
+                "share.link")
             #expect(
                 harness.mock.stats["ok~harness"]["sha256"] as? String
-                    == sha256Hex(ofFile: harness.work.child("new-upload.ipa")), "upload.sameBytes")
+                    == sha256Hex(ofFile: harness.work.child("new-share.ipa")), "share.sameBytes")
             #expect(!harness.loggedText.contains("bd_live_harness"), "tokenNotLogged")
         }
 
-        @Test func doesNotUploadAnAppex() async throws {
+        @Test func doesNotOfferAnAppexForSharing() async throws {
             let appex = harness.work.child("Standalone2.appex")
             try FileManager.default.copyItem(atPath: sampleAppex, toPath: appex.path)
-            try harness.signIn("ok~harness")
-            view.uploadPopup.selectItem(withTitle: "BetaDrop")
-            view.refreshUploadAccount()
-            await harness.sign("new-upload-appex", input: appex.path, output: appex.path)
-            #expect(
-                view.statusLabel.stringValue.hasSuffix(
-                    "Standalone2.appex (only .ipa files can be uploaded) · Show in Finder"),
-                "uploadAppex.skipped")
-            #expect(harness.mock.stats["ok~harness"]["publish"] == nil, "uploadAppex.noUpload")
+            await harness.sign("new-share-appex", input: appex.path, output: appex.path)
+            #expect(!view.shareButton.isEnabled, "shareAppex.off")
             let appexFile = URL(fileURLWithPath: appex.path)
             #expect(
-                !view.statusLabel.stringValue.contains("Open Install Page")
-                    && view.statusLink == appexFile && view.statusLabel.toolTip == appexFile.path,
-                "uploadAppex.linkReplaced")
-        }
-
-        @Test func anExpiredSessionKeepsTheSignedFile() async throws {
-            try harness.signIn("unauthorized~harness")
-            view.uploadPopup.selectItem(withTitle: "BetaDrop")
-            await harness.sign("new-upload-expired", input: sampleIPA)
-            #expect(
-                view.statusLabel.stringValue
-                    == "BetaDrop session expired. Sign in again. · Show in Finder"
-                    && view.isStatusWarning, "uploadExpired.status")
-            #expect(
-                !FileManager.default.fileExists(atPath: BetaDropConfig.fileURL().path),
-                "uploadExpired.configCleared")
-            #expect(view.uploadPopup.indexOfSelectedItem == 0, "uploadExpired.unchecked")
-            #expect(
-                view.statusLink
-                    == URL(fileURLWithPath: harness.work.child("new-upload-expired.ipa").path),
-                "uploadExpired.showInFinder")
+                view.statusLink == appexFile && view.statusLabel.toolTip == appexFile.path,
+                "shareAppex.finderLink")
         }
     }
 

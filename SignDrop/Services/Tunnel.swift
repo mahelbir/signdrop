@@ -311,12 +311,16 @@ final class CommandLineTunnel: Tunnel {
         }
 
         func wait() async throws -> OpenTunnel {
-            try await withCheckedThrowingContinuation { continuation in
-                if let pending {
-                    continuation.resume(with: pending)
-                } else {
-                    self.continuation = continuation
+            try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { continuation in
+                    if let pending {
+                        continuation.resume(with: pending)
+                    } else {
+                        self.continuation = continuation
+                    }
                 }
+            } onCancel: {
+                Task { @MainActor in self.fail(CancellationError()) }
             }
         }
 

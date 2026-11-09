@@ -13,19 +13,12 @@ extension SerialTests {
             ipa = work.ipa("OTA.ipa", sampleAppInfo)
         }
 
-        private func isSleepBlocked() -> Bool {
-            Process().execute(
-                "/usr/bin/pmset", workingDirectory: nil, arguments: ["-g", "assertions"]
-            ).output.contains("Sharing an app from this Mac")
-        }
-
         private func shareService(_ mode: FakeTunnel.Mode) -> (
             service: TunnelShareService, tunnel: FakeTunnel, logged: Collector<String>
         ) {
             let tunnel = FakeTunnel(mode)
-            let service = TunnelShareService(tunnel: tunnel, shorteners: [])
+            let service = TunnelShareService(tunnel: tunnel)
             service.readyTimeout = 2
-            service.linkStyle = .shortened
             let logged = Collector<String>()
             service.log = { logged.append($0) }
             return (service, tunnel, logged)
@@ -47,26 +40,15 @@ extension SerialTests {
                 "link.shortenOrKeep")
         }
 
-        @Test func sharesTheInstallLinkByDefault() async {
-            let shortenerCalls = Collector<String>()
-            let recorder = LinkShortener(
-                name: "Recorder",
-                makeRequest: { link in
-                    shortenerCalls.append(link)
-                    return nil
-                }, readShortLink: { _ in nil })
-            let direct = TunnelShareService(
-                tunnel: FakeTunnel(.passthrough), shorteners: [recorder])
-            direct.readyTimeout = 2
-            direct.log = { _ in }
+        @Test func sharesTheInstallPageAndTheRawLink() async {
+            let (direct, _, _) = shareService(.passthrough)
             let result = try? await direct.share(ipa) { _ in }
             let installURL = result?.link
-            #expect(installURL?.lastPathComponent == "install", "share.installLinkByDefault")
+            #expect(installURL?.lastPathComponent == "install", "share.installLink")
             #expect(
                 installURL?.absoluteString.hasPrefix("http://127.0.0.1:") == true,
-                "share.installLinkByDefault")
-            #expect(
-                result?.warnings == [] && shortenerCalls.all.isEmpty, "share.installLinkByDefault")
+                "share.installLink")
+            #expect(result?.warnings == [], "share.noThirdPartyWarnings")
             let installHead = installURL.map { responseHead($0) }
             let expectedManifest = installURL?.deletingLastPathComponent().appendingPathComponent(
                 "manifest.plist")
@@ -75,6 +57,9 @@ extension SerialTests {
                     && installHead?.location
                         == expectedManifest.map { InstallLink.itmsLink(manifest: $0) },
                 "share.installRedirects")
+            #expect(
+                result?.itmsLink != nil && result?.itmsLink == installHead?.location,
+                "share.rawLink")
             #expect(
                 await httpRequest(
                     manifestURL(fromItmsLink: installHead?.location) ?? URL(fileURLWithPath: "/")
@@ -99,9 +84,8 @@ extension SerialTests {
             let (service, tunnel, logged) = shareService(.passthrough)
             let result = try await service.share(ipa) { _ in }
             let share = result.liveShare
-            #expect(share?.isActive == true && LiveShare.current === share, "share.live")
-            #expect(result.warnings == ["Could not shorten the link ()."], "share.shortenWarning")
-            let manifest = manifestURL(fromWebLink: result.link)
+            #expect(share?.isActive == true, "share.live")
+            let manifest = manifestURL(fromItmsLink: result.itmsLink)
             #expect(
                 manifest?.lastPathComponent == "manifest.plist"
                     && manifest?.absoluteString.hasPrefix(
@@ -128,8 +112,7 @@ extension SerialTests {
             share?.stop()
             share?.stop()
             #expect(
-                tunnel.isClosed && share?.isActive == false && LiveShare.current == nil,
-                "share.stopClosesTunnel")
+                tunnel.isClosed && share?.isActive == false, "share.stopClosesTunnel")
             #expect(
                 await httpRequest(manifest ?? URL(fileURLWithPath: "/")).status == 0,
                 "share.stopClosesServer")
@@ -144,20 +127,24 @@ extension SerialTests {
             result?.liveShare?.onEnd = { reasons.append($0) }
             tunnel.tunnel?.reportUnexpectedClose("ERR lost")
             #expect(
-                reasons.all == ["ERR lost"] && result?.liveShare?.isActive == false
-                    && LiveShare.current == nil, "share.unexpectedEnd")
+                reasons.all == ["ERR lost"] && result?.liveShare?.isActive == false,
+                "share.unexpectedEnd")
             #expect(
                 await httpRequest(
-                    manifestURL(fromWebLink: result?.link) ?? URL(fileURLWithPath: "/")
+                    manifestURL(fromItmsLink: result?.itmsLink) ?? URL(fileURLWithPath: "/")
                 ).status == 0, "share.unexpectedEndClosesServer")
         }
 
-        @Test func aNewShareReplacesThePreviousOne() async {
+        @Test func twoSharesRunSideBySide() async {
             let first = try? await shareService(.passthrough).service.share(ipa) { _ in }
             let second = try? await shareService(.passthrough).service.share(ipa) { _ in }
             #expect(
-                first?.liveShare?.isActive == false && second?.liveShare?.isActive == true
-                    && LiveShare.current === second?.liveShare, "share.replacesPrevious")
+                first?.liveShare?.isActive == true && second?.liveShare?.isActive == true,
+                "share.sideBySide")
+            first?.liveShare?.stop()
+            #expect(
+                first?.liveShare?.isActive == false && second?.liveShare?.isActive == true,
+                "share.stopsOnlyItself")
             second?.liveShare?.stop()
         }
 
@@ -178,8 +165,7 @@ extension SerialTests {
                 await httpRequest(URL(string: "http://127.0.0.1:\(tunnel.openedPort ?? 0)/")!)
                 .status == 0
             #expect(
-                message == "ERR lost" && isServerClosed && LiveShare.current == nil,
-                "share.dropsAfterReady")
+                message == "ERR lost" && isServerClosed, "share.dropsAfterReady")
         }
 
         @Test func logsWhyTheLinkCheckFailed() async {
@@ -193,7 +179,6 @@ extension SerialTests {
 
         @Test func checksAFreshHostnameWithoutTheSystemResolver() async {
             let (service, _, logged) = shareService(.pinned)
-            service.linkStyle = .installRedirect
             let result = try? await service.share(ipa) { _ in }
             #expect(result?.link?.host == "fresh-host.invalid", "share.pinnedCheckSkipsResolver")
             #expect(
@@ -242,7 +227,7 @@ extension SerialTests {
                 }
                 #expect(
                     isServerClosed && (tunnel.tunnel == nil || tunnel.isClosed)
-                        && LiveShare.current == nil && Date().timeIntervalSince(started) < 5,
+                        && Date().timeIntervalSince(started) < 5,
                     "\(item.name).cleanup")
             }
         }

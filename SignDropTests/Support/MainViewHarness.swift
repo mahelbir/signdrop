@@ -46,6 +46,7 @@ final class MainViewHarness {
 
     func prepare(_ target: MainView, isCertificateLoaded: Bool) {
         target.defaults = defaults
+        target.shareWindows = ShareWindows()
         target.setUpLayout()
         target.populateProvisioningProfiles()
         if isCertificateLoaded {
@@ -61,20 +62,11 @@ final class MainViewHarness {
         return next
     }
 
-    func isBesideStatus(_ button: NSView) -> Bool {
-        view.layoutSubtreeIfNeeded()
-        let labelFrame = view.statusLabel.convert(view.statusLabel.bounds, to: view)
-        let buttonFrame = button.convert(button.bounds, to: view)
-        return buttonFrame.minX >= labelFrame.maxX && buttonFrame.minX - labelFrame.maxX < 20
-            && abs(buttonFrame.midY - labelFrame.midY) < 2
-    }
-
     func signIn(_ scenario: String) throws {
         try BetaDropConfig(
             apiUrl: mock.api(scenario), token: "bd_live_harness",
             user: .init(id: "1", email: "dev@example.com", role: nil)
         ).write(to: BetaDropConfig.fileURL())
-        view.refreshUploadAccount()
     }
 
     func sign(_ name: String, input: String, output: String? = nil, on other: MainView? = nil) async

@@ -43,6 +43,12 @@
 		D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */; };
 		82C880DBEB2F5BED99510E96 /* MainView+Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01E59B07D1B730531AFD3D /* MainView+Share.swift */; };
 		A7D3E1F05B2C4A6E8F901B2C /* MainView+SavedChoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4F2016C3D5B7F90A12C3D /* MainView+SavedChoices.swift */; };
+		C9F50312AD4E6C8091B23D4E /* ShareJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA061423BE5F7D91A2C34E5F /* ShareJob.swift */; };
+		E1A27534CF607EA2B3D45F60 /* ProgressSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B38645D0718FB3C4E56071 /* ProgressSlot.swift */; };
+		A3C49756E1829AC4D5F67182 /* ShareRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4D5A867F293ABD5E6078293 /* ShareRow.swift */; };
+		C5E6B978A3A4BCE6F71893A4 /* ShareWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6F7CA89B4B5CDF7A829A4B5 /* ShareWindowController.swift */; };
+		E7A8DB9AC5C6DEA8B93AB5C6 /* ShareWindows.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B9ECABD6D7EFB9CA4BC6D7 /* ShareWindows.swift */; };
+		A9CAFDBCE7E8F0CADB5CD7E8 /* AppMenus.swift in Sources */ = {isa = PBXBuildFile; fileRef = BADB0ECDF8F901DBEC6DE8F9 /* AppMenus.swift */; };
 		12272F3FE6AFCF5E6AFFD770 /* ShareAccountMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D81186D1098EB931AF550DA /* ShareAccountMenu.swift */; };
 /* End PBXBuildFile section */
 
@@ -103,6 +109,12 @@
 		1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropSignInSheet.swift; sourceTree = "<group>"; };
 		5A01E59B07D1B730531AFD3D /* MainView+Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+Share.swift"; sourceTree = "<group>"; };
 		B8E4F2016C3D5B7F90A12C3D /* MainView+SavedChoices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+SavedChoices.swift"; sourceTree = "<group>"; };
+		DA061423BE5F7D91A2C34E5F /* ShareJob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareJob.swift; sourceTree = "<group>"; };
+		F2B38645D0718FB3C4E56071 /* ProgressSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressSlot.swift; sourceTree = "<group>"; };
+		B4D5A867F293ABD5E6078293 /* ShareRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareRow.swift; sourceTree = "<group>"; };
+		D6F7CA89B4B5CDF7A829A4B5 /* ShareWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareWindowController.swift; sourceTree = "<group>"; };
+		F8B9ECABD6D7EFB9CA4BC6D7 /* ShareWindows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareWindows.swift; sourceTree = "<group>"; };
+		BADB0ECDF8F901DBEC6DE8F9 /* AppMenus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMenus.swift; sourceTree = "<group>"; };
 		3D81186D1098EB931AF550DA /* ShareAccountMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareAccountMenu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -189,6 +201,11 @@
 				65311EAD1BF8259000516EFD /* NSMenuLink.swift */,
 				1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */,
 				3D81186D1098EB931AF550DA /* ShareAccountMenu.swift */,
+				F2B38645D0718FB3C4E56071 /* ProgressSlot.swift */,
+				B4D5A867F293ABD5E6078293 /* ShareRow.swift */,
+				D6F7CA89B4B5CDF7A829A4B5 /* ShareWindowController.swift */,
+				F8B9ECABD6D7EFB9CA4BC6D7 /* ShareWindows.swift */,
+				BADB0ECDF8F901DBEC6DE8F9 /* AppMenus.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -209,6 +226,7 @@
 				65311EAF1BF835F100516EFD /* Log.swift */,
 				65B2EAA11CDE981500D02053 /* SignDropShared.swift */,
 				9F4E729C9EE3864CDE5B5B38 /* ShareService.swift */,
+				DA061423BE5F7D91A2C34E5F /* ShareJob.swift */,
 				25095D196EB38E0DF5FD1A7D /* BetaDropAPI.swift */,
 				3C203DEC93413E606B71A888 /* BetaDropService.swift */,
 				950F5CD450C4FD0538E44F6A /* InstallLink.swift */,
@@ -387,6 +405,11 @@
 				82C880DBEB2F5BED99510E96 /* MainView+Share.swift in Sources */,
 				A7D3E1F05B2C4A6E8F901B2C /* MainView+SavedChoices.swift in Sources */,
 				12272F3FE6AFCF5E6AFFD770 /* ShareAccountMenu.swift in Sources */,
+				E1A27534CF607EA2B3D45F60 /* ProgressSlot.swift in Sources */,
+				A3C49756E1829AC4D5F67182 /* ShareRow.swift in Sources */,
+				C5E6B978A3A4BCE6F71893A4 /* ShareWindowController.swift in Sources */,
+				E7A8DB9AC5C6DEA8B93AB5C6 /* ShareWindows.swift in Sources */,
+				A9CAFDBCE7E8F0CADB5CD7E8 /* AppMenus.swift in Sources */,
 				3E14F4510B01BCABD25FA539 /* MainView+Layout.swift in Sources */,
 				659734A71C65B94F00383D2D /* fmemopen.c in Sources */,
 				65311EB01BF835F100516EFD /* Log.swift in Sources */,
@@ -401,6 +424,7 @@
 				65B2EAA21CDE981500D02053 /* SignDropShared.swift in Sources */,
 				C4530FC30747402D7A71C5B9 /* BetaDropConfig.swift in Sources */,
 				EC156D2DDDDE420899C4CAE4 /* ShareService.swift in Sources */,
+				C9F50312AD4E6C8091B23D4E /* ShareJob.swift in Sources */,
 				C8EAB67E5314AB72E685E1A0 /* BetaDropAPI.swift in Sources */,
 				883BE16B3A7094453C7B608B /* BetaDropService.swift in Sources */,
 				CABFFA21BB5D5536E7B669F2 /* AppInfo.swift in Sources */,
