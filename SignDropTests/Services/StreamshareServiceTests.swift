@@ -4,17 +4,17 @@ import Testing
 
 extension SerialTests {
     @MainActor
-    struct StreamShareServiceTests {
-        private let mock: StreamShareMockServer
+    struct StreamshareServiceTests {
+        private let mock: StreamshareMockServer
         private let work: WorkDirectory
 
         init() async throws {
-            mock = try await StreamShareMockServer()
+            mock = try await StreamshareMockServer()
             work = try WorkDirectory()
         }
 
-        private func service(_ scenario: String, shortener: String? = nil) -> StreamShareService {
-            StreamShareService(
+        private func service(_ scenario: String, shortener: String? = nil) -> StreamshareService {
+            StreamshareService(
                 api: mock.api(scenario), shorteners: mock.shorteners(shortener ?? scenario))
         }
 
@@ -24,7 +24,7 @@ extension SerialTests {
 
         @Test func needsNoAccount() {
             let happy = service("ok~service")
-            #expect(happy.name == "StreamShare", "service.name")
+            #expect(happy.name == "Streamshare", "service.name")
             #expect(happy.accountName == nil, "service.noAccount")
             #expect(!happy.isSignInRequired, "service.noSignIn")
         }
@@ -33,7 +33,7 @@ extension SerialTests {
             #expect(ShareServices.all.first?.isSignInRequired == true, "service.betaDropSignIn")
             #expect(
                 ShareServices.all.map(\.name) == [
-                    "BetaDrop", "StreamShare", "Cloudflare Quick Tunnel",
+                    "BetaDrop", "Streamshare", "Cloudflare Quick Tunnel",
                 ],
                 "service.registered")
         }
@@ -44,8 +44,8 @@ extension SerialTests {
             let result = try? await service("ok~service").share(ipa) { fractions.append($0) }
             _ = await isEventuallyTrue(3) { mock.uploads("ok~service").count == 2 }
             let api = mock.api("ok~service")
-            let ipaFile = StreamShareFile(id: "ok~service-1", deletionToken: "tok1")
-            let manifestFile = StreamShareFile(id: "ok~service-2", deletionToken: "tok2")
+            let ipaFile = StreamshareFile(id: "ok~service-1", deletionToken: "tok1")
+            let manifestFile = StreamshareFile(id: "ok~service-2", deletionToken: "tok2")
             let expected = ShareResult(
                 link: URL(string: "https://ulvis.net/mock-ok~service"),
                 warnings: [],
@@ -83,7 +83,7 @@ extension SerialTests {
             let fallback = try? await service("ok~fallback", shortener: "fail-all~service").share(
                 ipa()
             ) { _ in }
-            let fallbackManifest = StreamShareFile(id: "ok~fallback-2", deletionToken: "tok2")
+            let fallbackManifest = StreamshareFile(id: "ok~fallback-2", deletionToken: "tok2")
             #expect(
                 fallback?.link
                     == (try? InstallLink.webLink(
@@ -102,7 +102,7 @@ extension SerialTests {
         @Test func deletesTheIPAWhenTheManifestFails() async {
             let ipa = ipa()
             await #expect(
-                throws: ShareError.server("StreamShare could not start the upload (HTTP 500)."),
+                throws: ShareError.server("Streamshare could not start the upload (HTTP 500)."),
                 "service.manifestFails"
             ) { try await service("manifest-fail").share(ipa) { _ in } }
             _ = await isEventuallyTrue(3) { mock.stats["manifest-fail"]["deleted"] != nil }
@@ -119,7 +119,7 @@ extension SerialTests {
                     withUnsafeCurrentTask { $0?.cancel() }
                     return URLRequest(url: URL(string: "https://example.invalid/")!)
                 }, readShortLink: { _ in nil })
-            let service = StreamShareService(api: mock.api("ok~cancel"), shorteners: [cancelling])
+            let service = StreamshareService(api: mock.api("ok~cancel"), shorteners: [cancelling])
             await #expect(throws: CancellationError.self, "service.cancelThrows") {
                 try await service.share(ipa) { _ in }
             }

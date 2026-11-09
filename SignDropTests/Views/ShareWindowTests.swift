@@ -11,17 +11,17 @@ extension SerialTests {
         private let link = URL(string: "https://example.com/install")!
         private let rawLink = "itms-services://?action=download-manifest&url=x"
         private let file = URL(fileURLWithPath: "/tmp/Signed App.ipa")
-        private let upload = ControlledShareService(name: "Upload Service")
+        private let hosted = ControlledShareService(name: "Hosted Service")
         private let live = ControlledShareService(name: "Live Service")
         private let controller: ShareWindowController
 
         init() async throws {
             harness = try await MainViewHarness()
             live.isLiveShare = true
-            controller = ShareWindowController(file: file, services: [upload, live])
+            controller = ShareWindowController(file: file, services: [hosted, live])
         }
 
-        private var uploadRow: ShareRow {
+        private var hostedRow: ShareRow {
             controller.rows[0]
         }
 
@@ -72,45 +72,45 @@ extension SerialTests {
         @Test func listsEveryServiceUnderTheFileName() {
             #expect(controller.window?.title == "Share Signed App.ipa", "window.title")
             #expect(
-                controller.rows.map(\.nameLabel.stringValue) == ["Upload Service", "Live Service"],
+                controller.rows.map(\.nameLabel.stringValue) == ["Hosted Service", "Live Service"],
                 "window.rows")
             #expect(
                 ShareWindowController(file: file, services: ShareServices.all).rows.map(
                     \.nameLabel.stringValue) == [
-                        "BetaDrop", "StreamShare", "Cloudflare Quick Tunnel",
+                        "BetaDrop", "Streamshare", "Cloudflare Quick Tunnel",
                     ], "window.registeredServices")
         }
 
         @Test func aReadyRowOffersShare() {
-            #expect(shownButtons(uploadRow) == ["Share"], "row.ready")
-            #expect(uploadRow.linkLabel.isHidden && uploadRow.noteLabel.isHidden, "row.readyEmpty")
+            #expect(shownButtons(hostedRow) == ["Share"], "row.ready")
+            #expect(hostedRow.linkLabel.isHidden && hostedRow.noteLabel.isHidden, "row.readyEmpty")
             #expect(
-                uploadRow.progress.bar.isHidden && uploadRow.progress.busyIndicator.isHidden,
+                hostedRow.progress.bar.isHidden && hostedRow.progress.busyIndicator.isHidden,
                 "row.readyNoProgress")
         }
 
         @Test func aServiceThatNeedsSetupAsksForMoreInput() async {
-            upload.isReadyToShare = false
-            upload.isPrepareSuccessful = false
-            let row = ShareWindowController(file: file, services: [upload]).rows[0]
+            hosted.isReadyToShare = false
+            hosted.isPrepareSuccessful = false
+            let row = ShareWindowController(file: file, services: [hosted]).rows[0]
             #expect(shownButtons(row) == ["Share…"], "row.shareEllipsis")
-            upload.isReadyToShare = true
+            hosted.isReadyToShare = true
             row.render()
             #expect(shownButtons(row) == ["Share"], "row.shareNoEllipsis")
         }
 
-        @Test func anUploadShowsItsPercentAndCanBeCancelled() async {
-            await start(uploadRow, upload)
-            #expect(shownButtons(uploadRow) == ["Cancel"], "row.runningButtons")
+        @Test func aHostedShareShowsItsPercentAndCanBeCancelled() async {
+            await start(hostedRow, hosted)
+            #expect(shownButtons(hostedRow) == ["Cancel"], "row.runningButtons")
             #expect(
-                !uploadRow.progress.bar.isHidden && uploadRow.progress.busyIndicator.isHidden,
+                !hostedRow.progress.bar.isHidden && hostedRow.progress.busyIndicator.isHidden,
                 "row.determinateBar")
-            upload.progress?(0.25)
-            _ = await isEventuallyTrue(1) { uploadRow.progress.label.stringValue == "25%" }
-            #expect(uploadRow.progress.bar.doubleValue == 25, "row.percent")
-            uploadRow.cancelButton.performClick(nil)
-            #expect(shownButtons(uploadRow) == ["Share"], "row.cancelled")
-            #expect(uploadRow.progress.bar.isHidden, "row.cancelHidesProgress")
+            hosted.progress?(0.25)
+            _ = await isEventuallyTrue(1) { hostedRow.progress.label.stringValue == "25%" }
+            #expect(hostedRow.progress.bar.doubleValue == 25, "row.percent")
+            hostedRow.cancelButton.performClick(nil)
+            #expect(shownButtons(hostedRow) == ["Share"], "row.cancelled")
+            #expect(hostedRow.progress.bar.isHidden, "row.cancelHidesProgress")
         }
 
         @Test func aLiveShareUsesTheBusyBarWithoutAPercent() async {
@@ -123,50 +123,50 @@ extension SerialTests {
         }
 
         @Test func oneIndicatorNeverChangesMode() async {
-            await start(uploadRow, upload)
-            defer { uploadRow.job.cancel() }
-            upload.progress?(1)
-            _ = await isEventuallyTrue(1) { !uploadRow.progress.busyIndicator.isHidden }
+            await start(hostedRow, hosted)
+            defer { hostedRow.job.cancel() }
+            hosted.progress?(1)
+            _ = await isEventuallyTrue(1) { !hostedRow.progress.busyIndicator.isHidden }
             #expect(
-                uploadRow.progress.bar.isHidden && !uploadRow.progress.bar.isIndeterminate
-                    && uploadRow.progress.busyIndicator.isIndeterminate, "row.neverSwitchesMode")
+                hostedRow.progress.bar.isHidden && !hostedRow.progress.bar.isIndeterminate
+                    && hostedRow.progress.busyIndicator.isIndeterminate, "row.neverSwitchesMode")
         }
 
         @Test func rowsKeepTheirOwnProgress() async {
-            await start(uploadRow, upload)
+            await start(hostedRow, hosted)
             let other = ControlledShareService(name: "Other")
-            let pair = ShareWindowController(file: file, services: [upload, other])
+            let pair = ShareWindowController(file: file, services: [hosted, other])
             defer {
-                uploadRow.job.cancel()
+                hostedRow.job.cancel()
                 pair.rows[1].job.cancel()
             }
             await start(pair.rows[1], other)
-            upload.progress?(0.25)
+            hosted.progress?(0.25)
             other.progress?(0.5)
             _ = await isEventuallyTrue(1) {
-                uploadRow.progress.label.stringValue == "25%"
+                hostedRow.progress.label.stringValue == "25%"
                     && pair.rows[1].progress.label.stringValue == "50%"
             }
-            #expect(uploadRow.progress.label.stringValue == "25%", "row.ownPercent")
+            #expect(hostedRow.progress.label.stringValue == "25%", "row.ownPercent")
             #expect(pair.rows[1].progress.label.stringValue == "50%", "row.otherPercent")
         }
 
-        @Test func aFinishedUploadOffersItsLinkAndDelete() async {
+        @Test func aFinishedHostedShareOffersItsLinkAndDelete() async {
             await finish(
-                uploadRow, upload,
+                hostedRow, hosted,
                 with: ShareResult(link: link, warnings: [], deletionRequests: deletion("ok~row")))
             #expect(
-                shownButtons(uploadRow) == ["Copy Link", "Open", "Delete…"], "row.finishedButtons")
+                shownButtons(hostedRow) == ["Copy Link", "Open", "Delete…"], "row.finishedButtons")
             #expect(
-                uploadRow.linkLabel.stringValue == link.absoluteString
-                    && !uploadRow.linkLabel.isHidden, "row.linkShown")
-            #expect(uploadRow.linkLabel.toolTip == link.absoluteString, "row.linkTooltip")
+                hostedRow.linkLabel.stringValue == link.absoluteString
+                    && !hostedRow.linkLabel.isHidden, "row.linkShown")
+            #expect(hostedRow.linkLabel.toolTip == link.absoluteString, "row.linkTooltip")
         }
 
         @Test func aServiceWithoutDeletionOffersOnlyTheLink() async {
-            await finish(uploadRow, upload, with: ShareResult(link: link, warnings: []))
-            #expect(shownButtons(uploadRow) == ["Copy Link", "Open"], "row.noDelete")
-            #expect(uploadRow.copyLinkButton.menu == nil, "row.noRawLinkMenu")
+            await finish(hostedRow, hosted, with: ShareResult(link: link, warnings: []))
+            #expect(shownButtons(hostedRow) == ["Copy Link", "Open"], "row.noDelete")
+            #expect(hostedRow.copyLinkButton.menu == nil, "row.noRawLinkMenu")
         }
 
         @Test func aLiveShareOffersStopSharing() async {
@@ -186,19 +186,19 @@ extension SerialTests {
         @Test func copyingNeedsAClick() async {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString("unchanged", forType: .string)
-            await finish(uploadRow, upload, with: ShareResult(link: link, warnings: []))
+            await finish(hostedRow, hosted, with: ShareResult(link: link, warnings: []))
             #expect(pasteboardText == "unchanged", "row.noAutoCopy")
-            uploadRow.copyLinkButton.performClick(nil)
+            hostedRow.copyLinkButton.performClick(nil)
             #expect(pasteboardText == link.absoluteString, "row.copied")
         }
 
         @Test func rightClickCopiesTheRawLink() async {
             await finish(
-                uploadRow, upload, with: ShareResult(link: link, warnings: [], itmsLink: rawLink))
-            let menu = uploadRow.copyLinkButton.menu
+                hostedRow, hosted, with: ShareResult(link: link, warnings: [], itmsLink: rawLink))
+            let menu = hostedRow.copyLinkButton.menu
             #expect(menu?.items.map(\.title) == ["Copy itms-services Link"], "row.rawLinkMenu")
             #expect(
-                uploadRow.copyLinkButton.toolTip == "Right-click to copy the itms-services link",
+                hostedRow.copyLinkButton.toolTip == "Right-click to copy the itms-services link",
                 "row.rawLinkHint")
             click(menu?.items.first)
             #expect(pasteboardText == rawLink, "row.rawLinkCopied")
@@ -206,40 +206,40 @@ extension SerialTests {
 
         @Test func openUsesTheNormalLink() async {
             let opened = Collector<URL>()
-            uploadRow.openURL = { opened.append($0) }
+            hostedRow.openURL = { opened.append($0) }
             await finish(
-                uploadRow, upload, with: ShareResult(link: link, warnings: [], itmsLink: rawLink))
-            uploadRow.openButton.performClick(nil)
+                hostedRow, hosted, with: ShareResult(link: link, warnings: [], itmsLink: rawLink))
+            hostedRow.openButton.performClick(nil)
             #expect(opened.all == [link], "row.openNormalLink")
         }
 
         @Test func warningsShowUnderTheLink() async {
             await finish(
-                uploadRow, upload, with: ShareResult(link: link, warnings: ["Slow", "Busy"]))
+                hostedRow, hosted, with: ShareResult(link: link, warnings: ["Slow", "Busy"]))
             #expect(
-                uploadRow.noteLabel.stringValue == "Slow. Busy" && !uploadRow.noteLabel.isHidden,
+                hostedRow.noteLabel.stringValue == "Slow. Busy" && !hostedRow.noteLabel.isHidden,
                 "row.warnings")
-            #expect(uploadRow.noteLabel.textColor == .systemOrange, "row.warningColor")
+            #expect(hostedRow.noteLabel.textColor == .systemOrange, "row.warningColor")
         }
 
         @Test func aFailureStaysInItsRowAndCanBeRetried() async {
-            await start(uploadRow, upload)
+            await start(hostedRow, hosted)
             await start(liveRow, live)
             defer { liveRow.job.cancel() }
-            upload.complete(.failure(ShareError.server("boom")))
-            _ = await isEventuallyTrue(2) { uploadRow.job.state == .failed("boom") }
-            #expect(shownButtons(uploadRow) == ["Retry"], "row.failedButtons")
-            #expect(uploadRow.noteLabel.stringValue == "boom", "row.failedText")
+            hosted.complete(.failure(ShareError.server("boom")))
+            _ = await isEventuallyTrue(2) { hostedRow.job.state == .failed("boom") }
+            #expect(shownButtons(hostedRow) == ["Retry"], "row.failedButtons")
+            #expect(hostedRow.noteLabel.stringValue == "boom", "row.failedText")
             #expect(shownButtons(liveRow) == ["Cancel"], "row.otherKeepsRunning")
-            uploadRow.retryButton.performClick(nil)
-            #expect(await isEventuallyTrue(2) { upload.shareCount == 2 }, "row.retried")
-            uploadRow.job.cancel()
+            hostedRow.retryButton.performClick(nil)
+            #expect(await isEventuallyTrue(2) { hosted.shareCount == 2 }, "row.retried")
+            hostedRow.job.cancel()
         }
 
         @Test func focusStaysInTheRowWhenItsButtonDisappears() async throws {
             guard NSApp.isFullKeyboardAccessEnabled else { return }
             let window = try #require(controller.window)
-            await finish(uploadRow, upload, with: ShareResult(link: link, warnings: []))
+            await finish(hostedRow, hosted, with: ShareResult(link: link, warnings: []))
             #expect(window.makeFirstResponder(liveRow.shareButton), "focus.setUp")
             await start(liveRow, live)
             defer { liveRow.job.cancel() }
@@ -249,10 +249,10 @@ extension SerialTests {
         @Test func aRowThatWasNotFocusedLeavesTheFocusAlone() async throws {
             guard NSApp.isFullKeyboardAccessEnabled else { return }
             let window = try #require(controller.window)
-            #expect(window.makeFirstResponder(uploadRow.shareButton), "focus.setUp")
+            #expect(window.makeFirstResponder(hostedRow.shareButton), "focus.setUp")
             await start(liveRow, live)
             defer { liveRow.job.cancel() }
-            #expect(window.firstResponder === uploadRow.shareButton, "focus.leftAlone")
+            #expect(window.firstResponder === hostedRow.shareButton, "focus.leftAlone")
         }
 
         private func isNoteFullyShown(_ row: ShareRow, in window: NSWindow) -> Bool {
@@ -267,9 +267,9 @@ extension SerialTests {
         }
 
         @Test func aLongErrorIsNotCutOff() async throws {
-            let message = "StreamShare returned an error (HTTP 500)."
+            let message = "Streamshare returned an error (HTTP 500)."
             let longName = ControlledShareService(name: "Cloudflare Quick Tunnel")
-            let narrow = ShareWindowController(file: file, services: [upload, longName])
+            let narrow = ShareWindowController(file: file, services: [hosted, longName])
             let window = try #require(narrow.window)
             await finish(
                 narrow.rows[1], longName,
@@ -277,8 +277,8 @@ extension SerialTests {
                     link: link, warnings: [], deletionRequests: deletion("ok~wide"),
                     liveShare: LiveShare {}))
             defer { narrow.rows[1].job.stopSharing() }
-            await start(narrow.rows[0], upload)
-            upload.complete(.failure(ShareError.server(message)))
+            await start(narrow.rows[0], hosted)
+            hosted.complete(.failure(ShareError.server(message)))
             _ = await isEventuallyTrue(2) { narrow.rows[0].job.state == .failed(message) }
             #expect(isNoteFullyShown(narrow.rows[0], in: window), "row.noteNotCutOff")
             window.setContentSize(NSSize(width: 900, height: window.contentLayoutRect.height))
@@ -305,10 +305,10 @@ extension SerialTests {
 
         @Test func deleteAsksFirst() async {
             await finish(
-                uploadRow, upload,
+                hostedRow, hosted,
                 with: ShareResult(link: link, warnings: [], deletionRequests: deletion("ok~row")))
-            let alert = uploadRow.makeDeleteAlert()
-            #expect(alert.messageText == "Delete this share from Upload Service?", "delete.alert")
+            let alert = hostedRow.makeDeleteAlert()
+            #expect(alert.messageText == "Delete this share from Hosted Service?", "delete.alert")
             #expect(
                 alert.informativeText
                     == "The install link will stop working. This can't be undone.",
@@ -318,39 +318,39 @@ extension SerialTests {
 
         @Test func aDeletedShareReturnsToReady() async {
             await finish(
-                uploadRow, upload,
+                hostedRow, hosted,
                 with: ShareResult(link: link, warnings: [], deletionRequests: deletion("ok~del")))
-            uploadRow.job.delete()
+            hostedRow.job.delete()
             #expect(
-                !uploadRow.progress.busyIndicator.isHidden && shownButtons(uploadRow) == [],
+                !hostedRow.progress.busyIndicator.isHidden && shownButtons(hostedRow) == [],
                 "delete.busy")
-            _ = await isEventuallyTrue(3) { uploadRow.job.state == .ready }
-            #expect(shownButtons(uploadRow) == ["Share"], "delete.ready")
+            _ = await isEventuallyTrue(3) { hostedRow.job.state == .ready }
+            #expect(shownButtons(hostedRow) == ["Share"], "delete.ready")
             #expect(harness.mock.stats["ok~del"]["delete"] as? Int == 2, "delete.sent")
         }
 
         @Test func aFailedDeleteShowsWhyAndKeepsTheButton() async {
             let result = ShareResult(
                 link: link, warnings: [], deletionRequests: deletion("delete-fail~row"))
-            await finish(uploadRow, upload, with: result)
-            uploadRow.job.delete()
-            _ = await isEventuallyTrue(3) { uploadRow.job.deletionError != nil }
+            await finish(hostedRow, hosted, with: result)
+            hostedRow.job.delete()
+            _ = await isEventuallyTrue(3) { hostedRow.job.deletionError != nil }
             #expect(
-                uploadRow.noteLabel.stringValue
-                    == "Could not delete: Upload Service returned an error (HTTP 500).",
+                hostedRow.noteLabel.stringValue
+                    == "Could not delete: Hosted Service returned an error (HTTP 500).",
                 "delete.failureText")
             #expect(
-                shownButtons(uploadRow) == ["Copy Link", "Open", "Delete…"], "delete.failureRetry")
+                shownButtons(hostedRow) == ["Copy Link", "Open", "Delete…"], "delete.failureRetry")
         }
 
         @Test func rightClickCopiesADeleteCommandThatWorks() async throws {
             await finish(
-                uploadRow, upload,
+                hostedRow, hosted,
                 with: ShareResult(link: link, warnings: [], deletionRequests: deletion("ok~copy")))
-            let menu = uploadRow.deleteButton.menu
+            let menu = hostedRow.deleteButton.menu
             #expect(menu?.items.map(\.title) == ["Copy Delete Command"], "delete.copyMenu")
             #expect(
-                uploadRow.deleteButton.toolTip
+                hostedRow.deleteButton.toolTip
                     == "Right-click to copy a Terminal command that deletes this share",
                 "delete.copyHint")
             click(menu?.items.first)
@@ -383,12 +383,12 @@ extension SerialTests {
         }
 
         @Test func theAccountNameIsAHint() async {
-            upload.accountName = "dev@example.com"
-            uploadRow.render()
-            #expect(uploadRow.nameLabel.toolTip == "Signed in as dev@example.com", "row.account")
-            upload.accountName = nil
+            hosted.accountName = "dev@example.com"
+            hostedRow.render()
+            #expect(hostedRow.nameLabel.toolTip == "Signed in as dev@example.com", "row.account")
+            hosted.accountName = nil
             NotificationCenter.default.post(name: .shareAccountDidChange, object: nil)
-            #expect(uploadRow.nameLabel.toolTip == nil, "row.accountCleared")
+            #expect(hostedRow.nameLabel.toolTip == nil, "row.accountCleared")
         }
 
         @Test func closingAnIdleWindowNeedsNoAnswer() throws {
@@ -408,7 +408,7 @@ extension SerialTests {
         }
 
         @Test func stoppingAndClosingHaltsEveryRow() async {
-            await start(uploadRow, upload)
+            await start(hostedRow, hosted)
             let stopped = Collector<Bool>()
             await finish(
                 liveRow, live,
@@ -417,11 +417,11 @@ extension SerialTests {
             #expect(controller.hasActiveWork, "close.active")
             controller.haltAndClose()
             #expect(!controller.hasActiveWork && !stopped.all.isEmpty, "close.halted")
-            #expect(uploadRow.job.state == .ready, "close.cancelled")
+            #expect(hostedRow.job.state == .ready, "close.cancelled")
         }
 
         @Test func finishedResultsDoNotAskBeforeClosing() async {
-            await finish(uploadRow, upload, with: ShareResult(link: link, warnings: []))
+            await finish(hostedRow, hosted, with: ShareResult(link: link, warnings: []))
             #expect(!controller.hasActiveWork, "close.finishedIsIdle")
         }
     }

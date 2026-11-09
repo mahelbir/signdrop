@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import SignDrop
 
-extension StreamShareMockServer {
+extension StreamshareMockServer {
     func shorteners(_ scenario: String) -> [LinkShortener] {
         [
             .ulvis("\(baseURL)/s/\(scenario)/ulvis"), .spoo("\(baseURL)/s/\(scenario)/spoo"),
@@ -14,13 +14,13 @@ extension StreamShareMockServer {
 
 extension SerialTests {
     struct LinkShortenerTests {
-        private let mock: StreamShareMockServer
+        private let mock: StreamshareMockServer
         private let link = URL(string: "https://axorax.github.io/urlmskr/ab+c/d=?e=f&g")!
         private let encodedLink =
             "https%3A%2F%2Faxorax.github.io%2Furlmskr%2Fab%2Bc%2Fd%3D%3Fe%3Df%26g"
 
         init() async throws {
-            mock = try await StreamShareMockServer()
+            mock = try await StreamshareMockServer()
         }
 
         @Test func triesServicesInTheVerifiedOrder() {

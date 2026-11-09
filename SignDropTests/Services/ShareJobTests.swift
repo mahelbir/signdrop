@@ -282,35 +282,35 @@ extension SerialTests {
             #expect(tunnel.isClosed && !job.isActive, "job.tunnelStopped")
         }
 
-        @Test func cancellingAnUploadRemovesThePartlySentFile() async throws {
-            let mock = try await StreamShareMockServer()
+        @Test func cancellingAHostedShareRemovesThePartlySentFile() async throws {
+            let mock = try await StreamshareMockServer()
             let work = try WorkDirectory()
-            let upload = StreamShareService(
+            let hosted = StreamshareService(
                 api: mock.api("stall~job"), shorteners: mock.shorteners("stall~job"))
-            let job = ShareJob(service: upload, file: work.ipa("Job.ipa", sampleAppInfo))
+            let job = ShareJob(service: hosted, file: work.ipa("Job.ipa", sampleAppInfo))
             job.start(in: window)
             _ = await isEventuallyTrue(3) { mock.stats["stall~job"]["create"] != nil }
             await pause(0.2)
             job.cancel()
-            #expect(job.state == .ready, "job.uploadCancelled")
+            #expect(job.state == .ready, "job.hostedCancelled")
             #expect(
                 await isEventuallyTrue(3) { mock.stats["stall~job"]["deleted"] != nil },
                 "job.partialFileRemoved")
         }
 
-        @Test func deletesAFinishedUpload() async throws {
-            let mock = try await StreamShareMockServer()
+        @Test func deletesAFinishedHostedShare() async throws {
+            let mock = try await StreamshareMockServer()
             let work = try WorkDirectory()
-            let upload = StreamShareService(
+            let hosted = StreamshareService(
                 api: mock.api("ok~job"), shorteners: mock.shorteners("ok~job"))
-            let job = ShareJob(service: upload, file: work.ipa("Job.ipa", sampleAppInfo))
+            let job = ShareJob(service: hosted, file: work.ipa("Job.ipa", sampleAppInfo))
             job.start(in: window)
             _ = await isEventuallyTrue(5) {
                 if case .finished = job.state { return true }
                 return false
             }
             job.delete()
-            #expect(await isEventuallyTrue(3) { job.state == .ready }, "job.uploadDeleted")
+            #expect(await isEventuallyTrue(3) { job.state == .ready }, "job.hostedDeleted")
             #expect(
                 mock.stats["ok~job"]["deleted"] as? [String] == ["ok~job-1/tok1", "ok~job-2/tok2"],
                 "job.bothFilesDeleted")

@@ -47,8 +47,12 @@ func isAlive(_ pattern: String) -> Bool {
 }
 
 func isSleepBlocked() -> Bool {
-    Process().execute("/usr/bin/pmset", workingDirectory: nil, arguments: ["-g", "assertions"])
-        .output.contains("Sharing an app from this Mac")
+    let owner = "pid \(ProcessInfo.processInfo.processIdentifier)("
+    return Process().execute(
+        "/usr/bin/pmset", workingDirectory: nil, arguments: ["-g", "assertions"]
+    ).output.components(separatedBy: .newlines).contains {
+        $0.contains(owner) && $0.contains("Sharing an app from this Mac")
+    }
 }
 
 func newMarker() -> String {

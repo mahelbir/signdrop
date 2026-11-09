@@ -1,6 +1,6 @@
 import Foundation
 
-struct StreamShareFile: Decodable, Equatable {
+struct StreamshareFile: Decodable, Equatable {
     let id: String
     let deletionToken: String
 
@@ -10,8 +10,8 @@ struct StreamShareFile: Decodable, Equatable {
     }
 }
 
-struct StreamShareAPI {
-    static let serviceName = "StreamShare"
+struct StreamshareAPI {
+    static let serviceName = "Streamshare"
     static let chunkSize = 1024 * 1024
     static let doneReason = Data("FILE_UPLOAD_DONE".utf8)
 
@@ -20,11 +20,11 @@ struct StreamShareAPI {
     var session = ShareServices.session
     var stallTimeout: TimeInterval = 60
 
-    func downloadURL(for file: StreamShareFile) -> URL {
+    func downloadURL(for file: StreamshareFile) -> URL {
         baseURL.appendingPathComponent("download/\(file.id)")
     }
 
-    func deletionRequest(for file: StreamShareFile) -> URLRequest {
+    func deletionRequest(for file: StreamshareFile) -> URLRequest {
         var request = URLRequest(
             url: baseURL.appendingPathComponent("api/delete/\(file.id)/\(file.deletionToken)"),
             timeoutInterval: 30)
@@ -32,7 +32,7 @@ struct StreamShareAPI {
         return request
     }
 
-    func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> StreamShareFile {
+    func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> StreamshareFile {
         guard let stream = InputStream(url: file),
             let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize
         else {
@@ -42,23 +42,23 @@ struct StreamShareAPI {
             stream, name: file.lastPathComponent, size: size, progress: progress)
     }
 
-    func upload(_ data: Data, name: String) async throws -> StreamShareFile {
+    func upload(_ data: Data, name: String) async throws -> StreamshareFile {
         try await upload(InputStream(data: data), name: name, size: data.count) { _ in }
     }
 
-    func delete(_ file: StreamShareFile) async throws {
+    func delete(_ file: StreamshareFile) async throws {
         try await ShareServices.delete(
-            [deletionRequest(for: file)], service: StreamShareAPI.serviceName, session: session)
+            [deletionRequest(for: file)], service: StreamshareAPI.serviceName, session: session)
     }
 
-    func deleteIgnoringCancellation(_ file: StreamShareFile) async {
+    func deleteIgnoringCancellation(_ file: StreamshareFile) async {
         let api = self
         await Task.detached { try? await api.delete(file) }.value
     }
 
     private func upload(
         _ stream: InputStream, name: String, size: Int, progress: @escaping (Double) -> Void
-    ) async throws -> StreamShareFile {
+    ) async throws -> StreamshareFile {
         let file = try await create(name: name)
         let socket = session.webSocketTask(
             with: URLRequest(
@@ -68,7 +68,7 @@ struct StreamShareAPI {
         stream.open()
         defer { stream.close() }
         do {
-            var buffer = [UInt8](repeating: 0, count: StreamShareAPI.chunkSize)
+            var buffer = [UInt8](repeating: 0, count: StreamshareAPI.chunkSize)
             var sentCount = 0
             while true {
                 let count = stream.read(&buffer, maxLength: buffer.count)
@@ -78,19 +78,19 @@ struct StreamShareAPI {
                 guard count > 0 else { break }
                 guard case .string("ACK") = try await exchange(Data(buffer[..<count]), on: socket)
                 else {
-                    throw ShareError.server("Unexpected response from StreamShare.")
+                    throw ShareError.server("Unexpected response from Streamshare.")
                 }
                 sentCount += count
                 let fraction = min(Double(sentCount) / Double(max(size, 1)), 1)
                 DispatchQueue.main.async { progress(fraction) }
             }
-            socket.cancel(with: .normalClosure, reason: StreamShareAPI.doneReason)
+            socket.cancel(with: .normalClosure, reason: StreamshareAPI.doneReason)
             return file
         } catch {
             socket.cancel(with: .goingAway, reason: nil)
             await deleteIgnoringCancellation(file)
             throw ShareError.from(
-                error, service: StreamShareAPI.serviceName, stallTimeout: stallTimeout)
+                error, service: StreamshareAPI.serviceName, stallTimeout: stallTimeout)
         }
     }
 
@@ -120,18 +120,18 @@ struct StreamShareAPI {
         }
     }
 
-    private func create(name: String) async throws -> StreamShareFile {
+    private func create(name: String) async throws -> StreamshareFile {
         var request = URLRequest(
             url: baseURL.appendingPathComponent("api/create"), timeoutInterval: 30)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(["name": name])
         let (data, status) = try await session.response(
-            for: request, service: StreamShareAPI.serviceName)
+            for: request, service: StreamshareAPI.serviceName)
         guard (200..<300).contains(status),
-            let file = try? JSONDecoder().decode(StreamShareFile.self, from: data)
+            let file = try? JSONDecoder().decode(StreamshareFile.self, from: data)
         else {
-            throw ShareError.server("StreamShare could not start the upload (HTTP \(status)).")
+            throw ShareError.server("Streamshare could not start the upload (HTTP \(status)).")
         }
         return file
     }

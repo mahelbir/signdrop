@@ -1,6 +1,6 @@
 import Foundation
 
-final class StreamShareMockServer {
+final class StreamshareMockServer {
     typealias Request = MockHTTPServer.Request
     typealias Response = MockHTTPServer.Response
 

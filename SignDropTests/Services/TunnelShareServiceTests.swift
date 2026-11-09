@@ -244,11 +244,11 @@ extension SerialTests {
 
         @Test func otherServicesAreNotLiveShares() {
             #expect(
-                StreamShareService().isReadyToShare && !StreamShareService().isLiveShare,
+                StreamshareService().isReadyToShare && !StreamshareService().isLiveShare,
                 "share.defaultsForOthers")
             #expect(
                 ShareServices.all.map(\.name) == [
-                    "BetaDrop", "StreamShare", "Cloudflare Quick Tunnel",
+                    "BetaDrop", "Streamshare", "Cloudflare Quick Tunnel",
                 ]
                     && ShareServices.all.last?.isLiveShare == true, "share.registered")
         }

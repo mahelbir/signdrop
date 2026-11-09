@@ -109,7 +109,8 @@ extension SerialTests {
             #expect(view.profilePopup.indexOfSelectedItem == 0, "expired.reSignOnly")
             #expect(view.appIDField.isEnabled, "expired.keepsAppIDEditable")
             #expect(view.appIDField.stringValue.isEmpty, "expired.leavesAppIDEmpty")
-            #expect(view.statusLabel.stringValue == "Provisioning profile expired", "expired.status")
+            #expect(
+                view.statusLabel.stringValue == "Provisioning profile expired", "expired.status")
         }
 
         @Test func anInstalledProfileIsFoundAgainAfterItIsRenewed() throws {

@@ -111,7 +111,7 @@ final class LiveShare: Equatable {
 
 enum ShareServices {
     @MainActor static let all: [ShareService] = [
-        BetaDropService(), StreamShareService(),
+        BetaDropService(), StreamshareService(),
         TunnelShareService(tunnel: CommandLineTunnel.cloudflareQuickTunnel()),
     ]
     static let session: URLSession = {

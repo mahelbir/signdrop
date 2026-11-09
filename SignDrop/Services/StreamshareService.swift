@@ -1,14 +1,14 @@
 import Cocoa
 
 @MainActor
-final class StreamShareService: ShareService {
-    let name = StreamShareAPI.serviceName
+final class StreamshareService: ShareService {
+    let name = StreamshareAPI.serviceName
     let accountName: String? = nil
     let isSignInRequired = false
-    private let api: StreamShareAPI
+    private let api: StreamshareAPI
     private let shorteners: [LinkShortener]
 
-    init(api: StreamShareAPI = StreamShareAPI(), shorteners: [LinkShortener] = LinkShortener.all) {
+    init(api: StreamshareAPI = StreamshareAPI(), shorteners: [LinkShortener] = LinkShortener.all) {
         self.api = api
         self.shorteners = shorteners
     }

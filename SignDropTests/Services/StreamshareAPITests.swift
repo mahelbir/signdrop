@@ -7,9 +7,9 @@ func download(_ url: URL) async -> Data? {
     return response.status == 200 ? response.data : nil
 }
 
-extension StreamShareMockServer {
-    func api(_ scenario: String) -> StreamShareAPI {
-        var api = StreamShareAPI(
+extension StreamshareMockServer {
+    func api(_ scenario: String) -> StreamshareAPI {
+        var api = StreamshareAPI(
             baseURL: URL(string: "\(baseURL)/s/\(scenario)")!,
             socketURL: URL(string: "\(socketURL)/s/\(scenario)")!)
         api.stallTimeout = 2
@@ -18,13 +18,13 @@ extension StreamShareMockServer {
 }
 
 extension SerialTests {
-    struct StreamShareAPITests {
-        private let mock: StreamShareMockServer
+    struct StreamshareAPITests {
+        private let mock: StreamshareMockServer
         private let work: WorkDirectory
-        private let sample = StreamShareFile(id: "abc123", deletionToken: "tok9")
+        private let sample = StreamshareFile(id: "abc123", deletionToken: "tok9")
 
         init() async throws {
-            mock = try await StreamShareMockServer()
+            mock = try await StreamshareMockServer()
             work = try WorkDirectory()
         }
 
@@ -33,7 +33,7 @@ extension SerialTests {
         }
 
         @Test func defaultsPointAtTheRealService() {
-            let defaults = StreamShareAPI()
+            let defaults = StreamshareAPI()
             #expect(
                 defaults.baseURL.absoluteString == "https://streamshare.wireway.ch"
                     && defaults.socketURL.absoluteString == "wss://streamshare.wireway.ch",
@@ -57,7 +57,7 @@ extension SerialTests {
             let received = mock.stats["ok"]
             let upload = mock.uploads("ok").first
             #expect(
-                uploaded == StreamShareFile(id: "ok-1", deletionToken: "tok1"),
+                uploaded == StreamshareFile(id: "ok-1", deletionToken: "tok1"),
                 "streamshare.upload.file")
             #expect(
                 received["names"] as? [String] == ["Big Name.ipa"]
@@ -94,7 +94,7 @@ extension SerialTests {
         @Test func reportsAFailedCreate() async {
             let ipa = bigIPA()
             await #expect(
-                throws: ShareError.server("StreamShare could not start the upload (HTTP 500)."),
+                throws: ShareError.server("Streamshare could not start the upload (HTTP 500)."),
                 "streamshare.create.error"
             ) { try await mock.api("create-500").upload(ipa) { _ in } }
         }
@@ -102,7 +102,7 @@ extension SerialTests {
         @Test func deletesTheFileAfterABadReply() async {
             let ipa = bigIPA()
             await #expect(
-                throws: ShareError.server("Unexpected response from StreamShare."),
+                throws: ShareError.server("Unexpected response from Streamshare."),
                 "streamshare.upload.badReply"
             ) { try await mock.api("bad-reply").upload(ipa) { _ in } }
             _ = await isEventuallyTrue(3) { mock.stats["bad-reply"]["deleted"] != nil }
@@ -156,11 +156,11 @@ extension SerialTests {
 
         @Test func reportsAnUnreachableServer() async {
             let ipa = work.file("Small.ipa", Data("x".utf8))
-            let offline = StreamShareAPI(
+            let offline = StreamshareAPI(
                 baseURL: URL(string: "http://127.0.0.1:1")!,
                 socketURL: URL(string: "ws://127.0.0.1:1")!)
             await #expect(
-                throws: ShareError.network("Could not reach StreamShare. Check your connection."),
+                throws: ShareError.network("Could not reach Streamshare. Check your connection."),
                 "streamshare.unreachable"
             ) { try await offline.upload(ipa) { _ in } }
         }
@@ -180,7 +180,7 @@ extension SerialTests {
 
         @Test func reportsAFailedDelete() async {
             await #expect(
-                throws: ShareError.server("StreamShare returned an error (HTTP 404)."),
+                throws: ShareError.server("Streamshare returned an error (HTTP 404)."),
                 "streamshare.delete.error"
             ) { try await mock.api("delete-404").delete(sample) }
         }
@@ -191,7 +191,7 @@ extension SerialTests {
             let second = try await api.upload(Data("b".utf8), name: "b.txt")
             _ = await isEventuallyTrue(3) { mock.uploads("ok~deletion").count == 2 }
             try await ShareServices.delete(
-                [first, second].map(api.deletionRequest(for:)), service: "StreamShare")
+                [first, second].map(api.deletionRequest(for:)), service: "Streamshare")
             #expect(
                 mock.stats["ok~deletion"]["deleted"] as? [String] == [
                     "ok~deletion-1/tok1", "ok~deletion-2/tok2",
@@ -199,20 +199,20 @@ extension SerialTests {
         }
 
         @Test func reportsDeletionFailures() async {
-            let missing = StreamShareFile(id: "x", deletionToken: "y")
+            let missing = StreamshareFile(id: "x", deletionToken: "y")
             await #expect(
-                throws: ShareError.server("StreamShare returned an error (HTTP 404)."),
+                throws: ShareError.server("Streamshare returned an error (HTTP 404)."),
                 "deletion.error"
             ) {
                 try await ShareServices.delete(
-                    [mock.api("delete-404").deletionRequest(for: missing)], service: "StreamShare")
+                    [mock.api("delete-404").deletionRequest(for: missing)], service: "Streamshare")
             }
             await #expect(
-                throws: ShareError.network("Could not reach StreamShare. Check your connection."),
+                throws: ShareError.network("Could not reach Streamshare. Check your connection."),
                 "deletion.unreachable"
             ) {
                 try await ShareServices.delete(
-                    [URLRequest(url: URL(string: "http://127.0.0.1:1/x")!)], service: "StreamShare")
+                    [URLRequest(url: URL(string: "http://127.0.0.1:1/x")!)], service: "Streamshare")
             }
         }
     }

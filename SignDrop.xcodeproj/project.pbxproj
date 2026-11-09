@@ -34,8 +34,8 @@
 		CABFFA21BB5D5536E7B669F2 /* AppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E0C896200C4408F404C15B7 /* AppInfo.swift */; };
 		41493892A133A906EBA796A1 /* InstallLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 950F5CD450C4FD0538E44F6A /* InstallLink.swift */; };
 		7C14947EE0C9D2AC66B7629A /* LinkShortener.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B2D9895341E2A2FB38171F /* LinkShortener.swift */; };
-		002F983F838CB5AB07660E42 /* StreamShareAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */; };
-		B10BF335BF7DAEB525D06EE4 /* StreamShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6734F05E3126EA2E13FB0886 /* StreamShareService.swift */; };
+		002F983F838CB5AB07660E42 /* StreamshareAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB6C311CB62469F5E027873 /* StreamshareAPI.swift */; };
+		B10BF335BF7DAEB525D06EE4 /* StreamshareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6734F05E3126EA2E13FB0886 /* StreamshareService.swift */; };
 		E3382DA8DED018D7C83D2BE6 /* TunnelShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1676410CD6E10D21C2CEA9 /* TunnelShareService.swift */; };
 		4108AF95F2E07EFA876D68D3 /* Tunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42DB3F9F8FE55CB13866E055 /* Tunnel.swift */; };
 		24CB716B5C139EF6CC584823 /* CloudflareQuickTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F00158675222D055BF9CB9 /* CloudflareQuickTunnel.swift */; };
@@ -100,8 +100,8 @@
 		0E0C896200C4408F404C15B7 /* AppInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppInfo.swift; sourceTree = "<group>"; };
 		950F5CD450C4FD0538E44F6A /* InstallLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallLink.swift; sourceTree = "<group>"; };
 		A7B2D9895341E2A2FB38171F /* LinkShortener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShortener.swift; sourceTree = "<group>"; };
-		1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamShareAPI.swift; sourceTree = "<group>"; };
-		6734F05E3126EA2E13FB0886 /* StreamShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamShareService.swift; sourceTree = "<group>"; };
+		1BB6C311CB62469F5E027873 /* StreamshareAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamshareAPI.swift; sourceTree = "<group>"; };
+		6734F05E3126EA2E13FB0886 /* StreamshareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamshareService.swift; sourceTree = "<group>"; };
 		7C1676410CD6E10D21C2CEA9 /* TunnelShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelShareService.swift; sourceTree = "<group>"; };
 		42DB3F9F8FE55CB13866E055 /* Tunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tunnel.swift; sourceTree = "<group>"; };
 		D4F00158675222D055BF9CB9 /* CloudflareQuickTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudflareQuickTunnel.swift; sourceTree = "<group>"; };
@@ -231,8 +231,8 @@
 				3C203DEC93413E606B71A888 /* BetaDropService.swift */,
 				950F5CD450C4FD0538E44F6A /* InstallLink.swift */,
 				A7B2D9895341E2A2FB38171F /* LinkShortener.swift */,
-				1BB6C311CB62469F5E027873 /* StreamShareAPI.swift */,
-				6734F05E3126EA2E13FB0886 /* StreamShareService.swift */,
+				1BB6C311CB62469F5E027873 /* StreamshareAPI.swift */,
+				6734F05E3126EA2E13FB0886 /* StreamshareService.swift */,
 				7C1676410CD6E10D21C2CEA9 /* TunnelShareService.swift */,
 				42DB3F9F8FE55CB13866E055 /* Tunnel.swift */,
 				D4F00158675222D055BF9CB9 /* CloudflareQuickTunnel.swift */,
@@ -430,8 +430,8 @@
 				CABFFA21BB5D5536E7B669F2 /* AppInfo.swift in Sources */,
 				41493892A133A906EBA796A1 /* InstallLink.swift in Sources */,
 				7C14947EE0C9D2AC66B7629A /* LinkShortener.swift in Sources */,
-				002F983F838CB5AB07660E42 /* StreamShareAPI.swift in Sources */,
-				B10BF335BF7DAEB525D06EE4 /* StreamShareService.swift in Sources */,
+				002F983F838CB5AB07660E42 /* StreamshareAPI.swift in Sources */,
+				B10BF335BF7DAEB525D06EE4 /* StreamshareService.swift in Sources */,
 				E3382DA8DED018D7C83D2BE6 /* TunnelShareService.swift in Sources */,
 				4108AF95F2E07EFA876D68D3 /* Tunnel.swift in Sources */,
 				24CB716B5C139EF6CC584823 /* CloudflareQuickTunnel.swift in Sources */,
