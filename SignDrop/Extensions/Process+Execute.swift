@@ -10,7 +10,7 @@ import Foundation
 struct SignDropTaskOutput {
     var output: String
     var status: Int32
-    init(status: Int32, output: String){
+    init(status: Int32, output: String) {
         self.status = status
         self.output = output
     }
@@ -33,19 +33,21 @@ extension Process {
         while self.isRunning {
             data.append(pipeFile.availableData)
         }
-        
+
         try? pipeFile.close()
         self.terminate();
-        
+
         if let output = String.init(data: data as Data, encoding: String.Encoding.utf8) {
             return SignDropTaskOutput(status: self.terminationStatus, output: output)
         } else {
             return SignDropTaskOutput(status: self.terminationStatus, output: "")
         }
-        
+
     }
-    
-    func execute(_ launchPath: String, workingDirectory: String?, arguments: [String]?)->SignDropTaskOutput{
+
+    func execute(_ launchPath: String, workingDirectory: String?, arguments: [String]?)
+        -> SignDropTaskOutput
+    {
         self.executableURL = URL(fileURLWithPath: launchPath)
         if arguments != nil {
             self.arguments = arguments
@@ -55,5 +57,5 @@ extension Process {
         }
         return self.launchSynchronous()
     }
-    
+
 }

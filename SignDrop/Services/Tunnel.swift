@@ -46,11 +46,16 @@ enum AuthoritativeDNS {
     static func answer(for host: String) async -> Answer {
         await Task.detached {
             let zone = host.split(separator: ".").dropFirst().joined(separator: ".")
-            guard let servers = dig(["+short", "+time=2", "+tries=1", "NS", zone]), !servers.isEmpty else { return .unreachable }
+            guard let servers = dig(["+short", "+time=2", "+tries=1", "NS", zone]), !servers.isEmpty
+            else { return .unreachable }
             var isMissing = false
             var found: [String] = []
             for server in servers {
-                guard let records = dig(["+short", "+norecurse", "+time=2", "+tries=1", "@\(server)", host, "A"]) else { return .unreachable }
+                guard
+                    let records = dig([
+                        "+short", "+norecurse", "+time=2", "+tries=1", "@\(server)", host, "A",
+                    ])
+                else { return .unreachable }
                 isMissing = isMissing || records.isEmpty
                 if found.isEmpty {
                     found = addresses(in: records)
@@ -64,7 +69,9 @@ enum AuthoritativeDNS {
     }
 
     static func records(in output: String) -> [String] {
-        output.split(whereSeparator: \.isNewline).map(String.init).filter { !$0.hasPrefix(";") && !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+        output.split(whereSeparator: \.isNewline).map(String.init).filter {
+            !$0.hasPrefix(";") && !$0.trimmingCharacters(in: .whitespaces).isEmpty
+        }
     }
 
     static func addresses(in records: [String]) -> [String] {
@@ -79,7 +86,8 @@ enum AuthoritativeDNS {
 
 @MainActor
 final class CommandLineTunnel: Tunnel {
-    static let wrapperScript = "\"$0\" \"$@\" & c=$!; exec >/dev/null 2>&1; read _; kill $c; for i in 1 2 3 4 5 6 7 8 9 10; do kill -0 $c || exit 0; sleep 0.3; done; kill -9 $c; exit 0"
+    static let wrapperScript =
+        "\"$0\" \"$@\" & c=$!; exec >/dev/null 2>&1; read _; kill $c; for i in 1 2 3 4 5 6 7 8 9 10; do kill -0 $c || exit 0; sleep 0.3; done; kill -9 $c; exit 0"
 
     let name: String
     let executable: String
@@ -93,11 +101,17 @@ final class CommandLineTunnel: Tunnel {
     var startTimeout: TimeInterval = 30
     var unreachableDNSDelay: TimeInterval = 8
     var unreachableDNSAttempts = 3
-    var hostnameAnswer: (String) async -> AuthoritativeDNS.Answer = { await AuthoritativeDNS.answer(for: $0) }
+    var hostnameAnswer: (String) async -> AuthoritativeDNS.Answer = {
+        await AuthoritativeDNS.answer(for: $0)
+    }
     var log: (String) -> Void = { Log.write($0) }
     private var shellFoundPath: String?
 
-    init(name: String, executable: String, brewPackage: String, installPage: URL, arguments: @escaping (UInt16) -> [String], publicURLPattern: String, hasFreshHostname: Bool = false) {
+    init(
+        name: String, executable: String, brewPackage: String, installPage: URL,
+        arguments: @escaping (UInt16) -> [String], publicURLPattern: String,
+        hasFreshHostname: Bool = false
+    ) {
         self.name = name
         self.executable = executable
         self.brewPackage = brewPackage
@@ -124,11 +138,15 @@ final class CommandLineTunnel: Tunnel {
     }
 
     func knownPath(_ tool: String) -> String? {
-        searchPaths.map { "\($0)/\(tool)" }.first { FileManager.default.isExecutableFile(atPath: $0) }
+        searchPaths.map { "\($0)/\(tool)" }.first {
+            FileManager.default.isExecutableFile(atPath: $0)
+        }
     }
 
     func publicURL(in line: String) -> URL? {
-        guard let range = line.range(of: publicURLPattern, options: .regularExpression) else { return nil }
+        guard let range = line.range(of: publicURLPattern, options: .regularExpression) else {
+            return nil
+        }
         return URL(string: String(line[range]))
     }
 
@@ -136,9 +154,11 @@ final class CommandLineTunnel: Tunnel {
         guard let loginShell else { return nil }
         let executable = executable
         return await Task.detached {
-            let result = Process().execute(loginShell, workingDirectory: nil, arguments: ["-lc", "command -v \(executable)"])
+            let result = Process().execute(
+                loginShell, workingDirectory: nil, arguments: ["-lc", "command -v \(executable)"])
             let path = result.output.components(separatedBy: .newlines).last { !$0.isEmpty } ?? ""
-            return result.status == 0 && FileManager.default.isExecutableFile(atPath: path) ? path : nil
+            return result.status == 0 && FileManager.default.isExecutableFile(atPath: path)
+                ? path : nil
         }.value
     }
 
@@ -171,10 +191,12 @@ final class CommandLineTunnel: Tunnel {
         let alert = NSAlert()
         alert.messageText = "\(name) needs \(executable)"
         if brewPath != nil {
-            alert.informativeText = "Install it with Homebrew by running “\(installCommand)” in Terminal, then try again."
+            alert.informativeText =
+                "Install it with Homebrew by running “\(installCommand)” in Terminal, then try again."
             alert.addButton(withTitle: "Copy Command")
         } else {
-            alert.informativeText = "Download it from the install page, put it in /usr/local/bin, then try again."
+            alert.informativeText =
+                "Download it from the install page, put it in /usr/local/bin, then try again."
         }
         alert.addButton(withTitle: "Open Install Page")
         alert.addButton(withTitle: "Cancel")
@@ -237,7 +259,9 @@ final class CommandLineTunnel: Tunnel {
                 let answer = await hostnameAnswer(host)
                 if answer != lastAnswer {
                     lastAnswer = answer
-                    log("\(name): DNS \(answer) for \(host) after \(String(format: "%.1f", Date().timeIntervalSince(started)))s")
+                    log(
+                        "\(name): DNS \(answer) for \(host) after \(String(format: "%.1f", Date().timeIntervalSince(started)))s"
+                    )
                 }
                 switch answer {
                 case .published(let addresses):
@@ -246,7 +270,10 @@ final class CommandLineTunnel: Tunnel {
                 case .unreachable:
                     unreachableLookups += 1
                     if unreachableLookups >= unreachableDNSAttempts || Date() >= deadline {
-                        try await Task.sleep(nanoseconds: UInt64(max(0, min(unreachableDNSDelay, deadline.timeIntervalSinceNow)) * 1_000_000_000))
+                        try await Task.sleep(
+                            nanoseconds: UInt64(
+                                max(0, min(unreachableDNSDelay, deadline.timeIntervalSinceNow))
+                                    * 1_000_000_000))
                         if let closeReason {
                             throw UploadError.server(closeReason)
                         }
@@ -307,14 +334,21 @@ final class CommandLineTunnel: Tunnel {
 
         func finish() {
             if let tunnel {
-                tunnel.reportUnexpectedClose(lastLine.isEmpty ? "\(name) closed unexpectedly." : lastLine)
+                tunnel.reportUnexpectedClose(
+                    lastLine.isEmpty ? "\(name) closed unexpectedly." : lastLine)
             } else {
-                fail(UploadError.server(lastLine.isEmpty ? "\(name) stopped before it was ready." : lastLine))
+                fail(
+                    UploadError.server(
+                        lastLine.isEmpty ? "\(name) stopped before it was ready." : lastLine))
             }
         }
 
         func timeOut() {
-            fail(UploadError.server(lastLine.isEmpty ? "The tunnel did not start in time." : "The tunnel did not start in time. Last output: \(lastLine)"))
+            fail(
+                UploadError.server(
+                    lastLine.isEmpty
+                        ? "The tunnel did not start in time."
+                        : "The tunnel did not start in time. Last output: \(lastLine)"))
         }
 
         func fail(_ error: Error) {

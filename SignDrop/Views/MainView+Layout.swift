@@ -22,11 +22,14 @@ extension MainView {
             .pair("Version:", versionField, "Build:", buildField),
             .section("Options"),
             .content(makeOptionsStack()),
-            .field("Upload:", uploadPopup)
+            .field("Upload:", uploadPopup),
         ])
         let statusSpacer = NSView()
         statusSpacer.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .horizontal)
-        let statusBar = NSStackView(views: [statusLabel, deleteUploadButton, stopSharingButton, statusSpacer, progressLabel, busyIndicator, progressBar])
+        let statusBar = NSStackView(views: [
+            statusLabel, deleteUploadButton, stopSharingButton, statusSpacer, progressLabel,
+            busyIndicator, progressBar,
+        ])
         statusBar.edgeInsets = NSEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
         statusBar.distribution = .fill
         statusBar.setHuggingPriority(.defaultLow, for: .horizontal)
@@ -49,40 +52,52 @@ extension MainView {
             statusBar.heightAnchor.constraint(equalToConstant: 25),
             progressBar.widthAnchor.constraint(equalToConstant: 160),
             busyIndicator.widthAnchor.constraint(equalTo: progressBar.widthAnchor),
-            progressLabel.widthAnchor.constraint(equalToConstant: 34)
+            progressLabel.widthAnchor.constraint(equalToConstant: 34),
         ])
         fitWindowToContent()
     }
 
     func configureControls() {
-        inputFileField.placeholderString = "Path or URL of an .ipa, .app, .appex, .xcarchive or .deb"
+        inputFileField.placeholderString =
+            "Path or URL of an .ipa, .app, .appex, .xcarchive or .deb"
         inputFileField.delegate = self
         inputFileButton.target = self
         inputFileButton.action = #selector(chooseInputFile(_:))
         entitlementsButton.target = self
         entitlementsButton.action = #selector(chooseEntitlementsFile(_:))
-        [inputFileButton, entitlementsButton].forEach { $0.setContentHuggingPriority(.defaultHigh, for: .horizontal) }
+        [inputFileButton, entitlementsButton].forEach {
+            $0.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        }
         appIDField.delegate = self
         certificatePopup.target = self
         certificatePopup.action = #selector(chooseSigningCertificate(_:))
         profilePopup.target = self
         profilePopup.action = #selector(chooseProvisioningProfile(_:))
         entitlementsField.placeholderString = "Optional, overrides the profile's entitlements"
-        [appIDField, displayNameField, versionField, buildField].forEach { $0.placeholderString = "Unchanged" }
+        [appIDField, displayNameField, versionField, buildField].forEach {
+            $0.placeholderString = "Unchanged"
+        }
         noGetTaskAllowCheckbox.state = .on
-        noGetTaskAllowCheckbox.toolTip = "Don't add the get-task-allow entitlement, as it might break some apps"
-        ignorePluginsCheckbox.toolTip = "Don't re-sign extension bundles, as they might have their own code signature"
+        noGetTaskAllowCheckbox.toolTip =
+            "Don't add the get-task-allow entitlement, as it might break some apps"
+        ignorePluginsCheckbox.toolTip =
+            "Don't re-sign extension bundles, as they might have their own code signature"
         configureUploadPopup()
         signButton.keyEquivalent = "\r"
         signButton.target = self
         signButton.action = #selector(doSign(_:))
         statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         statusLabel.lineBreakMode = .byTruncatingMiddle
-        statusLabel.addGestureRecognizer(NSClickGestureRecognizer(target: self, action: #selector(statusLabelClick(_:))))
+        statusLabel.addGestureRecognizer(
+            NSClickGestureRecognizer(target: self, action: #selector(statusLabelClick(_:))))
         configureStatusButton(deleteUploadButton, action: #selector(confirmUploadDeletion(_:)))
-        deleteUploadButton.toolTip = "Right-click to copy a Terminal command that deletes this upload"
+        deleteUploadButton.toolTip =
+            "Right-click to copy a Terminal command that deletes this upload"
         deleteUploadButton.menu = NSMenu()
-        deleteUploadButton.menu?.addItem(withTitle: "Copy Delete Command", action: #selector(copyDeletionCommand(_:)), keyEquivalent: "").target = self
+        deleteUploadButton.menu?.addItem(
+            withTitle: "Copy Delete Command", action: #selector(copyDeletionCommand(_:)),
+            keyEquivalent: ""
+        ).target = self
         configureStatusButton(stopSharingButton, action: #selector(stopSharing(_:)))
         progressBar.style = .bar
         progressBar.isIndeterminate = false
@@ -91,7 +106,8 @@ extension MainView {
         busyIndicator.style = .bar
         busyIndicator.isIndeterminate = true
         busyIndicator.isHidden = true
-        progressLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+        progressLabel.font = .monospacedDigitSystemFont(
+            ofSize: NSFont.smallSystemFontSize, weight: .regular)
         progressLabel.alignment = .right
         [statusLabel, certificatePopup, profilePopup].forEach {
             $0.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
@@ -101,7 +117,8 @@ extension MainView {
     func configureStatusButton(_ button: NSButton, action: Selector) {
         button.isBordered = false
         button.isHidden = true
-        button.attributedTitle = NSAttributedString(string: button.title, attributes: linkAttributes([.font: statusLabel.font as Any]))
+        button.attributedTitle = NSAttributedString(
+            string: button.title, attributes: linkAttributes([.font: statusLabel.font as Any]))
         button.target = self
         button.action = action
     }
@@ -120,9 +137,14 @@ extension MainView {
                 gridRow.mergeCells(in: NSRange(location: 0, length: 4))
                 gridRow.topPadding = 12
             case .field(let title, let control):
-                grid.addRow(with: [makeFormLabel(title, for: control), makeStretchable(control), empty, empty]).mergeCells(in: NSRange(location: 1, length: 3))
+                grid.addRow(with: [
+                    makeFormLabel(title, for: control), makeStretchable(control), empty, empty,
+                ]).mergeCells(in: NSRange(location: 1, length: 3))
             case .pair(let title, let control, let secondTitle, let secondControl):
-                grid.addRow(with: [makeFormLabel(title, for: control), makeStretchable(control), makeFormLabel(secondTitle, for: secondControl), makeStretchable(secondControl)])
+                grid.addRow(with: [
+                    makeFormLabel(title, for: control), makeStretchable(control),
+                    makeFormLabel(secondTitle, for: secondControl), makeStretchable(secondControl),
+                ])
             case .content(let view):
                 let gridRow = grid.addRow(with: [empty, view, empty, empty])
                 gridRow.mergeCells(in: NSRange(location: 1, length: 3))
@@ -144,7 +166,9 @@ extension MainView {
     func makeFormLabel(_ title: String, for control: NSView) -> NSTextField {
         let label = NSTextField(labelWithString: title)
         label.alignment = .right
-        label.setContentHuggingPriority(NSLayoutConstraint.Priority(NSLayoutConstraint.Priority.defaultHigh.rawValue - 1), for: .horizontal)
+        label.setContentHuggingPriority(
+            NSLayoutConstraint.Priority(NSLayoutConstraint.Priority.defaultHigh.rawValue - 1),
+            for: .horizontal)
         (control as? NSControl)?.setAccessibilityTitleUIElement(label)
         return label
     }

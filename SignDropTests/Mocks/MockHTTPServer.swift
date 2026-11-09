@@ -11,7 +11,8 @@ final class MockHTTPServer {
         let bodyFile: URL?
 
         var pathParts: [String] {
-            path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).components(separatedBy: "/")
+            path.trimmingCharacters(in: CharacterSet(charactersIn: "/")).components(
+                separatedBy: "/")
         }
 
         var body: Data {
@@ -36,7 +37,9 @@ final class MockHTTPServer {
         let body: Data
         let contentType: String
 
-        static func text(_ status: Int, _ text: String, contentType: String = "text/plain") -> Response {
+        static func text(_ status: Int, _ text: String, contentType: String = "text/plain")
+            -> Response
+        {
             Response(status: status, body: Data(text.utf8), contentType: contentType)
         }
 
@@ -65,7 +68,10 @@ final class MockHTTPServer {
 
         func request(bodyFile: URL?) -> Request {
             let parts = target.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false)
-            return Request(method: method, path: String(parts.first ?? ""), query: parts.count > 1 ? String(parts[1]) : "", headers: headers, bodyFile: bodyFile)
+            return Request(
+                method: method, path: String(parts.first ?? ""),
+                query: parts.count > 1 ? String(parts[1]) : "", headers: headers, bodyFile: bodyFile
+            )
         }
     }
 
@@ -74,7 +80,8 @@ final class MockHTTPServer {
     var handleSocket: (MockWebSocket) -> Void = { _ in }
     private(set) var port: UInt16 = 0
     private let queue = DispatchQueue(label: "MockHTTPServer")
-    private let spoolDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("MockHTTPServer-\(UUID().uuidString)")
+    private let spoolDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(
+        "MockHTTPServer-\(UUID().uuidString)")
     private var listener: NWListener?
     private var connections: [ObjectIdentifier: NWConnection] = [:]
 
@@ -85,7 +92,8 @@ final class MockHTTPServer {
     }
 
     func start() async throws {
-        try FileManager.default.createDirectory(at: spoolDirectory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: spoolDirectory, withIntermediateDirectories: true)
         let parameters = NWParameters.tcp
         parameters.requiredLocalEndpoint = NWEndpoint.hostPort(host: .ipv4(.loopback), port: .any)
         let listener = try NWListener(using: parameters)
@@ -140,7 +148,8 @@ final class MockHTTPServer {
             begin(connection, head: Self.parse(text), rest: Data(buffer[end.upperBound...]))
             return
         }
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [weak self] data, _, isComplete, error in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) {
+            [weak self] data, _, isComplete, error in
             guard let self else { return }
             guard let data, !data.isEmpty else {
                 if isComplete || error != nil {
@@ -160,9 +169,12 @@ final class MockHTTPServer {
         var headers: [String: String] = [:]
         for line in lines.dropFirst() {
             guard let colon = line.firstIndex(of: ":") else { continue }
-            headers[line[..<colon].lowercased()] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
+            headers[line[..<colon].lowercased()] = line[line.index(after: colon)...]
+                .trimmingCharacters(in: .whitespaces)
         }
-        return Head(method: requestLine.first.map(String.init) ?? "", target: requestLine.count > 1 ? String(requestLine[1]) : "", headers: headers)
+        return Head(
+            method: requestLine.first.map(String.init) ?? "",
+            target: requestLine.count > 1 ? String(requestLine[1]) : "", headers: headers)
     }
 
     private func begin(_ connection: NWConnection, head: Head, rest: Data) {
@@ -177,20 +189,27 @@ final class MockHTTPServer {
                 connection.cancel()
                 return
             }
-            spool(connection, head: head, file: file, writer: writer, remaining: head.contentLength, pending: rest)
+            spool(
+                connection, head: head, file: file, writer: writer, remaining: head.contentLength,
+                pending: rest)
         }
     }
 
-    private func spool(_ connection: NWConnection, head: Head, file: URL, writer: FileHandle, remaining: Int, pending: Data) {
+    private func spool(
+        _ connection: NWConnection, head: Head, file: URL, writer: FileHandle, remaining: Int,
+        pending: Data
+    ) {
         let used = pending.prefix(remaining)
         try? writer.write(contentsOf: used)
         let left = remaining - used.count
         guard left > 0 else {
             try? writer.close()
-            respond(connection, head: head, bodyFile: file, rest: Data(pending.dropFirst(used.count)))
+            respond(
+                connection, head: head, bodyFile: file, rest: Data(pending.dropFirst(used.count)))
             return
         }
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 20) { [weak self] data, _, isComplete, error in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 20) {
+            [weak self] data, _, isComplete, error in
             guard let self else { return }
             guard let data, !data.isEmpty else {
                 if isComplete || error != nil {
@@ -198,11 +217,14 @@ final class MockHTTPServer {
                     try? FileManager.default.removeItem(at: file)
                     connection.cancel()
                 } else {
-                    spool(connection, head: head, file: file, writer: writer, remaining: left, pending: Data())
+                    spool(
+                        connection, head: head, file: file, writer: writer, remaining: left,
+                        pending: Data())
                 }
                 return
             }
-            spool(connection, head: head, file: file, writer: writer, remaining: left, pending: data)
+            spool(
+                connection, head: head, file: file, writer: writer, remaining: left, pending: data)
         }
     }
 
@@ -213,23 +235,29 @@ final class MockHTTPServer {
         }
         guard let response else { return }
         let reason = HTTPURLResponse.localizedString(forStatusCode: response.status)
-        let header = "HTTP/1.1 \(response.status) \(reason)\r\nContent-Type: \(response.contentType)\r\nContent-Length: \(response.body.count)\r\n\r\n"
-        connection.send(content: Data(header.utf8) + response.body, completion: .contentProcessed { [weak self] error in
-            guard error == nil else {
-                connection.cancel()
-                return
-            }
-            self?.readHead(connection, buffer: rest)
-        })
+        let header =
+            "HTTP/1.1 \(response.status) \(reason)\r\nContent-Type: \(response.contentType)\r\nContent-Length: \(response.body.count)\r\n\r\n"
+        connection.send(
+            content: Data(header.utf8) + response.body,
+            completion: .contentProcessed { [weak self] error in
+                guard error == nil else {
+                    connection.cancel()
+                    return
+                }
+                self?.readHead(connection, buffer: rest)
+            })
     }
 
     private func upgrade(_ connection: NWConnection, head: Head, rest: Data) {
         let key = (head.headers["sec-websocket-key"] ?? "") + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
         let accept = Data(Insecure.SHA1.hash(data: Data(key.utf8))).base64EncodedString()
-        let reply = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: \(accept)\r\n\r\n"
-        let socket = MockWebSocket(path: head.request(bodyFile: nil).path, connection: connection, buffer: rest)
+        let reply =
+            "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: \(accept)\r\n\r\n"
+        let socket = MockWebSocket(
+            path: head.request(bodyFile: nil).path, connection: connection, buffer: rest)
         handleSocket(socket)
-        connection.send(content: Data(reply.utf8), completion: .contentProcessed { _ in socket.start() })
+        connection.send(
+            content: Data(reply.utf8), completion: .contentProcessed { _ in socket.start() })
     }
 }
 
@@ -271,7 +299,8 @@ final class MockWebSocket {
 
     private func receive() {
         guard !isFinished else { return }
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 21) { [self] data, _, isComplete, error in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 21) {
+            [self] data, _, isComplete, error in
             if let data {
                 buffer.append(data)
                 parseFrames()
@@ -309,7 +338,8 @@ final class MockWebSocket {
         let isMasked = second & 0x80 != 0
         let maskLength = isMasked ? 4 : 0
         guard buffer.count >= offset + maskLength + length else { return nil }
-        var payload = Data(buffer[(start + offset + maskLength)..<(start + offset + maskLength + length)])
+        var payload = Data(
+            buffer[(start + offset + maskLength)..<(start + offset + maskLength + length)])
         if isMasked {
             let mask = Array(buffer[(start + offset)..<(start + offset + 4)])
             payload.withUnsafeMutableBytes { bytes in
@@ -331,11 +361,18 @@ final class MockWebSocket {
             }
             fragments.append(frame.payload)
             if frame.isFinal {
-                onMessage(fragmentOpcode == 1 ? .text(String(decoding: fragments, as: UTF8.self)) : .binary(fragments))
+                onMessage(
+                    fragmentOpcode == 1
+                        ? .text(String(decoding: fragments, as: UTF8.self)) : .binary(fragments))
             }
         case 8:
-            let code = frame.payload.count >= 2 ? Int(frame.payload[frame.payload.startIndex]) << 8 | Int(frame.payload[frame.payload.startIndex + 1]) : nil
-            let reason = frame.payload.count > 2 ? String(decoding: frame.payload.dropFirst(2), as: UTF8.self) : nil
+            let code =
+                frame.payload.count >= 2
+                ? Int(frame.payload[frame.payload.startIndex]) << 8
+                    | Int(frame.payload[frame.payload.startIndex + 1]) : nil
+            let reason =
+                frame.payload.count > 2
+                ? String(decoding: frame.payload.dropFirst(2), as: UTF8.self) : nil
             sendFrame(opcode: 8, payload: frame.payload)
             finish(code: code, reason: reason)
         case 9:
@@ -353,7 +390,8 @@ final class MockWebSocket {
             frame.append(contentsOf: [126, UInt8(payload.count >> 8), UInt8(payload.count & 0xff)])
         } else {
             frame.append(127)
-            frame.append(contentsOf: (0..<8).reversed().map { UInt8((payload.count >> ($0 * 8)) & 0xff) })
+            frame.append(
+                contentsOf: (0..<8).reversed().map { UInt8((payload.count >> ($0 * 8)) & 0xff) })
         }
         connection.send(content: frame + payload, completion: .contentProcessed { _ in })
     }

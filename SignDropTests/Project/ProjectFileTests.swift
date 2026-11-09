@@ -8,7 +8,8 @@ struct ProjectFile {
 
     init(root: URL) throws {
         let projectURL = root.appendingPathComponent("SignDrop.xcodeproj/project.pbxproj")
-        let plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: projectURL), format: nil)
+        let plist = try PropertyListSerialization.propertyList(
+            from: Data(contentsOf: projectURL), format: nil)
         let project = try #require(plist as? [String: Any])
         let objects = try #require(project["objects"] as? [String: [String: Any]])
         let rootObjectID = try #require(project["rootObject"] as? String)
@@ -42,14 +43,18 @@ struct ProjectFile {
 
         var unbuilt: [String] = []
         let appDirectory = root.appendingPathComponent("SignDrop").path
-        for case let path as String in FileManager.default.enumerator(atPath: appDirectory) ?? FileManager.DirectoryEnumerator() where path.hasSuffix(".swift") {
+        for case let path as String in FileManager.default.enumerator(atPath: appDirectory)
+            ?? FileManager.DirectoryEnumerator() where path.hasSuffix(".swift")
+        {
             if !sourceNames.contains((path as NSString).lastPathComponent) {
                 unbuilt.append(path)
             }
         }
 
         missingEntries = missing
-        orphanBuildFiles = sources.filter { !grouped.contains($0) }.map { objects[$0]?["path"] as? String ?? $0 }
+        orphanBuildFiles = sources.filter { !grouped.contains($0) }.map {
+            objects[$0]?["path"] as? String ?? $0
+        }
         unbuiltSwiftFiles = unbuilt.sorted()
     }
 }

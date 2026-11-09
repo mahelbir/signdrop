@@ -32,7 +32,9 @@ struct MockHTTPServerTests {
         #expect(received.header("authorization") == "Bearer t")
         #expect(bodies.all == ["payload"])
         #expect((response as? HTTPURLResponse)?.statusCode == 201)
-        #expect((response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type") == "text/x-test")
+        #expect(
+            (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type")
+                == "text/x-test")
         #expect(data == Data("created".utf8))
     }
 
@@ -61,7 +63,8 @@ struct MockHTTPServerTests {
 
         var request = URLRequest(url: url("/large"))
         request.httpMethod = "PUT"
-        _ = try await URLSession.shared.upload(for: request, from: Data(repeating: 7, count: 5_000_000))
+        _ = try await URLSession.shared.upload(
+            for: request, from: Data(repeating: 7, count: 5_000_000))
 
         #expect(sizes.all == [5_000_000])
     }
@@ -102,7 +105,8 @@ struct MockHTTPServerTests {
         }
         try await server.start()
 
-        let socket = URLSession.shared.webSocketTask(with: URL(string: "ws://127.0.0.1:\(server.port)/s/ok/api/upload/id1")!)
+        let socket = URLSession.shared.webSocketTask(
+            with: URL(string: "ws://127.0.0.1:\(server.port)/s/ok/api/upload/id1")!)
         socket.resume()
         let large = Data(repeating: 9, count: 1_048_576)
         try await socket.send(.data(large))

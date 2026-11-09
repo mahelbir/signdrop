@@ -13,7 +13,10 @@ extension SerialTests {
             try work.installFakeTunnelTools()
         }
 
-        private func mockTunnel(_ behaviour: String, marker: String, timeout: TimeInterval = 5, hasFreshHostname: Bool = false) -> CommandLineTunnel {
+        private func mockTunnel(
+            _ behaviour: String, marker: String, timeout: TimeInterval = 5,
+            hasFreshHostname: Bool = false
+        ) -> CommandLineTunnel {
             let tunnel = CommandLineTunnel(
                 name: "Mock Tunnel",
                 executable: "mock-tunnel",
@@ -45,29 +48,53 @@ extension SerialTests {
 
         @Test func cloudflareUsesTheVerifiedSetup() {
             let cloudflare = CommandLineTunnel.cloudflare()
-            #expect(cloudflare.name == "Cloudflare Tunnel" && cloudflare.executable == "cloudflared", "cloudflare.name")
+            #expect(
+                cloudflare.name == "Cloudflare Tunnel" && cloudflare.executable == "cloudflared",
+                "cloudflare.name")
             #expect(cloudflare.installCommand == "brew install cloudflared", "cloudflare.install")
             #expect(
-                cloudflare.installPage.absoluteString == "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/#macos",
+                cloudflare.installPage.absoluteString
+                    == "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/#macos",
                 "cloudflare.install"
             )
-            #expect(cloudflare.arguments(8080) == ["tunnel", "--no-autoupdate", "--config", "/dev/null", "--grace-period", "1s", "--url", "http://127.0.0.1:8080"], "cloudflare.arguments")
-            #expect(cloudflare.searchPaths == ["/opt/homebrew/bin", "/usr/local/bin"] && cloudflare.loginShell == "/bin/zsh" && cloudflare.startTimeout == 30, "cloudflare.searchPaths")
-            #expect(cloudflare.hasFreshHostname && !mockTunnel("url", marker: "unused").hasFreshHostname, "cloudflare.freshHostname")
+            #expect(
+                cloudflare.arguments(8080) == [
+                    "tunnel", "--no-autoupdate", "--config", "/dev/null", "--grace-period", "1s",
+                    "--url", "http://127.0.0.1:8080",
+                ], "cloudflare.arguments")
+            #expect(
+                cloudflare.searchPaths == ["/opt/homebrew/bin", "/usr/local/bin"]
+                    && cloudflare.loginShell == "/bin/zsh" && cloudflare.startTimeout == 30,
+                "cloudflare.searchPaths")
+            #expect(
+                cloudflare.hasFreshHostname
+                    && !mockTunnel("url", marker: "unused").hasFreshHostname,
+                "cloudflare.freshHostname")
             #expect(cloudflare.unreachableDNSDelay == 8, "cloudflare.dnsFallbackDelay")
             #expect(cloudflare.unreachableDNSAttempts == 3, "cloudflare.dnsFallbackAttempts")
         }
 
         @Test func parsesDNSAnswers() {
-            #expect(AuthoritativeDNS.addresses(in: ["edge.example.net.", "104.16.1.1"]) == ["104.16.1.1"], "dns.addressesSkipNonIPv4")
-            #expect(AuthoritativeDNS.records(in: ";; Warning, ignoring\n104.16.1.1\n\n") == ["104.16.1.1"], "dns.recordsSkipComments")
+            #expect(
+                AuthoritativeDNS.addresses(in: ["edge.example.net.", "104.16.1.1"]) == [
+                    "104.16.1.1"
+                ], "dns.addressesSkipNonIPv4")
+            #expect(
+                AuthoritativeDNS.records(in: ";; Warning, ignoring\n104.16.1.1\n\n") == [
+                    "104.16.1.1"
+                ], "dns.recordsSkipComments")
         }
 
         @Test func findsThePublicURLInToolOutput() {
             let cloudflare = CommandLineTunnel.cloudflare()
-            let banner = "2026-09-28T10:00:00Z INF |  https://quiet-river-sample-words.trycloudflare.com                                   |"
-            #expect(cloudflare.publicURL(in: banner)?.absoluteString == "https://quiet-river-sample-words.trycloudflare.com", "cloudflare.urlFromBanner")
-            let apiError = "2026-09-28T10:00:00Z ERR failed to request quick Tunnel: Post \"https://api.trycloudflare.com/tunnel\": dial tcp: lookup api.trycloudflare.com: no such host"
+            let banner =
+                "2026-09-28T10:00:00Z INF |  https://quiet-river-sample-words.trycloudflare.com                                   |"
+            #expect(
+                cloudflare.publicURL(in: banner)?.absoluteString
+                    == "https://quiet-river-sample-words.trycloudflare.com",
+                "cloudflare.urlFromBanner")
+            let apiError =
+                "2026-09-28T10:00:00Z ERR failed to request quick Tunnel: Post \"https://api.trycloudflare.com/tunnel\": dial tcp: lookup api.trycloudflare.com: no such host"
             #expect(cloudflare.publicURL(in: apiError) == nil, "cloudflare.ignoresAPIHost")
         }
 
@@ -76,10 +103,16 @@ extension SerialTests {
             let happy = mockTunnel("url", marker: marker)
             let output = Collector<String>()
             happy.log = { output.append($0) }
-            #expect(happy.isReady && happy.executablePath == work.child("mock-tunnel").path, "tunnel.ready")
+            #expect(
+                happy.isReady && happy.executablePath == work.child("mock-tunnel").path,
+                "tunnel.ready")
             let open = try? await happy.open(port: 8080)
-            #expect(open?.publicURL.absoluteString == "https://abc-def.trycloudflare.com", "tunnel.url")
-            #expect(output.all.contains("Mock Tunnel: 2026-09-28T10:00:00Z INF |  https://abc-def.trycloudflare.com  |"), "tunnel.logsOutput")
+            #expect(
+                open?.publicURL.absoluteString == "https://abc-def.trycloudflare.com", "tunnel.url")
+            #expect(
+                output.all.contains(
+                    "Mock Tunnel: 2026-09-28T10:00:00Z INF |  https://abc-def.trycloudflare.com  |"),
+                "tunnel.logsOutput")
             #expect(isAlive("url \(marker)"), "tunnel.running")
             #expect(isAlive("\(marker) 8080"), "tunnel.portPassed")
             open?.close()
@@ -89,7 +122,9 @@ extension SerialTests {
         }
 
         @Test func reportsAToolThatExitsEarly() async {
-            #expect(await openError(mockTunnel("fail", marker: newMarker())) == "ERR failed to request quick Tunnel: 429", "tunnel.earlyExitLastLine")
+            #expect(
+                await openError(mockTunnel("fail", marker: newMarker()))
+                    == "ERR failed to request quick Tunnel: 429", "tunnel.earlyExitLastLine")
         }
 
         @Test func stopsASilentToolAtTheDeadline() async {
@@ -102,8 +137,11 @@ extension SerialTests {
         }
 
         @Test func keepsTheLastLineOnTimeout() async {
-            let message = await openError(mockTunnel("chatty-silent", marker: newMarker(), timeout: 1))
-            #expect(message == "The tunnel did not start in time. Last output: INF still connecting", "tunnel.timeoutKeepsLastLine")
+            let message = await openError(
+                mockTunnel("chatty-silent", marker: newMarker(), timeout: 1))
+            #expect(
+                message == "The tunnel did not start in time. Last output: INF still connecting",
+                "tunnel.timeoutKeepsLastLine")
         }
 
         @Test func reportsAnUnexpectedClose() async {
@@ -118,15 +156,28 @@ extension SerialTests {
             let missing = mockTunnel("url", marker: "unused")
             missing.searchPaths = ["/nonexistent"]
             #expect(!missing.isReady && missing.executablePath == nil, "tunnel.missingNotReady")
-            #expect(await openError(missing) == "Mock Tunnel needs mock-tunnel. Install it and try again.", "tunnel.missingOpenThrows")
+            #expect(
+                await openError(missing)
+                    == "Mock Tunnel needs mock-tunnel. Install it and try again.",
+                "tunnel.missingOpenThrows")
             let noBrew = missing.makeInstallAlert()
             #expect(noBrew.messageText == "Mock Tunnel needs mock-tunnel", "installAlert.noBrew")
-            #expect(noBrew.informativeText == "Download it from the install page, put it in /usr/local/bin, then try again.", "installAlert.noBrew")
-            #expect(noBrew.buttons.map(\.title) == ["Open Install Page", "Cancel"], "installAlert.noBrew")
+            #expect(
+                noBrew.informativeText
+                    == "Download it from the install page, put it in /usr/local/bin, then try again.",
+                "installAlert.noBrew")
+            #expect(
+                noBrew.buttons.map(\.title) == ["Open Install Page", "Cancel"],
+                "installAlert.noBrew")
             missing.searchPaths = ["/nonexistent", work.child("fakebrew").path]
             let withBrew = missing.makeInstallAlert()
-            #expect(withBrew.informativeText == "Install it with Homebrew by running “brew install mock-tunnel” in Terminal, then try again.", "installAlert.withBrew")
-            #expect(withBrew.buttons.map(\.title) == ["Copy Command", "Open Install Page", "Cancel"], "installAlert.withBrew")
+            #expect(
+                withBrew.informativeText
+                    == "Install it with Homebrew by running “brew install mock-tunnel” in Terminal, then try again.",
+                "installAlert.withBrew")
+            #expect(
+                withBrew.buttons.map(\.title) == ["Copy Command", "Open Install Page", "Cancel"],
+                "installAlert.withBrew")
         }
 
         @Test func findsTheToolThroughTheLoginShell() async {
@@ -135,7 +186,10 @@ extension SerialTests {
             shellOnly.loginShell = work.child("fake-shell").path
             #expect(!shellOnly.isReady, "loginShell.notReadyBefore")
             let isPrepared = await shellOnly.prepare(in: NSWindow())
-            #expect(isPrepared && shellOnly.isReady && shellOnly.executablePath == work.child("mock-tunnel").path, "loginShell.found")
+            #expect(
+                isPrepared && shellOnly.isReady
+                    && shellOnly.executablePath == work.child("mock-tunnel").path,
+                "loginShell.found")
         }
 
         @Test func waitsUntilTheHostnameIsPublished() async throws {
@@ -149,13 +203,22 @@ extension SerialTests {
                 return lookups.all.count >= 3 ? .published(["104.16.1.1"]) : .missing
             }
             let published = try? await publishing.open(port: 1)
-            #expect(published != nil && lookups.all == Array(repeating: "abc-def.trycloudflare.com", count: 3), "dns.waitsUntilPublished")
+            #expect(
+                published != nil
+                    && lookups.all == Array(repeating: "abc-def.trycloudflare.com", count: 3),
+                "dns.waitsUntilPublished")
             #expect(published?.onUnexpectedClose == nil, "dns.handlerFreeAfterWait")
             #expect(published?.resolvedAddresses == ["104.16.1.1"], "dns.keepsAddresses")
             let dnsLines = dnsLog.all.filter { $0.hasPrefix("Mock Tunnel: DNS ") }
             try #require(dnsLines.count == 2, "dns.logsProgress")
-            #expect(dnsLines[0].hasPrefix("Mock Tunnel: DNS missing for abc-def.trycloudflare.com after "), "dns.logsProgress")
-            #expect(dnsLines[1].hasPrefix("Mock Tunnel: DNS published([\"104.16.1.1\"]) for abc-def.trycloudflare.com after "), "dns.logsProgress")
+            #expect(
+                dnsLines[0].hasPrefix(
+                    "Mock Tunnel: DNS missing for abc-def.trycloudflare.com after "),
+                "dns.logsProgress")
+            #expect(
+                dnsLines[1].hasPrefix(
+                    "Mock Tunnel: DNS published([\"104.16.1.1\"]) for abc-def.trycloudflare.com after "
+                ), "dns.logsProgress")
             published?.close()
             #expect(await hasStopped(marker), "dns.closeAfterWaitStops")
         }
@@ -166,7 +229,9 @@ extension SerialTests {
             unpublished.hostnameAnswer = { _ in .missing }
             let started = Date()
             let message = await openError(unpublished)
-            #expect(message == "The tunnel address was not published in time.", "dns.unpublishedTimesOut")
+            #expect(
+                message == "The tunnel address was not published in time.",
+                "dns.unpublishedTimesOut")
             #expect(Date().timeIntervalSince(started) < 10, "dns.unpublishedTimesOut")
             #expect(await hasStopped(marker), "dns.unpublishedStops")
         }
@@ -198,7 +263,8 @@ extension SerialTests {
 
         @Test func retriesAfterAnUnreachableAnswer() async {
             let lookups = Collector<String>()
-            let recovering = mockTunnel("url", marker: newMarker(), timeout: 30, hasFreshHostname: true)
+            let recovering = mockTunnel(
+                "url", marker: newMarker(), timeout: 30, hasFreshHostname: true)
             recovering.unreachableDNSDelay = 30
             recovering.hostnameAnswer = { host in
                 lookups.append(host)
@@ -206,17 +272,21 @@ extension SerialTests {
             }
             let started = Date()
             let recovered = try? await recovering.open(port: 1)
-            #expect(recovered?.resolvedAddresses == ["104.16.1.1"] && lookups.all.count == 2, "dns.retriesAfterUnreachable")
+            #expect(
+                recovered?.resolvedAddresses == ["104.16.1.1"] && lookups.all.count == 2,
+                "dns.retriesAfterUnreachable")
             #expect(Date().timeIntervalSince(started) < 15, "dns.retriesAfterUnreachable")
             recovered?.close()
         }
 
         @Test func fallsBackAtTheDeadlineWhenDNSStaysUnreachable() async {
-            let stubborn = mockTunnel("url", marker: newMarker(), timeout: 1, hasFreshHostname: true)
+            let stubborn = mockTunnel(
+                "url", marker: newMarker(), timeout: 1, hasFreshHostname: true)
             stubborn.unreachableDNSAttempts = 100
             stubborn.hostnameAnswer = { _ in .unreachable }
             let open = try? await stubborn.open(port: 1)
-            #expect(open != nil && open?.resolvedAddresses == [], "dns.unreachableAtDeadlineFallsBack")
+            #expect(
+                open != nil && open?.resolvedAddresses == [], "dns.unreachableAtDeadlineFallsBack")
             open?.close()
         }
 
@@ -238,14 +308,20 @@ extension SerialTests {
             let marker = newMarker()
             let parent = Process()
             parent.executableURL = URL(fileURLWithPath: "/bin/sh")
-            parent.arguments = ["-c", """
-            mkfifo "$1"
-            exec 3<>"$1"
-            /bin/sh -c "$SIGNDROP_WRAPPER" "$2" url "$3" 1 <"$1" 3>&- >/dev/null 2>&1 &
-            echo READY
-            while :; do sleep 1; done
-            """, "parent", work.child("stdin.fifo").path, work.child("mock-tunnel").path, marker]
-            parent.environment = ProcessInfo.processInfo.environment.merging(["SIGNDROP_WRAPPER": CommandLineTunnel.wrapperScript]) { $1 }
+            parent.arguments = [
+                "-c",
+                """
+                mkfifo "$1"
+                exec 3<>"$1"
+                /bin/sh -c "$SIGNDROP_WRAPPER" "$2" url "$3" 1 <"$1" 3>&- >/dev/null 2>&1 &
+                echo READY
+                while :; do sleep 1; done
+                """, "parent", work.child("stdin.fifo").path, work.child("mock-tunnel").path,
+                marker,
+            ]
+            parent.environment = ProcessInfo.processInfo.environment.merging([
+                "SIGNDROP_WRAPPER": CommandLineTunnel.wrapperScript
+            ]) { $1 }
             let output = Pipe()
             parent.standardOutput = output
             try parent.run()

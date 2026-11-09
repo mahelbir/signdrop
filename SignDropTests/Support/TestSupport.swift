@@ -11,12 +11,15 @@ func sha256Hex(_ data: Data) -> String {
 func sha256Hex(reading handle: FileHandle, byteCount: Int = .max) -> String {
     var hasher = SHA256()
     var remaining = byteCount
-    while remaining > 0, autoreleasepool(invoking: {
-        guard let chunk = try? handle.read(upToCount: min(remaining, 4 << 20)), !chunk.isEmpty else { return false }
-        hasher.update(data: chunk)
-        remaining -= chunk.count
-        return true
-    }) {}
+    while remaining > 0,
+        autoreleasepool(invoking: {
+            guard let chunk = try? handle.read(upToCount: min(remaining, 4 << 20)), !chunk.isEmpty
+            else { return false }
+            hasher.update(data: chunk)
+            remaining -= chunk.count
+            return true
+        })
+    {}
     return hasher.finalize().map { String(format: "%02x", $0) }.joined()
 }
 
@@ -47,7 +50,8 @@ final class WorkDirectory {
     let url: URL
 
     init() throws {
-        url = FileManager.default.temporaryDirectory.appendingPathComponent("SignDropTests-\(UUID().uuidString)")
+        url = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "SignDropTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     }
 
@@ -82,7 +86,9 @@ func pause(_ seconds: Double) async {
     try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
 }
 
-func isEventuallyTrue(isolation: isolated (any Actor)? = #isolation, _ seconds: Double, _ condition: () -> Bool) async -> Bool {
+func isEventuallyTrue(
+    isolation: isolated (any Actor)? = #isolation, _ seconds: Double, _ condition: () -> Bool
+) async -> Bool {
     let deadline = Date().addingTimeInterval(seconds)
     while Date() < deadline {
         if condition() {

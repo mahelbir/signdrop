@@ -15,17 +15,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var uploadAccountMenu: UploadAccountMenu?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        uploadAccountMenu = UploadAccountMenu(services: UploadServices.all, in: NSApp.mainMenu?.items.first?.submenu)
+        uploadAccountMenu = UploadAccountMenu(
+            services: UploadServices.all, in: NSApp.mainMenu?.items.first?.submenu)
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
         try? fileManager.removeItem(atPath: Log.logName)
     }
-    
+
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard let share = LiveShare.current else { return .terminateNow }
-        guard MainView.makeQuitWhileSharingAlert().runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+        guard MainView.makeQuitWhileSharingAlert().runModal() == .alertFirstButtonReturn else {
+            return .terminateCancel
+        }
         share.stop()
         return .terminateNow
     }
@@ -44,15 +47,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.open(URL(fileURLWithPath: Log.logName))
     }
     @IBAction func checkForUpdates(_ sender: NSMenuItem) {
-        func updateCheckStatus(_ status: Bool, data: Data?, response: URLResponse?, error: Error?){
+        func updateCheckStatus(_ status: Bool, data: Data?, response: URLResponse?, error: Error?) {
             if status == false {
                 DispatchQueue.main.async {
                     let alert = NSAlert()
-                    
-                    
+
                     if error != nil {
                         alert.messageText = "There was a problem checking for a new version."
-                        alert.informativeText = "More information is available in the application log."
+                        alert.informativeText =
+                            "More information is available in the application log."
                         Log.write(error!.localizedDescription)
                     } else {
                         alert.messageText = "You are currently running the latest version."
@@ -64,4 +67,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         UpdatesController.checkForUpdate(forceShow: true, callbackFunc: updateCheckStatus)
     }
 }
-

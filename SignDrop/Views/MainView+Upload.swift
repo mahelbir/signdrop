@@ -17,7 +17,9 @@ extension MainView {
         uploadPopup.target = self
         uploadPopup.action = #selector(chooseUploadService(_:))
         refreshUploadAccount()
-        NotificationCenter.default.addObserver(self, selector: #selector(uploadAccountDidChange(_:)), name: .uploadAccountDidChange, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(uploadAccountDidChange(_:)), name: .uploadAccountDidChange,
+            object: nil)
     }
 
     @objc func uploadAccountDidChange(_ notification: Notification) {
@@ -28,7 +30,9 @@ extension MainView {
         if let service = uploadService, service.isSignInRequired, service.accountName == nil {
             uploadPopup.selectItem(at: 0)
         }
-        uploadPopup.toolTip = uploadService?.accountName.map { "Signed in as \($0)" } ?? "Uploads the signed IPA and copies its install link"
+        uploadPopup.toolTip =
+            uploadService?.accountName.map { "Signed in as \($0)" }
+            ?? "Uploads the signed IPA and copies its install link"
     }
 
     @objc func chooseUploadService(_ sender: NSPopUpButton) {
@@ -72,7 +76,8 @@ extension MainView {
             return
         }
         guard output.pathExtension.lowercased() == "ipa" else {
-            setStatus("Done, output at \(output) (only .ipa files can be uploaded)", link: outputURL)
+            setStatus(
+                "Done, output at \(output) (only .ipa files can be uploaded)", link: outputURL)
             controlsEnabled(true)
             return
         }
@@ -82,7 +87,8 @@ extension MainView {
     }
 
     func uploadSignedFile(_ file: URL, to service: UploadService) async {
-        setStatus(service.isLiveShare ? "Starting \(service.name)…" : "Uploading to \(service.name)…")
+        setStatus(
+            service.isLiveShare ? "Starting \(service.name)…" : "Uploading to \(service.name)…")
         showProgress(service.isLiveShare ? nil : 0)
         do {
             let result = try await service.upload(file) { [weak self] fraction in
@@ -94,9 +100,12 @@ extension MainView {
                 return
             }
         } catch UploadError.sessionExpired {
-            setStatus("\(service.name) session expired. Sign in again.", isWarning: true, link: file)
+            setStatus(
+                "\(service.name) session expired. Sign in again.", isWarning: true, link: file)
         } catch {
-            setStatus("\(service.isLiveShare ? "Sharing" : "Upload") failed: \(error.localizedDescription)", isWarning: true, link: file)
+            setStatus(
+                "\(service.isLiveShare ? "Sharing" : "Upload") failed: \(error.localizedDescription)",
+                isWarning: true, link: file)
         }
         controlsEnabled(true)
     }
@@ -106,23 +115,33 @@ extension MainView {
         let attributes = status.length > 0 ? status.attributes(at: 0, effectiveRange: nil) : [:]
         let text = NSMutableAttributedString(attributedString: status)
         text.append(NSAttributedString(string: " · ", attributes: attributes))
-        text.append(NSAttributedString(string: statusLink?.isFileURL == true ? "Show in Finder" : "Open Install Page", attributes: linkAttributes(attributes)))
+        text.append(
+            NSAttributedString(
+                string: statusLink?.isFileURL == true ? "Show in Finder" : "Open Install Page",
+                attributes: linkAttributes(attributes)))
         statusLabel.attributedStringValue = text
     }
 
-    func linkAttributes(_ attributes: [NSAttributedString.Key: Any]) -> [NSAttributedString.Key: Any] {
-        attributes.merging([.foregroundColor: NSColor.linkColor, .underlineStyle: NSUnderlineStyle.single.rawValue]) { $1 }
+    func linkAttributes(_ attributes: [NSAttributedString.Key: Any]) -> [NSAttributedString.Key:
+        Any]
+    {
+        attributes.merging([
+            .foregroundColor: NSColor.linkColor, .underlineStyle: NSUnderlineStyle.single.rawValue,
+        ]) { $1 }
     }
 
     func reportUpload(_ result: UploadResult, from service: UploadService) {
-        var headline = result.liveShare == nil ? "Uploaded to \(service.name)" : "Sharing from this Mac"
+        var headline =
+            result.liveShare == nil ? "Uploaded to \(service.name)" : "Sharing from this Mac"
         if let link = result.link {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(link.absoluteString, forType: .string)
             Log.write("Install link: \(link.absoluteString)")
             headline += " — link copied"
         }
-        setStatus(([headline] + result.warnings).joined(separator: ". "), isWarning: !result.warnings.isEmpty, link: result.link)
+        setStatus(
+            ([headline] + result.warnings).joined(separator: ". "),
+            isWarning: !result.warnings.isEmpty, link: result.link)
         if !result.deletionRequests.isEmpty {
             showUploadDeletion((service.name, result.deletionRequests))
         }
@@ -156,7 +175,8 @@ extension MainView {
     @objc func copyDeletionCommand(_ sender: Any) {
         guard let upload = deletableUpload else { return }
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(UploadServices.deletionCommand(upload.requests), forType: .string)
+        NSPasteboard.general.setString(
+            UploadServices.deletionCommand(upload.requests), forType: .string)
     }
 
     func deleteUpload() {
@@ -169,7 +189,8 @@ extension MainView {
                 try await UploadServices.delete(upload.requests, service: upload.serviceName)
                 setStatus("Deleted the upload from \(upload.serviceName)")
             } catch {
-                setStatus("Could not delete the upload: \(error.localizedDescription)", isWarning: true)
+                setStatus(
+                    "Could not delete the upload: \(error.localizedDescription)", isWarning: true)
                 showUploadDeletion(upload)
             }
             controlsEnabled(true)
@@ -182,7 +203,8 @@ extension MainView {
         window?.invalidateCursorRects(for: self)
         share.onEnd = { [weak self] reason in
             Log.write(reason)
-            self?.finishSharing("Sharing stopped: the tunnel closed unexpectedly.", isWarning: true, link: file)
+            self?.finishSharing(
+                "Sharing stopped: the tunnel closed unexpectedly.", isWarning: true, link: file)
         }
     }
 

@@ -4,7 +4,9 @@ import Cocoa
 final class BetaDropSignInSheet: NSObject {
     static let createTokenURL = URL(string: "https://betadrop.app/settings/?tab=developer")!
 
-    let panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 420, height: 200), styleMask: [.titled], backing: .buffered, defer: true)
+    let panel = NSPanel(
+        contentRect: NSRect(x: 0, y: 0, width: 420, height: 200), styleMask: [.titled],
+        backing: .buffered, defer: true)
     let messageLabel = NSTextField(wrappingLabelWithString: "")
     let codeLabel = NSTextField(labelWithString: "")
     let linkButton = NSButton(title: "", target: nil, action: nil)
@@ -42,7 +44,8 @@ final class BetaDropSignInSheet: NSObject {
     func showCode(_ code: BetaDropDeviceCode) {
         codeLabel.stringValue = code.userCode
         linkButton.title = code.verificationURI
-        verificationURL = URL(string: code.verificationURIComplete) ?? URL(string: code.verificationURI)
+        verificationURL =
+            URL(string: code.verificationURIComplete) ?? URL(string: code.verificationURI)
         linkButton.isHidden = verificationURL == nil
         openVerificationPage()
     }
@@ -60,8 +63,10 @@ final class BetaDropSignInSheet: NSObject {
     @objc func showTokenMode() {
         signInTask?.cancel()
         isTokenMode = true
-        messageLabel.stringValue = "Paste an API token from BetaDrop Settings → Developer → API tokens."
-        [codeLabel, linkButton, waitingLabel, spinner, tokenButton, retryButton, errorLabel].forEach { $0.isHidden = true }
+        messageLabel.stringValue =
+            "Paste an API token from BetaDrop Settings → Developer → API tokens."
+        [codeLabel, linkButton, waitingLabel, spinner, tokenButton, retryButton, errorLabel].forEach
+        { $0.isHidden = true }
         [tokenField, createTokenButton, signInButton].forEach { $0.isHidden = false }
         signInButton.keyEquivalent = "\r"
         panel.makeFirstResponder(tokenField)
@@ -93,9 +98,14 @@ final class BetaDropSignInSheet: NSObject {
         cancelButton.action = #selector(cancel)
         cancelButton.keyEquivalent = "\u{1b}"
         let waitingRow = NSStackView(views: [spinner, waitingLabel])
-        let buttonRow = NSStackView(views: [tokenButton, NSView(), retryButton, cancelButton, signInButton])
+        let buttonRow = NSStackView(views: [
+            tokenButton, NSView(), retryButton, cancelButton, signInButton,
+        ])
         buttonRow.distribution = .fill
-        let stack = NSStackView(views: [titleLabel, messageLabel, codeLabel, linkButton, waitingRow, tokenField, createTokenButton, errorLabel, buttonRow])
+        let stack = NSStackView(views: [
+            titleLabel, messageLabel, codeLabel, linkButton, waitingRow, tokenField,
+            createTokenButton, errorLabel, buttonRow,
+        ])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 12
@@ -113,7 +123,7 @@ final class BetaDropSignInSheet: NSObject {
                 messageLabel.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40),
                 errorLabel.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40),
                 tokenField.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40),
-                buttonRow.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40)
+                buttonRow.widthAnchor.constraint(equalTo: stack.widthAnchor, constant: -40),
             ])
         }
     }
@@ -123,7 +133,9 @@ final class BetaDropSignInSheet: NSObject {
         isTokenMode = false
         messageLabel.stringValue = "Approve SignDrop in your browser, then come back here."
         codeLabel.stringValue = "…"
-        [tokenField, createTokenButton, signInButton, retryButton, errorLabel, linkButton].forEach { $0.isHidden = true }
+        [tokenField, createTokenButton, signInButton, retryButton, errorLabel, linkButton].forEach {
+            $0.isHidden = true
+        }
         [codeLabel, waitingLabel, spinner, tokenButton].forEach { $0.isHidden = false }
         spinner.startAnimation(nil)
         signInTask = Task {

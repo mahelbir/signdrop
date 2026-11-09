@@ -11,26 +11,29 @@ import AppKit
 struct ProvisioningProfile {
     var filename: String,
         name: String,
-        created:Date,
+        created: Date,
         expires: Date,
         appID: String,
         teamID: String,
-        entitlements: [String : AnyObject]
+        entitlements: [String: AnyObject]
     fileprivate let delegate = NSApplication.shared.delegate as! AppDelegate
-    
+
     static func getProfiles() -> [ProvisioningProfile] {
         let fileManager = FileManager()
-        
-        guard let libraryDirectory = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first else { return [] }
+
+        guard
+            let libraryDirectory = fileManager.urls(for: .libraryDirectory, in: .userDomainMask)
+                .first
+        else { return [] }
 
         let preMacOSSequouiaPath = libraryDirectory
             .path
             .stringByAppendingPathComponent("MobileDevice/Provisioning Profiles")
-        
+
         let macOSSequoiaPath = libraryDirectory
             .path
             .stringByAppendingPathComponent("Developer/Xcode/UserData/Provisioning Profiles")
-        
+
         let profiles = [preMacOSSequouiaPath, macOSSequoiaPath]
             .flatMap { (profilesPath: String) -> [String] in
                 let contents = (try? fileManager.contentsOfDirectory(atPath: profilesPath)) ?? []
@@ -47,7 +50,7 @@ struct ProvisioningProfile {
             .sorted { lhs, rhs in
                 lhs.created.timeIntervalSince1970 > rhs.created.timeIntervalSince1970
             }
-        
+
         var names = Set<String>()
         return profiles.filter { profile in
             let inserted = names.insert("\(profile.name)\(profile.appID)").inserted
@@ -57,13 +60,14 @@ struct ProvisioningProfile {
             return inserted
         }
     }
-    
-    init?(filename: String){
-        let securityArgs = ["cms","-D","-i", filename]
-        
-         let taskOutput = Process().execute("/usr/bin/security", workingDirectory: nil, arguments: securityArgs)
-         let rawXML: String
-         if taskOutput.status == 0 {
+
+    init?(filename: String) {
+        let securityArgs = ["cms", "-D", "-i", filename]
+
+        let taskOutput = Process().execute(
+            "/usr/bin/security", workingDirectory: nil, arguments: securityArgs)
+        let rawXML: String
+        if taskOutput.status == 0 {
             if let xmlIndex = taskOutput.output.range(of: "<?xml") {
                 rawXML = String(taskOutput.output[xmlIndex.lowerBound...])
             } else {
@@ -71,22 +75,25 @@ struct ProvisioningProfile {
                 rawXML = taskOutput.output
             }
 
-            
-            
-            if let results = try? PropertyListSerialization.propertyList(from: rawXML.data(using: String.Encoding.utf8)!, options: .mutableContainers, format: nil) as? [String : AnyObject] {
+            if let results = try? PropertyListSerialization.propertyList(
+                from: rawXML.data(using: String.Encoding.utf8)!, options: .mutableContainers,
+                format: nil) as? [String: AnyObject]
+            {
                 if let expirationDate = results["ExpirationDate"] as? Date,
                     let creationDate = results["CreationDate"] as? Date,
                     let name = results["Name"] as? String,
-                    let entitlements = results["Entitlements"] as? [String : AnyObject],
+                    let entitlements = results["Entitlements"] as? [String: AnyObject],
                     let applicationIdentifier = entitlements["application-identifier"] as? String,
-                    let periodIndex = applicationIdentifier.firstIndex(of: ".") {
-                        self.filename = filename
-                        self.expires = expirationDate
-                        self.created = creationDate
-                        self.appID = String(applicationIdentifier[applicationIdentifier.index(after: periodIndex)...])
-                        self.teamID = String(applicationIdentifier[..<periodIndex])
-                        self.name = name
-                        self.entitlements = entitlements
+                    let periodIndex = applicationIdentifier.firstIndex(of: ".")
+                {
+                    self.filename = filename
+                    self.expires = expirationDate
+                    self.created = creationDate
+                    self.appID = String(
+                        applicationIdentifier[applicationIdentifier.index(after: periodIndex)...])
+                    self.teamID = String(applicationIdentifier[..<periodIndex])
+                    self.name = name
+                    self.entitlements = entitlements
                 } else {
                     Log.write("Error processing \(filename.lastPathComponent)")
                     return nil
@@ -100,7 +107,7 @@ struct ProvisioningProfile {
             return nil
         }
     }
-    
+
     mutating func removeGetTaskAllow() {
         if let _ = entitlements.removeValue(forKey: "get-task-allow") {
             Log.write("Skipped get-task-allow entitlement!");
@@ -108,7 +115,7 @@ struct ProvisioningProfile {
             Log.write("get-task-allow entitlement not found!");
         }
     }
-    
+
     mutating func update(trueAppID: String) {
         guard let oldIdentifier = entitlements["application-identifier"] as? String else {
             Log.write("Error reading application-identifier")
@@ -119,9 +126,12 @@ struct ProvisioningProfile {
         Log.write("Updated application-identifier from '\(oldIdentifier)' to '\(newIdentifier)'")
         // TODO: update any other wildcard entitlements
     }
-    
+
     func getEntitlementsPlist() -> String? {
-        guard let data = try? PropertyListSerialization.data(fromPropertyList: entitlements, format: .xml, options: 0) else {
+        guard
+            let data = try? PropertyListSerialization.data(
+                fromPropertyList: entitlements, format: .xml, options: 0)
+        else {
             return nil
         }
         return String(data: data, encoding: .utf8)

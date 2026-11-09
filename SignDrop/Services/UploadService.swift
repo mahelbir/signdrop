@@ -13,7 +13,8 @@ enum UploadError: LocalizedError, Equatable {
     case server(String)
     case network(String)
 
-    static let invalidBuild = UploadError.invalidFile("This file does not appear to be a valid iOS build. Please upload a valid IPA file.")
+    static let invalidBuild = UploadError.invalidFile(
+        "This file does not appear to be a valid iOS build. Please upload a valid IPA file.")
 
     var errorDescription: String? {
         switch self {
@@ -32,7 +33,8 @@ enum UploadError: LocalizedError, Equatable {
         case .cancelled?:
             return CancellationError()
         case .timedOut? where stallTimeout != nil:
-            return UploadError.network("Upload stalled — no data for \(Int(stallTimeout ?? 0))s. Check your connection.")
+            return UploadError.network(
+                "Upload stalled — no data for \(Int(stallTimeout ?? 0))s. Check your connection.")
         case .timedOut?:
             return UploadError.network("Request timed out. Check your connection or try again.")
         default:
@@ -77,7 +79,8 @@ final class LiveShare: Equatable {
 
     init(stop: @escaping @MainActor () -> Void) {
         stopHandler = stop
-        activity = ProcessInfo.processInfo.beginActivity(options: .userInitiated, reason: "Sharing an app from this Mac")
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: .userInitiated, reason: "Sharing an app from this Mac")
         LiveShare.current?.stop()
         LiveShare.current = self
     }
@@ -111,14 +114,19 @@ final class LiveShare: Equatable {
 }
 
 enum UploadServices {
-    @MainActor static let all: [UploadService] = [BetaDropService(), StreamShareService(), TunnelShareService(tunnel: CommandLineTunnel.cloudflare())]
+    @MainActor static let all: [UploadService] = [
+        BetaDropService(), StreamShareService(),
+        TunnelShareService(tunnel: CommandLineTunnel.cloudflare()),
+    ]
     static let session: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.urlCache = nil
         return URLSession(configuration: configuration)
     }()
 
-    static func delete(_ requests: [URLRequest], service: String, session: URLSession = UploadServices.session) async throws {
+    static func delete(
+        _ requests: [URLRequest], service: String, session: URLSession = UploadServices.session
+    ) async throws {
         for request in requests {
             let (_, status) = try await session.response(for: request, service: service)
             guard (200..<300).contains(status) else {
@@ -129,8 +137,13 @@ enum UploadServices {
 
     static func deletionCommand(_ requests: [URLRequest]) -> String {
         requests.map { request in
-            let headers = (request.allHTTPHeaderFields ?? [:]).sorted { $0.key < $1.key }.map { "-H \(shellQuoted("\($0.key): \($0.value)"))" }
-            return (["curl", "-X", request.httpMethod ?? "GET"] + headers + [shellQuoted(request.url?.absoluteString ?? "")]).joined(separator: " ")
+            let headers = (request.allHTTPHeaderFields ?? [:]).sorted { $0.key < $1.key }.map {
+                "-H \(shellQuoted("\($0.key): \($0.value)"))"
+            }
+            return
+                (["curl", "-X", request.httpMethod ?? "GET"] + headers + [
+                    shellQuoted(request.url?.absoluteString ?? "")
+                ]).joined(separator: " ")
         }.joined(separator: " && ")
     }
 
@@ -140,7 +153,9 @@ enum UploadServices {
 }
 
 extension URLSession {
-    func response(for request: URLRequest, service: String) async throws -> (data: Data, status: Int) {
+    func response(for request: URLRequest, service: String) async throws -> (
+        data: Data, status: Int
+    ) {
         do {
             let (data, response) = try await data(for: request)
             return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)

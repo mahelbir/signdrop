@@ -9,7 +9,8 @@
 import Cocoa
 class SignDropShared {
     static let certificateAuthorityURL = URL(string: "https://www.apple.com/certificateauthority/")!
-    static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    static let isRunningTests =
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
     static func openCertificateAuthority() {
         NSWorkspace.shared.open(certificateAuthorityURL)

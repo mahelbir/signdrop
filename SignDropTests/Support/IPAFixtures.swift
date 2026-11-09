@@ -18,7 +18,9 @@ func randomData(_ count: Int) -> Data {
 }
 
 func manifestItem(_ data: Data?) -> (assets: [[String: String]]?, metadata: [String: String]?) {
-    let plist = data.flatMap { try? PropertyListSerialization.propertyList(from: $0, format: nil) } as? [String: Any]
+    let plist =
+        data.flatMap { try? PropertyListSerialization.propertyList(from: $0, format: nil) }
+        as? [String: Any]
     let item = (plist?["items"] as? [[String: Any]])?.first
     return (item?["assets"] as? [[String: String]], item?["metadata"] as? [String: String])
 }
@@ -28,10 +30,16 @@ extension WorkDirectory {
         let payload = child("app-\(UUID().uuidString)/Payload")
         let app = payload.appendingPathComponent("Sample.app")
         try? FileManager.default.createDirectory(at: app, withIntermediateDirectories: true)
-        if let info, let data = try? PropertyListSerialization.data(fromPropertyList: info, format: .binary, options: 0) {
-            FileManager.default.createFile(atPath: app.appendingPathComponent("Info.plist").path, contents: data)
+        if let info,
+            let data = try? PropertyListSerialization.data(
+                fromPropertyList: info, format: .binary, options: 0)
+        {
+            FileManager.default.createFile(
+                atPath: app.appendingPathComponent("Info.plist").path, contents: data)
         }
-        FileManager.default.createFile(atPath: app.appendingPathComponent("Sample").path, contents: Data(repeating: 7, count: 5000))
+        FileManager.default.createFile(
+            atPath: app.appendingPathComponent("Sample").path,
+            contents: Data(repeating: 7, count: 5000))
         return payload
     }
 

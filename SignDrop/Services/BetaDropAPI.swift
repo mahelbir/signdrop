@@ -48,7 +48,9 @@ struct BetaDropAPI {
     static func validateBuild(_ file: URL) throws {
         let fileExtension = file.pathExtension.lowercased()
         guard fileExtension == "ipa" else {
-            throw UploadError.invalidFile("Unsupported file type \"\(fileExtension.isEmpty ? "" : "." + fileExtension)\". Expected .ipa.")
+            throw UploadError.invalidFile(
+                "Unsupported file type \"\(fileExtension.isEmpty ? "" : "." + fileExtension)\". Expected .ipa."
+            )
         }
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory) else {
@@ -79,14 +81,18 @@ struct BetaDropAPI {
     }
 
     func logout(token: String) async {
-        let _: BetaDropIgnored? = try? await send(makeRequest("/api/cli/logout", method: "POST", token: token))
+        let _: BetaDropIgnored? = try? await send(
+            makeRequest("/api/cli/logout", method: "POST", token: token))
     }
 
     func requestDeviceCode(clientName: String) async throws -> BetaDropDeviceCode {
-        let request = try makeRequest("/api/cli/device/code", method: "POST", body: ["client_name": clientName, "scope": "publish read"])
+        let request = try makeRequest(
+            "/api/cli/device/code", method: "POST",
+            body: ["client_name": clientName, "scope": "publish read"])
         let (data, status) = try await perform(request)
         guard (200..<300).contains(status) else {
-            throw UploadError.server("BetaDrop returned an error (HTTP \(status)). Try again, or use an API token.")
+            throw UploadError.server(
+                "BetaDrop returned an error (HTTP \(status)). Try again, or use an API token.")
         }
         guard let code = try? JSONDecoder().decode(BetaDropDeviceCode.self, from: data) else {
             throw BetaDropAPI.unexpectedResponse(status)
@@ -95,9 +101,12 @@ struct BetaDropAPI {
     }
 
     func pollDeviceToken(deviceCode: String) async throws -> BetaDropDeviceTokenResult {
-        let request = try makeRequest("/api/cli/device/token", method: "POST", body: ["device_code": deviceCode])
+        let request = try makeRequest(
+            "/api/cli/device/token", method: "POST", body: ["device_code": deviceCode])
         let (data, status) = try await perform(request)
-        let body = (try? JSONDecoder().decode(BetaDropDeviceTokenBody.self, from: data)) ?? BetaDropDeviceTokenBody()
+        let body =
+            (try? JSONDecoder().decode(BetaDropDeviceTokenBody.self, from: data))
+            ?? BetaDropDeviceTokenBody()
         if (200..<300).contains(status), let token = body.accessToken {
             return .approved(token: token, user: body.user)
         }
@@ -113,9 +122,13 @@ struct BetaDropAPI {
         }
     }
 
-    func publish(file: URL, token: String, progress: @escaping (Double) -> Void) async throws -> BetaDropPublishResult {
+    func publish(file: URL, token: String, progress: @escaping (Double) -> Void) async throws
+        -> BetaDropPublishResult
+    {
         try BetaDropAPI.validateBuild(file)
-        let boundary = "----signdrop" + (0..<16).map { _ in String(format: "%02x", UInt8.random(in: .min ... .max)) }.joined()
+        let boundary =
+            "----signdrop"
+            + (0..<16).map { _ in String(format: "%02x", UInt8.random(in: .min ... .max)) }.joined()
         removeStaleUploadBodies()
         let body = try makeMultipartBody(for: file, boundary: boundary)
         let bodyLock = open(body.path, O_RDONLY)
@@ -128,17 +141,21 @@ struct BetaDropAPI {
                 close(bodyLock)
             }
         }
-        var request = try makeRequest("/api/cli/publish", method: "POST", token: token, timeout: stallTimeout)
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var request = try makeRequest(
+            "/api/cli/publish", method: "POST", token: token, timeout: stallTimeout)
+        request.setValue(
+            "multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         var attempt = 0
         while true {
             attempt += 1
-            let (data, status) = try await perform(request, fromFile: body, delegate: BetaDropUploadProgress(progress))
+            let (data, status) = try await perform(
+                request, fromFile: body, delegate: BetaDropUploadProgress(progress))
             if attempt <= retries && BetaDropAPI.isRetryable(data, status: status) {
                 try await Task.sleep(nanoseconds: UInt64(1_000_000_000) << (attempt - 1))
                 continue
             }
-            let response: BetaDropPublishResponse? = try decode(data, status: status, fallback: "Upload failed")
+            let response: BetaDropPublishResponse? = try decode(
+                data, status: status, fallback: "Upload failed")
             guard let response else {
                 throw BetaDropAPI.unexpectedResponse(status)
             }
@@ -148,14 +165,18 @@ struct BetaDropAPI {
 
     private static func isRetryable(_ data: Data, status: Int) -> Bool {
         guard (500..<600).contains(status) else { return false }
-        return (try? JSONDecoder().decode(BetaDropEnvelope<BetaDropIgnored>.self, from: data))?.hasErrorDetail != true
+        return (try? JSONDecoder().decode(BetaDropEnvelope<BetaDropIgnored>.self, from: data))?
+            .hasErrorDetail != true
     }
 
     private static func unexpectedResponse(_ status: Int) -> UploadError {
         UploadError.server("Unexpected response from BetaDrop (HTTP \(status)).")
     }
 
-    private func makeRequest(_ path: String, method: String = "GET", token: String? = nil, body: [String: String]? = nil, timeout: TimeInterval = 30) throws -> URLRequest {
+    private func makeRequest(
+        _ path: String, method: String = "GET", token: String? = nil, body: [String: String]? = nil,
+        timeout: TimeInterval = 30
+    ) throws -> URLRequest {
         guard let url = URL(string: baseURL + path) else {
             throw UploadError.server("Invalid BetaDrop API URL: \(baseURL)")
         }
@@ -172,17 +193,21 @@ struct BetaDropAPI {
         return request
     }
 
-    private func perform(_ request: URLRequest, fromFile file: URL? = nil, delegate: URLSessionTaskDelegate? = nil) async throws -> (Data, Int) {
+    private func perform(
+        _ request: URLRequest, fromFile file: URL? = nil, delegate: URLSessionTaskDelegate? = nil
+    ) async throws -> (Data, Int) {
         do {
             let (data, response): (Data, URLResponse)
             if let file {
-                (data, response) = try await session.upload(for: request, fromFile: file, delegate: delegate)
+                (data, response) = try await session.upload(
+                    for: request, fromFile: file, delegate: delegate)
             } else {
                 (data, response) = try await session.data(for: request, delegate: delegate)
             }
             return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
         } catch let error as URLError {
-            throw UploadError.from(error, service: "BetaDrop", stallTimeout: file != nil ? stallTimeout : nil)
+            throw UploadError.from(
+                error, service: "BetaDrop", stallTimeout: file != nil ? stallTimeout : nil)
         }
     }
 
@@ -191,11 +216,14 @@ struct BetaDropAPI {
         return try decode(data, status: status, fallback: "Request failed")
     }
 
-    private func decode<Payload: Decodable>(_ data: Data, status: Int, fallback: String) throws -> Payload? {
+    private func decode<Payload: Decodable>(_ data: Data, status: Int, fallback: String) throws
+        -> Payload?
+    {
         if status == 401 {
             throw UploadError.sessionExpired
         }
-        guard let envelope = try? JSONDecoder().decode(BetaDropEnvelope<Payload>.self, from: data) else {
+        guard let envelope = try? JSONDecoder().decode(BetaDropEnvelope<Payload>.self, from: data)
+        else {
             throw BetaDropAPI.unexpectedResponse(status)
         }
         if !(200..<300).contains(status) || envelope.isSuccess == false {
@@ -204,7 +232,9 @@ struct BetaDropAPI {
         return envelope.data
     }
 
-    private func result(for response: BetaDropPublishResponse, status: Int) throws -> BetaDropPublishResult {
+    private func result(for response: BetaDropPublishResponse, status: Int) throws
+        -> BetaDropPublishResult
+    {
         var components = URLComponents(string: BetaDropAPI.appURL + "/install/")
         components?.queryItems = [URLQueryItem(name: "i", value: response.shortId)]
         guard let link = components?.url else {
@@ -215,7 +245,8 @@ struct BetaDropAPI {
     }
 
     private func removeStaleUploadBodies() {
-        let names = (try? FileManager.default.contentsOfDirectory(atPath: temporaryDirectory.path)) ?? []
+        let names =
+            (try? FileManager.default.contentsOfDirectory(atPath: temporaryDirectory.path)) ?? []
         for name in names where name.hasPrefix(BetaDropAPI.uploadBodyPrefix) {
             let path = temporaryDirectory.appendingPathComponent(name).path
             let descriptor = open(path, O_RDONLY)
@@ -228,12 +259,16 @@ struct BetaDropAPI {
     }
 
     private func makeMultipartBody(for file: URL, boundary: String) throws -> URL {
-        let fileName = file.lastPathComponent.replacingOccurrences(of: "[\"\\\\\r\n]", with: "_", options: .regularExpression)
-        let header = "--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\nContent-Type: application/octet-stream\r\n\r\n"
+        let fileName = file.lastPathComponent.replacingOccurrences(
+            of: "[\"\\\\\r\n]", with: "_", options: .regularExpression)
+        let header =
+            "--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\nContent-Type: application/octet-stream\r\n\r\n"
         let footer = "\r\n--\(boundary)--\r\n"
-        let body = temporaryDirectory.appendingPathComponent(BetaDropAPI.uploadBodyPrefix + UUID().uuidString)
+        let body = temporaryDirectory.appendingPathComponent(
+            BetaDropAPI.uploadBodyPrefix + UUID().uuidString)
         guard FileManager.default.createFile(atPath: body.path, contents: Data(header.utf8)) else {
-            throw UploadError.invalidFile("Could not prepare the upload in \(temporaryDirectory.path).")
+            throw UploadError.invalidFile(
+                "Could not prepare the upload in \(temporaryDirectory.path).")
         }
         do {
             let output = try FileHandle(forWritingTo: body)
@@ -244,7 +279,9 @@ struct BetaDropAPI {
             var hasMoreData = true
             while hasMoreData {
                 hasMoreData = try autoreleasepool {
-                    guard let chunk = try input.read(upToCount: 1 << 20), !chunk.isEmpty else { return false }
+                    guard let chunk = try input.read(upToCount: 1 << 20), !chunk.isEmpty else {
+                        return false
+                    }
                     try output.write(contentsOf: chunk)
                     return true
                 }
@@ -252,7 +289,8 @@ struct BetaDropAPI {
             try output.write(contentsOf: Data(footer.utf8))
         } catch {
             try? FileManager.default.removeItem(at: body)
-            throw UploadError.invalidFile("Could not prepare the upload: \(error.localizedDescription)")
+            throw UploadError.invalidFile(
+                "Could not prepare the upload: \(error.localizedDescription)")
         }
         return body
     }
@@ -276,15 +314,21 @@ private struct BetaDropEnvelope<Payload: Decodable>: Decodable {
         data = try? container.decodeIfPresent(Payload.self, forKey: .data)
         error = try? container.decodeIfPresent(String.self, forKey: .error)
         message = try? container.decodeIfPresent(String.self, forKey: .message)
-        hasErrorDetail = BetaDropEnvelope.isTruthy(container, .error) || BetaDropEnvelope.isTruthy(container, .message)
+        hasErrorDetail =
+            BetaDropEnvelope.isTruthy(container, .error)
+            || BetaDropEnvelope.isTruthy(container, .message)
     }
 
     var errorText: String? {
         [error, message].compactMap { $0 }.first { !$0.isEmpty }
     }
 
-    private static func isTruthy(_ container: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys) -> Bool {
-        guard container.contains(key), (try? container.decodeNil(forKey: key)) == false else { return false }
+    private static func isTruthy(_ container: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys)
+        -> Bool
+    {
+        guard container.contains(key), (try? container.decodeNil(forKey: key)) == false else {
+            return false
+        }
         if let text = try? container.decode(String.self, forKey: key) {
             return !text.isEmpty
         }
@@ -353,7 +397,10 @@ private final class BetaDropUploadProgress: NSObject, URLSessionTaskDelegate {
         self.onProgress = onProgress
     }
 
-    func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64,
+        totalBytesSent: Int64, totalBytesExpectedToSend: Int64
+    ) {
         guard totalBytesExpectedToSend > 0 else { return }
         let fraction = min(Double(totalBytesSent) / Double(totalBytesExpectedToSend), 1)
         DispatchQueue.main.async { self.onProgress(fraction) }

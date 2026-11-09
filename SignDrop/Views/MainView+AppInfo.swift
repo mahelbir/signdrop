@@ -29,7 +29,8 @@ extension MainView: NSTextFieldDelegate {
         case "ipa":
             return AppInfo(ipa: inputFile)
         case "xcarchive":
-            return AppInfo(payload: inputFile.stringByAppendingPathComponent("Products/Applications"))
+            return AppInfo(
+                payload: inputFile.stringByAppendingPathComponent("Products/Applications"))
         case "app", "appex":
             return AppInfo(infoPlist: inputFile.stringByAppendingPathComponent("Info.plist"))
         default:
@@ -68,12 +69,16 @@ extension MainView: NSTextFieldDelegate {
     }
 
     func profileWarning() -> String? {
-        guard let originalAppID = inputAppInfo?.bundleID, let profileAppID = selectedProfileAppID else { return nil }
+        guard let originalAppID = inputAppInfo?.bundleID, let profileAppID = selectedProfileAppID
+        else { return nil }
         guard profileAppID.hasSuffix("*") else {
-            return originalAppID == profileAppID ? nil : "⚠︎ App ID \(originalAppID) doesn't match the profile, it will be changed to \(profileAppID)"
+            return originalAppID == profileAppID
+                ? nil
+                : "⚠︎ App ID \(originalAppID) doesn't match the profile, it will be changed to \(profileAppID)"
         }
         let editedAppID = appIDField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         let appID = editedAppID.isEmpty ? originalAppID : editedAppID
-        return appID.hasPrefix(String(profileAppID.dropLast())) ? nil : "⚠︎ App ID \(appID) isn't covered by the profile \(profileAppID)"
+        return appID.hasPrefix(String(profileAppID.dropLast()))
+            ? nil : "⚠︎ App ID \(appID) isn't covered by the profile \(profileAppID)"
     }
 }

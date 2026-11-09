@@ -18,7 +18,10 @@ final class TunnelShareService: UploadService {
     private let shorteners: [LinkShortener]
     private let session: URLSession
 
-    init(tunnel: Tunnel, shorteners: [LinkShortener] = LinkShortener.all, session: URLSession = UploadServices.session) {
+    init(
+        tunnel: Tunnel, shorteners: [LinkShortener] = LinkShortener.all,
+        session: URLSession = UploadServices.session
+    ) {
         self.tunnel = tunnel
         self.shorteners = shorteners
         self.session = session
@@ -47,13 +50,16 @@ final class TunnelShareService: UploadService {
         guard let app = await Task.detached(operation: { AppInfo(ipa: path) }).value else {
             throw UploadError.invalidBuild
         }
-        guard let handle = try? FileHandle(forReadingFrom: file), let size = try? handle.seekToEnd() else {
+        guard let handle = try? FileHandle(forReadingFrom: file), let size = try? handle.seekToEnd()
+        else {
             throw UploadError.invalidFile("Could not read \(file.lastPathComponent).")
         }
         let token = UUID().uuidString.lowercased()
         let server = LocalFileServer()
         server.onRequest = { [log] method, path, status in log("\(method) \(path) \(status)") }
-        server.setRoute("/\(token)/app.ipa", .init(content: .file(handle, size: size), contentType: "application/octet-stream"))
+        server.setRoute(
+            "/\(token)/app.ipa",
+            .init(content: .file(handle, size: size), contentType: "application/octet-stream"))
         var openTunnel: OpenTunnel?
         var share: LiveShare?
         do {
@@ -69,10 +75,19 @@ final class TunnelShareService: UploadService {
             opened.onUnexpectedClose = { closeReason = $0 }
             let folder = opened.publicURL.appendingPathComponent(token)
             let manifestURL = folder.appendingPathComponent("manifest.plist")
-            let manifest = try InstallLink.manifest(for: app, package: folder.appendingPathComponent("app.ipa"))
-            server.setRoute("/\(token)/manifest.plist", .init(content: .data(manifest), contentType: "text/xml"))
-            server.setRoute("/\(token)/install", .init(content: .redirect(InstallLink.itmsLink(manifest: manifestURL)), contentType: "text/plain"))
-            try await waitUntilReachable(manifestURL, addresses: opened.resolvedAddresses) { closeReason }
+            let manifest = try InstallLink.manifest(
+                for: app, package: folder.appendingPathComponent("app.ipa"))
+            server.setRoute(
+                "/\(token)/manifest.plist", .init(content: .data(manifest), contentType: "text/xml")
+            )
+            server.setRoute(
+                "/\(token)/install",
+                .init(
+                    content: .redirect(InstallLink.itmsLink(manifest: manifestURL)),
+                    contentType: "text/plain"))
+            try await waitUntilReachable(manifestURL, addresses: opened.resolvedAddresses) {
+                closeReason
+            }
             let liveShare = LiveShare {
                 opened.close()
                 server.stop()
@@ -87,7 +102,9 @@ final class TunnelShareService: UploadService {
             case .installRedirect:
                 shared = (folder.appendingPathComponent("install"), [])
             case .shortened:
-                shared = try await InstallLink.shortenOrKeep(try InstallLink.webLink(manifest: manifestURL), with: shorteners, session: session)
+                shared = try await InstallLink.shortenOrKeep(
+                    try InstallLink.webLink(manifest: manifestURL), with: shorteners,
+                    session: session)
             }
             if let closeReason {
                 throw UploadError.server(closeReason)
@@ -101,7 +118,9 @@ final class TunnelShareService: UploadService {
         }
     }
 
-    private func waitUntilReachable(_ url: URL, addresses: [String], closeReason: () -> String?) async throws {
+    private func waitUntilReachable(_ url: URL, addresses: [String], closeReason: () -> String?)
+        async throws
+    {
         let started = Date()
         let deadline = started.addingTimeInterval(readyTimeout)
         var lastFailure: String?
@@ -112,7 +131,10 @@ final class TunnelShareService: UploadService {
             if let reason = closeReason() {
                 throw UploadError.server(reason)
             }
-            guard let failure = await (addresses.isEmpty ? linkFailure(url) : linkFailure(url, pinnedTo: addresses)) else {
+            guard
+                let failure = await
+                    (addresses.isEmpty ? linkFailure(url) : linkFailure(url, pinnedTo: addresses))
+            else {
                 log("\(name): link check passed after \(elapsed())s")
                 return
             }
@@ -140,9 +162,15 @@ final class TunnelShareService: UploadService {
     }
 
     private func linkFailure(_ url: URL, pinnedTo addresses: [String]) async -> String? {
-        let arguments = ["--head", "--silent", "--max-time", "\(Int(linkCheckTimeout))", "--output", "/dev/null", "--write-out", "%{http_code}", "--resolve", "\(url.host ?? ""):\(url.port ?? 443):\(addresses.joined(separator: ","))", url.absoluteString]
+        let arguments = [
+            "--head", "--silent", "--max-time", "\(Int(linkCheckTimeout))", "--output", "/dev/null",
+            "--write-out", "%{http_code}", "--resolve",
+            "\(url.host ?? ""):\(url.port ?? 443):\(addresses.joined(separator: ","))",
+            url.absoluteString,
+        ]
         return await Task.detached { () -> String? in
-            let result = Process().execute("/usr/bin/curl", workingDirectory: nil, arguments: arguments)
+            let result = Process().execute(
+                "/usr/bin/curl", workingDirectory: nil, arguments: arguments)
             guard result.status == 0 else { return "curl exit \(result.status)" }
             return result.output == "200" ? nil : "HTTP \(result.output)"
         }.value

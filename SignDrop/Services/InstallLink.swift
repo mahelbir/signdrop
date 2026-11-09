@@ -2,7 +2,8 @@ import Foundation
 
 enum InstallLink {
     static let maskerURL = "https://axorax.github.io/urlmskr/"
-    private static let queryValueCharacters = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._")
+    private static let queryValueCharacters = CharacterSet(
+        charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._")
 
     static func manifest(for app: AppInfo, package: URL) throws -> Data {
         let metadata = [
@@ -11,8 +12,12 @@ enum InstallLink {
             "kind": "software",
             "title": app.displayName.isEmpty ? app.bundleID : app.displayName,
         ]
-        let item: [String: Any] = ["assets": [["kind": "software-package", "url": package.absoluteString]], "metadata": metadata]
-        return try PropertyListSerialization.data(fromPropertyList: ["items": [item]], format: .xml, options: 0)
+        let item: [String: Any] = [
+            "assets": [["kind": "software-package", "url": package.absoluteString]],
+            "metadata": metadata,
+        ]
+        return try PropertyListSerialization.data(
+            fromPropertyList: ["items": [item]], format: .xml, options: 0)
     }
 
     static func itmsLink(manifest: URL) -> String {
@@ -28,16 +33,23 @@ enum InstallLink {
         return link
     }
 
-    static func shorten(_ link: URL, with shorteners: [LinkShortener] = LinkShortener.all, session: URLSession = UploadServices.session) async throws -> URL {
+    static func shorten(
+        _ link: URL, with shorteners: [LinkShortener] = LinkShortener.all,
+        session: URLSession = UploadServices.session
+    ) async throws -> URL {
         for shortener in shorteners {
             if let shortLink = try await shortener.shorten(link, session: session) {
                 return shortLink
             }
         }
-        throw UploadError.server("Could not shorten the link (\(shorteners.map(\.name).joined(separator: ", "))).")
+        throw UploadError.server(
+            "Could not shorten the link (\(shorteners.map(\.name).joined(separator: ", "))).")
     }
 
-    static func shortenOrKeep(_ link: URL, with shorteners: [LinkShortener] = LinkShortener.all, session: URLSession = UploadServices.session) async throws -> (link: URL, warnings: [String]) {
+    static func shortenOrKeep(
+        _ link: URL, with shorteners: [LinkShortener] = LinkShortener.all,
+        session: URLSession = UploadServices.session
+    ) async throws -> (link: URL, warnings: [String]) {
         do {
             return (try await shorten(link, with: shorteners, session: session), [])
         } catch let error as UploadError {

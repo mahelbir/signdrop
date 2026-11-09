@@ -25,16 +25,21 @@ struct StreamShareAPI {
     }
 
     func deletionRequest(for file: StreamShareFile) -> URLRequest {
-        var request = URLRequest(url: baseURL.appendingPathComponent("api/delete/\(file.id)/\(file.deletionToken)"), timeoutInterval: 30)
+        var request = URLRequest(
+            url: baseURL.appendingPathComponent("api/delete/\(file.id)/\(file.deletionToken)"),
+            timeoutInterval: 30)
         request.httpMethod = "DELETE"
         return request
     }
 
     func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> StreamShareFile {
-        guard let stream = InputStream(url: file), let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize else {
+        guard let stream = InputStream(url: file),
+            let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize
+        else {
             throw UploadError.invalidFile("Could not read file: \(file.path)")
         }
-        return try await upload(stream, name: file.lastPathComponent, size: size, progress: progress)
+        return try await upload(
+            stream, name: file.lastPathComponent, size: size, progress: progress)
     }
 
     func upload(_ data: Data, name: String) async throws -> StreamShareFile {
@@ -42,12 +47,18 @@ struct StreamShareAPI {
     }
 
     func delete(_ file: StreamShareFile) async throws {
-        try await UploadServices.delete([deletionRequest(for: file)], service: StreamShareAPI.serviceName, session: session)
+        try await UploadServices.delete(
+            [deletionRequest(for: file)], service: StreamShareAPI.serviceName, session: session)
     }
 
-    private func upload(_ stream: InputStream, name: String, size: Int, progress: @escaping (Double) -> Void) async throws -> StreamShareFile {
+    private func upload(
+        _ stream: InputStream, name: String, size: Int, progress: @escaping (Double) -> Void
+    ) async throws -> StreamShareFile {
         let file = try await create(name: name)
-        let socket = session.webSocketTask(with: URLRequest(url: socketURL.appendingPathComponent("api/upload/\(file.id)"), timeoutInterval: stallTimeout))
+        let socket = session.webSocketTask(
+            with: URLRequest(
+                url: socketURL.appendingPathComponent("api/upload/\(file.id)"),
+                timeoutInterval: stallTimeout))
         socket.resume()
         stream.open()
         defer { stream.close() }
@@ -60,7 +71,8 @@ struct StreamShareAPI {
                     throw UploadError.invalidFile("Could not read \(name).")
                 }
                 guard count > 0 else { break }
-                guard case .string("ACK") = try await exchange(Data(buffer[..<count]), on: socket) else {
+                guard case .string("ACK") = try await exchange(Data(buffer[..<count]), on: socket)
+                else {
                     throw UploadError.server("Unexpected response from StreamShare.")
                 }
                 sentCount += count
@@ -72,11 +84,14 @@ struct StreamShareAPI {
         } catch {
             socket.cancel(with: .goingAway, reason: nil)
             try? await delete(file)
-            throw UploadError.from(error, service: StreamShareAPI.serviceName, stallTimeout: stallTimeout)
+            throw UploadError.from(
+                error, service: StreamShareAPI.serviceName, stallTimeout: stallTimeout)
         }
     }
 
-    private func exchange(_ chunk: Data, on socket: URLSessionWebSocketTask) async throws -> URLSessionWebSocketTask.Message {
+    private func exchange(_ chunk: Data, on socket: URLSessionWebSocketTask) async throws
+        -> URLSessionWebSocketTask.Message
+    {
         let timeout = UInt64(stallTimeout * 1_000_000_000)
         return try await withThrowingTaskGroup(of: URLSessionWebSocketTask.Message?.self) { group in
             group.addTask {
@@ -97,12 +112,16 @@ struct StreamShareAPI {
     }
 
     private func create(name: String) async throws -> StreamShareFile {
-        var request = URLRequest(url: baseURL.appendingPathComponent("api/create"), timeoutInterval: 30)
+        var request = URLRequest(
+            url: baseURL.appendingPathComponent("api/create"), timeoutInterval: 30)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(["name": name])
-        let (data, status) = try await session.response(for: request, service: StreamShareAPI.serviceName)
-        guard (200..<300).contains(status), let file = try? JSONDecoder().decode(StreamShareFile.self, from: data) else {
+        let (data, status) = try await session.response(
+            for: request, service: StreamShareAPI.serviceName)
+        guard (200..<300).contains(status),
+            let file = try? JSONDecoder().decode(StreamShareFile.self, from: data)
+        else {
             throw UploadError.server("StreamShare could not start the upload (HTTP \(status)).")
         }
         return file

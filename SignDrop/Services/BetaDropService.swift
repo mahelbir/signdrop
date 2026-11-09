@@ -9,7 +9,10 @@ final class BetaDropService: UploadService {
     private let configURL: URL
     private let defaultAPIURL: String
 
-    init(configURL: URL = BetaDropConfig.fileURL(), defaultAPIURL: String = BetaDropConfig.defaultAPIURL) {
+    init(
+        configURL: URL = BetaDropConfig.fileURL(),
+        defaultAPIURL: String = BetaDropConfig.defaultAPIURL
+    ) {
         self.configURL = configURL
         self.defaultAPIURL = defaultAPIURL
     }
@@ -20,11 +23,12 @@ final class BetaDropService: UploadService {
     }
 
     var clientName: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+        let version =
+            Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
         #if arch(arm64)
-        let architecture = "arm64"
+            let architecture = "arm64"
         #else
-        let architecture = "x86_64"
+            let architecture = "x86_64"
         #endif
         return "SignDrop/\(version) (macOS/\(architecture))"
     }
@@ -61,7 +65,8 @@ final class BetaDropService: UploadService {
     func signIn(token rawToken: String) async throws {
         let token = rawToken.trimmingCharacters(in: .whitespacesAndNewlines)
         guard token.hasPrefix("bd_live_") else {
-            throw UploadError.server("That doesn't look like a BetaDrop token (expected to start with bd_live_).")
+            throw UploadError.server(
+                "That doesn't look like a BetaDrop token (expected to start with bd_live_).")
         }
         try await save(token: token, user: nil, api: makeAPI())
     }
@@ -79,7 +84,8 @@ final class BetaDropService: UploadService {
             throw UploadError.sessionExpired
         }
         do {
-            let result = try await BetaDropAPI(baseURL: config.apiUrl).publish(file: file, token: config.token, progress: progress)
+            let result = try await BetaDropAPI(baseURL: config.apiUrl).publish(
+                file: file, token: config.token, progress: progress)
             return UploadResult(link: result.link, warnings: result.warnings)
         } catch UploadError.sessionExpired {
             if BetaDropConfig.read(from: configURL)?.token == config.token {
@@ -104,9 +110,11 @@ final class BetaDropService: UploadService {
         }
         try Task.checkCancellation()
         do {
-            try BetaDropConfig(apiUrl: api.baseURL, token: token, user: verifiedUser).write(to: configURL)
+            try BetaDropConfig(apiUrl: api.baseURL, token: token, user: verifiedUser).write(
+                to: configURL)
         } catch {
-            throw UploadError.server("Could not save the BetaDrop session: \(error.localizedDescription)")
+            throw UploadError.server(
+                "Could not save the BetaDrop session: \(error.localizedDescription)")
         }
         postAccountChange()
     }

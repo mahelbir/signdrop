@@ -71,20 +71,37 @@ extension SerialTests {
             let share = makeShare()
             service.result = .success(UploadResult(link: link, warnings: [], liveShare: share))
             await upload()
-            #expect(service.statusDuringUpload == "Starting Fake Tunnel…" && service.isBusyDuringUpload, "liveShare.startingStatus")
-            #expect(view.statusLabel.stringValue == "Sharing from this Mac — link copied · Open Install Page", "liveShare.status")
-            #expect(!view.stopSharingButton.isHidden && view.stopSharingButton.title == "Stop Sharing" && view.deleteUploadButton.isHidden, "liveShare.stopShown")
+            #expect(
+                service.statusDuringUpload == "Starting Fake Tunnel…" && service.isBusyDuringUpload,
+                "liveShare.startingStatus")
+            #expect(
+                view.statusLabel.stringValue
+                    == "Sharing from this Mac — link copied · Open Install Page", "liveShare.status"
+            )
+            #expect(
+                !view.stopSharingButton.isHidden && view.stopSharingButton.title == "Stop Sharing"
+                    && view.deleteUploadButton.isHidden, "liveShare.stopShown")
             let title = view.stopSharingButton.attributedTitle
-            #expect(isLinkStyled(title.length > 0 ? title.attributes(at: 0, effectiveRange: nil) : [:]), "liveShare.stopLinkStyled")
+            #expect(
+                isLinkStyled(title.length > 0 ? title.attributes(at: 0, effectiveRange: nil) : [:]),
+                "liveShare.stopLinkStyled")
             #expect(harness.isBesideStatus(view.stopSharingButton), "liveShare.stopBesideStatus")
-            #expect(view.isSigning && !view.signButton.isEnabled && !view.uploadPopup.isEnabled, "liveShare.locked")
-            #expect(view.busyIndicator.isHidden && view.progressBar.isHidden, "liveShare.progressHidden")
+            #expect(
+                view.isSigning && !view.signButton.isEnabled && !view.uploadPopup.isEnabled,
+                "liveShare.locked")
+            #expect(
+                view.busyIndicator.isHidden && view.progressBar.isHidden, "liveShare.progressHidden"
+            )
             #expect(LiveShare.current === share, "liveShare.current")
 
             view.stopSharing(view.stopSharingButton)
             #expect(!stopped.all.isEmpty && LiveShare.current == nil, "liveShare.stopStops")
-            #expect(view.statusLabel.stringValue == "Stopped sharing" && !view.isStatusWarning, "liveShare.stoppedStatus")
-            #expect(!view.isSigning && view.signButton.isEnabled && view.stopSharingButton.isHidden, "liveShare.unlockedAfterStop")
+            #expect(
+                view.statusLabel.stringValue == "Stopped sharing" && !view.isStatusWarning,
+                "liveShare.stoppedStatus")
+            #expect(
+                !view.isSigning && view.signButton.isEnabled && view.stopSharingButton.isHidden,
+                "liveShare.unlockedAfterStop")
             #expect(view.windowShouldClose(NSWindow()), "liveShare.windowClosesWithoutShare")
         }
 
@@ -93,22 +110,31 @@ extension SerialTests {
             service.result = .success(UploadResult(link: link, warnings: [], liveShare: share))
             await upload()
             share.end("ERR connection lost")
-            #expect(view.statusLabel.stringValue == "Sharing stopped: the tunnel closed unexpectedly. · Show in Finder", "liveShare.unexpectedStatus")
+            #expect(
+                view.statusLabel.stringValue
+                    == "Sharing stopped: the tunnel closed unexpectedly. · Show in Finder",
+                "liveShare.unexpectedStatus")
             #expect(view.isStatusWarning && view.statusLink == file, "liveShare.unexpectedStatus")
-            #expect(!stopped.all.isEmpty && !view.isSigning && view.stopSharingButton.isHidden && LiveShare.current == nil, "liveShare.unexpectedUnlocks")
+            #expect(
+                !stopped.all.isEmpty && !view.isSigning && view.stopSharingButton.isHidden
+                    && LiveShare.current == nil, "liveShare.unexpectedUnlocks")
         }
 
         @Test func aFailedShareWarnsAndUnlocks() async {
             service.result = .failure(UploadError.server("boom"))
             await upload()
-            #expect(view.statusLabel.stringValue == "Sharing failed: boom · Show in Finder" && view.isStatusWarning, "liveShare.failedStatus")
+            #expect(
+                view.statusLabel.stringValue == "Sharing failed: boom · Show in Finder"
+                    && view.isStatusWarning, "liveShare.failedStatus")
             #expect(!view.isSigning && view.stopSharingButton.isHidden, "liveShare.failedUnlocks")
         }
 
         @Test func quittingAsksFirst() {
             let alert = MainView.makeQuitWhileSharingAlert()
             #expect(alert.messageText == "Stop sharing and quit?", "liveShare.quitAlert")
-            #expect(alert.informativeText == "The install link will stop working.", "liveShare.quitAlert")
+            #expect(
+                alert.informativeText == "The install link will stop working.",
+                "liveShare.quitAlert")
             #expect(alert.buttons.map(\.title) == ["Quit", "Cancel"], "liveShare.quitAlert")
         }
 

@@ -3,23 +3,36 @@ import Testing
 @testable import SignDrop
 
 enum SigningFixtures {
-    private static let root = FileManager.default.temporaryDirectory.appendingPathComponent("SignDropTests-Fixtures")
+    private static let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+        "SignDropTests-Fixtures")
 
     static let certificate: String? = {
-        let output = Process().execute("/usr/bin/security", workingDirectory: nil, arguments: ["find-identity", "-v", "-p", "appleID"]).output
-        let names = output.components(separatedBy: "\"").enumerated().filter { $0.offset % 2 == 1 }.map(\.element)
-        return names.first { $0.hasPrefix("Apple Distribution") } ?? names.first { $0.hasPrefix("Apple Development") }
+        let output = Process().execute(
+            "/usr/bin/security", workingDirectory: nil,
+            arguments: ["find-identity", "-v", "-p", "appleID"]
+        ).output
+        let names = output.components(separatedBy: "\"").enumerated().filter { $0.offset % 2 == 1 }
+            .map(\.element)
+        return names.first { $0.hasPrefix("Apple Distribution") }
+            ?? names.first { $0.hasPrefix("Apple Development") }
     }()
 
     static let sampleApp: (ipa: String, appex: String)? = buildSampleApp()
     static let fixedProfile: String? = buildFixedProfile()
 
-    private static func didRun(_ tool: String, _ arguments: [String], in directory: URL? = nil) -> Bool {
+    private static func didRun(_ tool: String, _ arguments: [String], in directory: URL? = nil)
+        -> Bool
+    {
         Process().execute(tool, workingDirectory: directory?.path, arguments: arguments).status == 0
     }
 
-    private static func didWritePlist(_ plist: [String: Any], to url: URL, format: PropertyListSerialization.PropertyListFormat) -> Bool {
-        guard let data = try? PropertyListSerialization.data(fromPropertyList: plist, format: format, options: 0) else { return false }
+    private static func didWritePlist(
+        _ plist: [String: Any], to url: URL, format: PropertyListSerialization.PropertyListFormat
+    ) -> Bool {
+        guard
+            let data = try? PropertyListSerialization.data(
+                fromPropertyList: plist, format: format, options: 0)
+        else { return false }
         return FileManager.default.createFile(atPath: url.path, contents: data)
     }
 
@@ -31,14 +44,20 @@ enum SigningFixtures {
         let appex = app.appendingPathComponent("PlugIns/Ext.appex")
         let egg = directory.appendingPathComponent("egg")
         let manager = FileManager.default
-        for folder in [app.appendingPathComponent("Frameworks"), appex, app.appendingPathComponent("Eggs"), egg] {
+        for folder in [
+            app.appendingPathComponent("Frameworks"), appex, app.appendingPathComponent("Eggs"),
+            egg,
+        ] {
             try? manager.createDirectory(at: folder, withIntermediateDirectories: true)
         }
         let main = directory.appendingPathComponent("main.c")
         let library = directory.appendingPathComponent("lib.c")
         try? "int main(void){return 0;}\n".write(to: main, atomically: true, encoding: .utf8)
         try? "int one(void){return 1;}\n".write(to: library, atomically: true, encoding: .utf8)
-        let sdk = Process().execute("/usr/bin/xcrun", workingDirectory: nil, arguments: ["--sdk", "iphoneos", "--show-sdk-path"]).output.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sdk = Process().execute(
+            "/usr/bin/xcrun", workingDirectory: nil,
+            arguments: ["--sdk", "iphoneos", "--show-sdk-path"]
+        ).output.trimmingCharacters(in: .whitespacesAndNewlines)
         let clang = ["clang", "-target", "arm64-apple-ios15.0", "-isysroot", sdk]
         let appInfo: [String: Any] = [
             "CFBundleIdentifier": "com.acme.sample",
@@ -69,15 +88,36 @@ enum SigningFixtures {
         ]
         let standalone = directory.appendingPathComponent("Standalone.appex")
         let ipa = directory.appendingPathComponent("Sample.ipa")
-        let isBuilt = didRun("/usr/bin/xcrun", clang + ["-o", app.appendingPathComponent("Sample").path, main.path])
-            && didRun("/usr/bin/xcrun", clang + ["-o", appex.appendingPathComponent("Ext").path, main.path])
-            && didRun("/usr/bin/xcrun", clang + ["-dynamiclib", "-o", app.appendingPathComponent("Frameworks/libone.dylib").path, library.path])
-            && didRun("/usr/bin/xcrun", clang + ["-dynamiclib", "-o", egg.appendingPathComponent("libegg.dylib").path, library.path])
-            && didRun("/usr/bin/codesign", ["-s", "-", egg.appendingPathComponent("libegg.dylib").path])
-            && didRun("/usr/bin/zip", ["-qr", app.appendingPathComponent("Eggs/bundle.egg").path, "."], in: egg)
+        let isBuilt =
+            didRun(
+                "/usr/bin/xcrun",
+                clang + ["-o", app.appendingPathComponent("Sample").path, main.path])
+            && didRun(
+                "/usr/bin/xcrun",
+                clang + ["-o", appex.appendingPathComponent("Ext").path, main.path])
+            && didRun(
+                "/usr/bin/xcrun",
+                clang + [
+                    "-dynamiclib", "-o", app.appendingPathComponent("Frameworks/libone.dylib").path,
+                    library.path,
+                ])
+            && didRun(
+                "/usr/bin/xcrun",
+                clang + [
+                    "-dynamiclib", "-o", egg.appendingPathComponent("libegg.dylib").path,
+                    library.path,
+                ])
+            && didRun(
+                "/usr/bin/codesign", ["-s", "-", egg.appendingPathComponent("libegg.dylib").path])
+            && didRun(
+                "/usr/bin/zip", ["-qr", app.appendingPathComponent("Eggs/bundle.egg").path, "."],
+                in: egg)
             && didWritePlist(appInfo, to: app.appendingPathComponent("Info.plist"), format: .binary)
-            && didWritePlist(extensionInfo, to: appex.appendingPathComponent("Info.plist"), format: .binary)
-            && didRun("/usr/bin/codesign", ["-s", "-", app.appendingPathComponent("Frameworks/libone.dylib").path])
+            && didWritePlist(
+                extensionInfo, to: appex.appendingPathComponent("Info.plist"), format: .binary)
+            && didRun(
+                "/usr/bin/codesign",
+                ["-s", "-", app.appendingPathComponent("Frameworks/libone.dylib").path])
             && didRun("/usr/bin/codesign", ["-s", "-", appex.path])
             && didRun("/usr/bin/codesign", ["-s", "-", app.path])
             && didRun("/usr/bin/zip", ["-qr", ipa.path, "Payload"], in: build)
@@ -100,11 +140,25 @@ enum SigningFixtures {
             "ExpirationDate": formatter.date(from: "2030-01-01T00:00:00Z") as Any,
             "Name": "SignDrop Test Fixed",
             "TeamIdentifier": ["ABCDE12345"],
-            "Entitlements": ["application-identifier": "ABCDE12345.com.acme.fixed", "com.apple.developer.team-identifier": "ABCDE12345", "get-task-allow": false] as [String: Any],
+            "Entitlements": [
+                "application-identifier": "ABCDE12345.com.acme.fixed",
+                "com.apple.developer.team-identifier": "ABCDE12345", "get-task-allow": false,
+            ] as [String: Any],
         ]
-        let isBuilt = didWritePlist(contents, to: plist, format: .xml)
-            && didRun("/usr/bin/openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", key.path, "-out", certificate.path, "-subj", "/CN=SignDrop Test", "-days", "2"])
-            && didRun("/usr/bin/openssl", ["cms", "-sign", "-binary", "-nodetach", "-outform", "DER", "-in", plist.path, "-signer", certificate.path, "-inkey", key.path, "-out", profile.path])
+        let isBuilt =
+            didWritePlist(contents, to: plist, format: .xml)
+            && didRun(
+                "/usr/bin/openssl",
+                [
+                    "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", key.path, "-out",
+                    certificate.path, "-subj", "/CN=SignDrop Test", "-days", "2",
+                ])
+            && didRun(
+                "/usr/bin/openssl",
+                [
+                    "cms", "-sign", "-binary", "-nodetach", "-outform", "DER", "-in", plist.path,
+                    "-signer", certificate.path, "-inkey", key.path, "-out", profile.path,
+                ])
         return isBuilt ? profile.path : nil
     }
 }

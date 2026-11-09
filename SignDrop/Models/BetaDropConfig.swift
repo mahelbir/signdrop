@@ -38,27 +38,39 @@ struct BetaDropConfig: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        apiUrl = (try? container.decodeIfPresent(String.self, forKey: .apiUrl)) ?? BetaDropConfig.defaultAPIURL
+        apiUrl =
+            (try? container.decodeIfPresent(String.self, forKey: .apiUrl))
+            ?? BetaDropConfig.defaultAPIURL
         token = try container.decode(String.self, forKey: .token)
         user = try? container.decodeIfPresent(User.self, forKey: .user)
     }
 
-    static func fileURL(environment: [String: String] = ProcessInfo.processInfo.environment, home: URL = FileManager.default.homeDirectoryForCurrentUser) -> URL {
+    static func fileURL(
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        home: URL = FileManager.default.homeDirectoryForCurrentUser
+    ) -> URL {
         if let xdg = environment["XDG_CONFIG_HOME"], !xdg.isEmpty {
-            return URL(fileURLWithPath: xdg).appendingPathComponent("betadrop").appendingPathComponent("config.json")
+            return URL(fileURLWithPath: xdg).appendingPathComponent("betadrop")
+                .appendingPathComponent("config.json")
         }
         return home.appendingPathComponent(".betadrop").appendingPathComponent("config.json")
     }
 
     static func read(from url: URL = fileURL()) -> BetaDropConfig? {
-        guard let data = try? Data(contentsOf: url), let config = try? JSONDecoder().decode(BetaDropConfig.self, from: data), !config.token.isEmpty else {
+        guard let data = try? Data(contentsOf: url),
+            let config = try? JSONDecoder().decode(BetaDropConfig.self, from: data),
+            !config.token.isEmpty
+        else {
             return nil
         }
         return config
     }
 
     static func storedAPIURL(from url: URL = fileURL()) -> String? {
-        guard let data = try? Data(contentsOf: url), let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], let apiUrl = json["apiUrl"] as? String, !apiUrl.isEmpty else {
+        guard let data = try? Data(contentsOf: url),
+            let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+            let apiUrl = json["apiUrl"] as? String, !apiUrl.isEmpty
+        else {
             return nil
         }
         return apiUrl
@@ -74,7 +86,8 @@ struct BetaDropConfig: Codable, Equatable {
         let data = try encoder.encode(self)
         let directory = url.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let temporaryURL = directory.appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString)")
+        let temporaryURL = directory.appendingPathComponent(
+            ".\(url.lastPathComponent).\(UUID().uuidString)")
         let descriptor = open(temporaryURL.path, O_WRONLY | O_CREAT | O_EXCL, 0o600)
         guard descriptor >= 0 else {
             throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)

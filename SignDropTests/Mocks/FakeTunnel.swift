@@ -4,22 +4,26 @@ import Foundation
 
 extension WorkDirectory {
     func installFakeTunnelTools() throws {
-        try script("mock-tunnel", """
-        #!/bin/sh
-        trap 'exit 0' TERM
-        case "$1" in
-          url) echo "2026-09-28T10:00:00Z INF |  https://abc-def.trycloudflare.com  |" >&2; while :; do sleep 0.2; done ;;
-          url-then-exit) echo "INF | https://abc-def.trycloudflare.com |" >&2; sleep 1; echo "ERR connection lost" >&2; exit 1 ;;
-          fail) echo "INF starting" >&2; echo "ERR failed to request quick Tunnel: 429" >&2; exit 1 ;;
-          silent) while :; do sleep 0.2; done ;;
-          chatty-silent) echo "INF still connecting" >&2; while :; do sleep 0.2; done ;;
-        esac
-        """)
-        try script("fake-shell", """
-        #!/bin/sh
-        echo "noise from a login profile"
-        echo "$(dirname "$0")/mock-tunnel"
-        """)
+        try script(
+            "mock-tunnel",
+            """
+            #!/bin/sh
+            trap 'exit 0' TERM
+            case "$1" in
+              url) echo "2026-09-28T10:00:00Z INF |  https://abc-def.trycloudflare.com  |" >&2; while :; do sleep 0.2; done ;;
+              url-then-exit) echo "INF | https://abc-def.trycloudflare.com |" >&2; sleep 1; echo "ERR connection lost" >&2; exit 1 ;;
+              fail) echo "INF starting" >&2; echo "ERR failed to request quick Tunnel: 429" >&2; exit 1 ;;
+              silent) while :; do sleep 0.2; done ;;
+              chatty-silent) echo "INF still connecting" >&2; while :; do sleep 0.2; done ;;
+            esac
+            """)
+        try script(
+            "fake-shell",
+            """
+            #!/bin/sh
+            echo "noise from a login profile"
+            echo "$(dirname "$0")/mock-tunnel"
+            """)
         _ = try directory("fakebrew")
         try script("fakebrew/brew", "#!/bin/sh\nexit 0\n")
     }

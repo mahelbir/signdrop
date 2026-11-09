@@ -7,7 +7,9 @@ struct ReleaseScriptTests {
         .deletingLastPathComponent()
         .deletingLastPathComponent()
 
-    private func run(_ executable: String, _ arguments: [String], path: String? = nil) throws -> (status: Int32, output: String) {
+    private func run(_ executable: String, _ arguments: [String], path: String? = nil) throws -> (
+        status: Int32, output: String
+    ) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
@@ -28,7 +30,12 @@ struct ReleaseScriptTests {
         let stage = try work.directory("stage")
         work.file("stage/file.txt", Data("x".utf8))
         let image = work.child("Test.dmg")
-        let created = try run("/usr/bin/hdiutil", ["create", "-volname", "SignDropTest", "-srcfolder", stage.path, "-format", "UDZO", image.path])
+        let created = try run(
+            "/usr/bin/hdiutil",
+            [
+                "create", "-volname", "SignDropTest", "-srcfolder", stage.path, "-format", "UDZO",
+                image.path,
+            ])
         try #require(created.status == 0, "\(created.output)")
 
         let shimDirectory = try work.directory("shim")
@@ -46,8 +53,12 @@ struct ReleaseScriptTests {
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: shim.path)
 
         let script = Self.root.appendingPathComponent("scripts/release.sh").path
-        let result = try run("/bin/zsh", [script, "--verify", image.path], path: "\(shimDirectory.path):/usr/bin:/bin:/usr/sbin:/sbin")
-        let mounts = Set(((try? String(contentsOf: busyMounts, encoding: .utf8)) ?? "").split(separator: "\n").map(String.init))
+        let result = try run(
+            "/bin/zsh", [script, "--verify", image.path],
+            path: "\(shimDirectory.path):/usr/bin:/bin:/usr/sbin:/sbin")
+        let mounts = Set(
+            ((try? String(contentsOf: busyMounts, encoding: .utf8)) ?? "").split(separator: "\n")
+                .map(String.init))
         for mount in mounts {
             _ = try run("/usr/bin/hdiutil", ["detach", mount, "-force", "-quiet"])
             try? FileManager.default.removeItem(atPath: mount)
