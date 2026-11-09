@@ -1,19 +1,19 @@
 import Cocoa
 
-struct UploadResult: Equatable {
+struct ShareResult: Equatable {
     let link: URL?
     let warnings: [String]
     var deletionRequests: [URLRequest] = []
     var liveShare: LiveShare?
 }
 
-enum UploadError: LocalizedError, Equatable {
+enum ShareError: LocalizedError, Equatable {
     case sessionExpired
     case invalidFile(String)
     case server(String)
     case network(String)
 
-    static let invalidBuild = UploadError.invalidFile(
+    static let invalidBuild = ShareError.invalidFile(
         "This file does not appear to be a valid iOS build. Please upload a valid IPA file.")
 
     var errorDescription: String? {
@@ -26,38 +26,38 @@ enum UploadError: LocalizedError, Equatable {
     }
 
     static func from(_ error: Error, service: String, stallTimeout: TimeInterval? = nil) -> Error {
-        if error is UploadError || error is CancellationError {
+        if error is ShareError || error is CancellationError {
             return error
         }
         switch (error as? URLError)?.code {
         case .cancelled?:
             return CancellationError()
         case .timedOut? where stallTimeout != nil:
-            return UploadError.network(
+            return ShareError.network(
                 "Upload stalled — no data for \(Int(stallTimeout ?? 0))s. Check your connection.")
         case .timedOut?:
-            return UploadError.network("Request timed out. Check your connection or try again.")
+            return ShareError.network("Request timed out. Check your connection or try again.")
         default:
-            return UploadError.network("Could not reach \(service). Check your connection.")
+            return ShareError.network("Could not reach \(service). Check your connection.")
         }
     }
 }
 
 @MainActor
-protocol UploadService: AnyObject {
+protocol ShareService: AnyObject {
     var name: String { get }
     var accountName: String? { get }
     var isSignInRequired: Bool { get }
-    var isReadyToUpload: Bool { get }
+    var isReadyToShare: Bool { get }
     var isLiveShare: Bool { get }
     func signIn(in window: NSWindow) async -> Bool
-    func prepareToUpload(in window: NSWindow) async -> Bool
+    func prepareToShare(in window: NSWindow) async -> Bool
     func signOut() async
-    func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> UploadResult
+    func share(_ file: URL, progress: @escaping (Double) -> Void) async throws -> ShareResult
 }
 
-extension UploadService {
-    var isReadyToUpload: Bool {
+extension ShareService {
+    var isReadyToShare: Bool {
         !isSignInRequired || accountName != nil
     }
 
@@ -65,7 +65,7 @@ extension UploadService {
         false
     }
 
-    func prepareToUpload(in window: NSWindow) async -> Bool {
+    func prepareToShare(in window: NSWindow) async -> Bool {
         await signIn(in: window)
     }
 }
@@ -113,10 +113,10 @@ final class LiveShare: Equatable {
     }
 }
 
-enum UploadServices {
-    @MainActor static let all: [UploadService] = [
+enum ShareServices {
+    @MainActor static let all: [ShareService] = [
         BetaDropService(), StreamShareService(),
-        TunnelShareService(tunnel: CommandLineTunnel.cloudflare()),
+        TunnelShareService(tunnel: CommandLineTunnel.cloudflareQuickTunnel()),
     ]
     static let session: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
@@ -125,12 +125,12 @@ enum UploadServices {
     }()
 
     static func delete(
-        _ requests: [URLRequest], service: String, session: URLSession = UploadServices.session
+        _ requests: [URLRequest], service: String, session: URLSession = ShareServices.session
     ) async throws {
         for request in requests {
             let (_, status) = try await session.response(for: request, service: service)
             guard (200..<300).contains(status) else {
-                throw UploadError.server("\(service) returned an error (HTTP \(status)).")
+                throw ShareError.server("\(service) returned an error (HTTP \(status)).")
             }
         }
     }
@@ -160,11 +160,11 @@ extension URLSession {
             let (data, response) = try await data(for: request)
             return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
         } catch {
-            throw UploadError.from(error, service: service)
+            throw ShareError.from(error, service: service)
         }
     }
 }
 
 extension Notification.Name {
-    static let uploadAccountDidChange = Notification.Name("uploadAccountDidChange")
+    static let shareAccountDidChange = Notification.Name("shareAccountDidChange")
 }

@@ -1,7 +1,7 @@
 import Cocoa
 
 @MainActor
-final class StreamShareService: UploadService {
+final class StreamShareService: ShareService {
     let name = StreamShareAPI.serviceName
     let accountName: String? = nil
     let isSignInRequired = false
@@ -19,10 +19,10 @@ final class StreamShareService: UploadService {
 
     func signOut() async {}
 
-    func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> UploadResult {
+    func share(_ file: URL, progress: @escaping (Double) -> Void) async throws -> ShareResult {
         let path = file.path
         guard let app = await Task.detached(operation: { AppInfo(ipa: path) }).value else {
-            throw UploadError.invalidBuild
+            throw ShareError.invalidBuild
         }
         var files = [try await api.upload(file, progress: progress)]
         do {
@@ -33,7 +33,7 @@ final class StreamShareService: UploadService {
             let webLink = try InstallLink.webLink(manifest: api.downloadURL(for: manifest))
             let shared = try await InstallLink.shortenOrKeep(
                 webLink, with: shorteners, session: api.session)
-            return UploadResult(
+            return ShareResult(
                 link: shared.link, warnings: shared.warnings,
                 deletionRequests: files.map(api.deletionRequest(for:)))
         } catch {

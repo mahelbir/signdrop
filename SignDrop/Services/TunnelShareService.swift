@@ -1,7 +1,7 @@
 import Cocoa
 
 @MainActor
-final class TunnelShareService: UploadService {
+final class TunnelShareService: ShareService {
     enum LinkStyle {
         case installRedirect
         case shortened
@@ -20,7 +20,7 @@ final class TunnelShareService: UploadService {
 
     init(
         tunnel: Tunnel, shorteners: [LinkShortener] = LinkShortener.all,
-        session: URLSession = UploadServices.session
+        session: URLSession = ShareServices.session
     ) {
         self.tunnel = tunnel
         self.shorteners = shorteners
@@ -31,7 +31,7 @@ final class TunnelShareService: UploadService {
         tunnel.name
     }
 
-    var isReadyToUpload: Bool {
+    var isReadyToShare: Bool {
         tunnel.isReady
     }
 
@@ -41,18 +41,18 @@ final class TunnelShareService: UploadService {
 
     func signOut() async {}
 
-    func prepareToUpload(in window: NSWindow) async -> Bool {
+    func prepareToShare(in window: NSWindow) async -> Bool {
         await tunnel.prepare(in: window)
     }
 
-    func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> UploadResult {
+    func share(_ file: URL, progress: @escaping (Double) -> Void) async throws -> ShareResult {
         let path = file.path
         guard let app = await Task.detached(operation: { AppInfo(ipa: path) }).value else {
-            throw UploadError.invalidBuild
+            throw ShareError.invalidBuild
         }
         guard let handle = try? FileHandle(forReadingFrom: file), let size = try? handle.seekToEnd()
         else {
-            throw UploadError.invalidFile("Could not read \(file.lastPathComponent).")
+            throw ShareError.invalidFile("Could not read \(file.lastPathComponent).")
         }
         let token = UUID().uuidString.lowercased()
         let server = LocalFileServer()
@@ -67,7 +67,7 @@ final class TunnelShareService: UploadService {
             do {
                 port = try await server.start()
             } catch {
-                throw UploadError.server("Could not start the local server.")
+                throw ShareError.server("Could not start the local server.")
             }
             let opened = try await tunnel.open(port: port)
             openTunnel = opened
@@ -107,9 +107,9 @@ final class TunnelShareService: UploadService {
                     session: session)
             }
             if let closeReason {
-                throw UploadError.server(closeReason)
+                throw ShareError.server(closeReason)
             }
-            return UploadResult(link: shared.link, warnings: shared.warnings, liveShare: liveShare)
+            return ShareResult(link: shared.link, warnings: shared.warnings, liveShare: liveShare)
         } catch {
             share?.stop()
             openTunnel?.close()
@@ -129,7 +129,7 @@ final class TunnelShareService: UploadService {
         }
         repeat {
             if let reason = closeReason() {
-                throw UploadError.server(reason)
+                throw ShareError.server(reason)
             }
             guard
                 let failure = await
@@ -144,7 +144,7 @@ final class TunnelShareService: UploadService {
             }
             try await Task.sleep(nanoseconds: 1_000_000_000)
         } while Date() < deadline
-        throw UploadError.server("The link did not become reachable.")
+        throw ShareError.server("The link did not become reachable.")
     }
 
     private func linkFailure(_ url: URL) async -> String? {

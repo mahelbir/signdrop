@@ -4,14 +4,14 @@ import Testing
 @testable import SignDrop
 
 @MainActor
-private final class FakeShareService: UploadService {
+private final class FakeShareService: ShareService {
     let name = "Fake Tunnel"
     let accountName: String? = nil
     let isSignInRequired = false
     let isLiveShare = true
-    var isReadyToUpload = true
+    var isReadyToShare = true
     var isPrepared = false
-    var result: Result<UploadResult, Error> = .failure(UploadError.server("unset"))
+    var result: Result<ShareResult, Error> = .failure(ShareError.server("unset"))
     var statusDuringUpload = ""
     var isBusyDuringUpload = false
     private let view: MainView
@@ -24,13 +24,13 @@ private final class FakeShareService: UploadService {
         true
     }
 
-    func prepareToUpload(in window: NSWindow) async -> Bool {
+    func prepareToShare(in window: NSWindow) async -> Bool {
         isPrepared
     }
 
     func signOut() async {}
 
-    func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> UploadResult {
+    func share(_ file: URL, progress: @escaping (Double) -> Void) async throws -> ShareResult {
         statusDuringUpload = view.statusLabel.stringValue
         isBusyDuringUpload = !view.busyIndicator.isHidden && view.progressBar.isHidden
         return try result.get()
@@ -69,7 +69,7 @@ extension SerialTests {
 
         @Test func sharingLocksTheFormUntilStopped() async {
             let share = makeShare()
-            service.result = .success(UploadResult(link: link, warnings: [], liveShare: share))
+            service.result = .success(ShareResult(link: link, warnings: [], liveShare: share))
             await upload()
             #expect(
                 service.statusDuringUpload == "Starting Fake Tunnel…" && service.isBusyDuringUpload,
@@ -107,7 +107,7 @@ extension SerialTests {
 
         @Test func anUnexpectedEndWarnsAndUnlocks() async {
             let share = makeShare()
-            service.result = .success(UploadResult(link: link, warnings: [], liveShare: share))
+            service.result = .success(ShareResult(link: link, warnings: [], liveShare: share))
             await upload()
             share.end("ERR connection lost")
             #expect(
@@ -121,7 +121,7 @@ extension SerialTests {
         }
 
         @Test func aFailedShareWarnsAndUnlocks() async {
-            service.result = .failure(UploadError.server("boom"))
+            service.result = .failure(ShareError.server("boom"))
             await upload()
             #expect(
                 view.statusLabel.stringValue == "Sharing failed: boom · Show in Finder"
@@ -142,10 +142,10 @@ extension SerialTests {
             view.uploadPopup.addItem(withTitle: "Fake Tunnel")
             view.uploadPopup.lastItem?.representedObject = service
             view.uploadPopup.selectItem(withTitle: "Fake Tunnel")
-            view.chooseUploadService(view.uploadPopup)
+            view.chooseShareService(view.uploadPopup)
             #expect(view.uploadPopup.titleOfSelectedItem == "Fake Tunnel", "liveShare.readyKept")
-            service.isReadyToUpload = false
-            view.chooseUploadService(view.uploadPopup)
+            service.isReadyToShare = false
+            view.chooseShareService(view.uploadPopup)
             _ = await isEventuallyTrue(3) { view.uploadPopup.indexOfSelectedItem == 0 }
             #expect(view.uploadPopup.indexOfSelectedItem == 0, "liveShare.notReadyResets")
         }

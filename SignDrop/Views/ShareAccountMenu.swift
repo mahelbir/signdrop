@@ -1,11 +1,11 @@
 import Cocoa
 
 @MainActor
-final class UploadAccountMenu: NSObject, NSMenuDelegate {
+final class ShareAccountMenu: NSObject, NSMenuDelegate {
     private let separator = NSMenuItem.separator()
     private var accountItems: [NSMenuItem] = []
 
-    init(services: [UploadService], in menu: NSMenu?) {
+    init(services: [ShareService], in menu: NSMenu?) {
         super.init()
         guard let menu else { return }
         accountItems = services.filter(\.isSignInRequired).map { service in
@@ -23,7 +23,7 @@ final class UploadAccountMenu: NSObject, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         for item in accountItems {
-            guard let service = item.representedObject as? UploadService else { continue }
+            guard let service = item.representedObject as? ShareService else { continue }
             let account = service.accountName
             item.title = "Sign Out of \(service.name)" + (account.map { " (\($0))" } ?? "")
             item.isHidden = account == nil
@@ -32,7 +32,7 @@ final class UploadAccountMenu: NSObject, NSMenuDelegate {
     }
 
     @objc private func signOut(_ sender: NSMenuItem) {
-        guard let service = sender.representedObject as? UploadService else { return }
+        guard let service = sender.representedObject as? ShareService else { return }
         Task {
             await service.signOut()
         }

@@ -12,11 +12,11 @@ import Cocoa
 class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc let fileManager = FileManager.default
-    var uploadAccountMenu: UploadAccountMenu?
+    var shareAccountMenu: ShareAccountMenu?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        uploadAccountMenu = UploadAccountMenu(
-            services: UploadServices.all, in: NSApp.mainMenu?.items.first?.submenu)
+        shareAccountMenu = ShareAccountMenu(
+            services: ShareServices.all, in: NSApp.mainMenu?.items.first?.submenu)
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {

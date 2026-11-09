@@ -23,7 +23,7 @@ extension SerialTests {
                 brewPackage: "mock-tunnel",
                 installPage: URL(string: "https://example.com/install")!,
                 arguments: { port in [behaviour, marker, "\(port)"] },
-                publicURLPattern: CommandLineTunnel.cloudflare().publicURLPattern,
+                publicURLPattern: CommandLineTunnel.cloudflareQuickTunnel().publicURLPattern,
                 hasFreshHostname: hasFreshHostname
             )
             tunnel.searchPaths = [work.path]
@@ -46,32 +46,33 @@ extension SerialTests {
             await isEventuallyTrue(2) { !isAlive(marker) }
         }
 
-        @Test func cloudflareUsesTheVerifiedSetup() {
-            let cloudflare = CommandLineTunnel.cloudflare()
+        @Test func quickTunnelUsesTheVerifiedSetup() {
+            let quickTunnel = CommandLineTunnel.cloudflareQuickTunnel()
             #expect(
-                cloudflare.name == "Cloudflare Tunnel" && cloudflare.executable == "cloudflared",
-                "cloudflare.name")
-            #expect(cloudflare.installCommand == "brew install cloudflared", "cloudflare.install")
+                quickTunnel.name == "Cloudflare Quick Tunnel"
+                    && quickTunnel.executable == "cloudflared",
+                "quickTunnel.name")
+            #expect(quickTunnel.installCommand == "brew install cloudflared", "quickTunnel.install")
             #expect(
-                cloudflare.installPage.absoluteString
+                quickTunnel.installPage.absoluteString
                     == "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/#macos",
-                "cloudflare.install"
+                "quickTunnel.install"
             )
             #expect(
-                cloudflare.arguments(8080) == [
+                quickTunnel.arguments(8080) == [
                     "tunnel", "--no-autoupdate", "--config", "/dev/null", "--grace-period", "1s",
                     "--url", "http://127.0.0.1:8080",
-                ], "cloudflare.arguments")
+                ], "quickTunnel.arguments")
             #expect(
-                cloudflare.searchPaths == ["/opt/homebrew/bin", "/usr/local/bin"]
-                    && cloudflare.loginShell == "/bin/zsh" && cloudflare.startTimeout == 30,
-                "cloudflare.searchPaths")
+                quickTunnel.searchPaths == ["/opt/homebrew/bin", "/usr/local/bin"]
+                    && quickTunnel.loginShell == "/bin/zsh" && quickTunnel.startTimeout == 30,
+                "quickTunnel.searchPaths")
             #expect(
-                cloudflare.hasFreshHostname
+                quickTunnel.hasFreshHostname
                     && !mockTunnel("url", marker: "unused").hasFreshHostname,
-                "cloudflare.freshHostname")
-            #expect(cloudflare.unreachableDNSDelay == 8, "cloudflare.dnsFallbackDelay")
-            #expect(cloudflare.unreachableDNSAttempts == 3, "cloudflare.dnsFallbackAttempts")
+                "quickTunnel.freshHostname")
+            #expect(quickTunnel.unreachableDNSDelay == 8, "quickTunnel.dnsFallbackDelay")
+            #expect(quickTunnel.unreachableDNSAttempts == 3, "quickTunnel.dnsFallbackAttempts")
         }
 
         @Test func parsesDNSAnswers() {
@@ -86,16 +87,16 @@ extension SerialTests {
         }
 
         @Test func findsThePublicURLInToolOutput() {
-            let cloudflare = CommandLineTunnel.cloudflare()
+            let quickTunnel = CommandLineTunnel.cloudflareQuickTunnel()
             let banner =
                 "2026-09-28T10:00:00Z INF |  https://quiet-river-sample-words.trycloudflare.com                                   |"
             #expect(
-                cloudflare.publicURL(in: banner)?.absoluteString
+                quickTunnel.publicURL(in: banner)?.absoluteString
                     == "https://quiet-river-sample-words.trycloudflare.com",
-                "cloudflare.urlFromBanner")
+                "quickTunnel.urlFromBanner")
             let apiError =
                 "2026-09-28T10:00:00Z ERR failed to request quick Tunnel: Post \"https://api.trycloudflare.com/tunnel\": dial tcp: lookup api.trycloudflare.com: no such host"
-            #expect(cloudflare.publicURL(in: apiError) == nil, "cloudflare.ignoresAPIHost")
+            #expect(quickTunnel.publicURL(in: apiError) == nil, "quickTunnel.ignoresAPIHost")
         }
 
         @Test func opensAndClosesATunnel() async {

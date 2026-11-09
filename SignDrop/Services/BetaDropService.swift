@@ -1,8 +1,8 @@
 import Cocoa
 
 @MainActor
-final class BetaDropService: UploadService {
-    static let codeExpired = UploadError.server("The code expired. Try again.")
+final class BetaDropService: ShareService {
+    static let codeExpired = ShareError.server("The code expired. Try again.")
 
     let name = "BetaDrop"
     let isSignInRequired = true
@@ -54,7 +54,7 @@ final class BetaDropService: UploadService {
             case .slowDown(let newInterval):
                 interval = newInterval ?? interval + 5
             case .denied:
-                throw UploadError.server("Sign-in was denied in the browser.")
+                throw ShareError.server("Sign-in was denied in the browser.")
             case .expired:
                 throw BetaDropService.codeExpired
             }
@@ -65,7 +65,7 @@ final class BetaDropService: UploadService {
     func signIn(token rawToken: String) async throws {
         let token = rawToken.trimmingCharacters(in: .whitespacesAndNewlines)
         guard token.hasPrefix("bd_live_") else {
-            throw UploadError.server(
+            throw ShareError.server(
                 "That doesn't look like a BetaDrop token (expected to start with bd_live_).")
         }
         try await save(token: token, user: nil, api: makeAPI())
@@ -79,20 +79,20 @@ final class BetaDropService: UploadService {
         postAccountChange()
     }
 
-    func upload(_ file: URL, progress: @escaping (Double) -> Void) async throws -> UploadResult {
+    func share(_ file: URL, progress: @escaping (Double) -> Void) async throws -> ShareResult {
         guard let config = BetaDropConfig.read(from: configURL) else {
-            throw UploadError.sessionExpired
+            throw ShareError.sessionExpired
         }
         do {
             let result = try await BetaDropAPI(baseURL: config.apiUrl).publish(
                 file: file, token: config.token, progress: progress)
-            return UploadResult(link: result.link, warnings: result.warnings)
-        } catch UploadError.sessionExpired {
+            return ShareResult(link: result.link, warnings: result.warnings)
+        } catch ShareError.sessionExpired {
             if BetaDropConfig.read(from: configURL)?.token == config.token {
                 BetaDropConfig.clear(at: configURL)
                 postAccountChange()
             }
-            throw UploadError.sessionExpired
+            throw ShareError.sessionExpired
         }
     }
 
@@ -113,13 +113,13 @@ final class BetaDropService: UploadService {
             try BetaDropConfig(apiUrl: api.baseURL, token: token, user: verifiedUser).write(
                 to: configURL)
         } catch {
-            throw UploadError.server(
+            throw ShareError.server(
                 "Could not save the BetaDrop session: \(error.localizedDescription)")
         }
         postAccountChange()
     }
 
     private func postAccountChange() {
-        NotificationCenter.default.post(name: .uploadAccountDidChange, object: self)
+        NotificationCenter.default.post(name: .shareAccountDidChange, object: self)
     }
 }

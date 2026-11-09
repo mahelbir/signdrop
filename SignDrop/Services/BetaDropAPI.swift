@@ -36,7 +36,7 @@ struct BetaDropAPI {
     static let uploadBodyPrefix = "signdrop-upload-"
 
     let baseURL: String
-    var session = UploadServices.session
+    var session = ShareServices.session
     var stallTimeout: TimeInterval = 60
     var retries = 2
     var temporaryDirectory = FileManager.default.temporaryDirectory
@@ -48,34 +48,34 @@ struct BetaDropAPI {
     static func validateBuild(_ file: URL) throws {
         let fileExtension = file.pathExtension.lowercased()
         guard fileExtension == "ipa" else {
-            throw UploadError.invalidFile(
+            throw ShareError.invalidFile(
                 "Unsupported file type \"\(fileExtension.isEmpty ? "" : "." + fileExtension)\". Expected .ipa."
             )
         }
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: file.path, isDirectory: &isDirectory) else {
-            throw UploadError.invalidFile("File not found: \(file.path)")
+            throw ShareError.invalidFile("File not found: \(file.path)")
         }
         guard !isDirectory.boolValue else {
-            throw UploadError.invalidFile("Not a file: \(file.path)")
+            throw ShareError.invalidFile("Not a file: \(file.path)")
         }
         let size = (try? FileManager.default.attributesOfItem(atPath: file.path))?[.size] as? Int
         guard size != 0 else {
-            throw UploadError.invalidFile("The file is empty.")
+            throw ShareError.invalidFile("The file is empty.")
         }
         guard let handle = try? FileHandle(forReadingFrom: file) else {
-            throw UploadError.invalidFile("Could not read file to validate it: \(file.path)")
+            throw ShareError.invalidFile("Could not read file to validate it: \(file.path)")
         }
         defer { try? handle.close() }
         guard (try? handle.read(upToCount: 4)) == Data([0x50, 0x4B, 0x03, 0x04]) else {
-            throw UploadError.invalidBuild
+            throw ShareError.invalidBuild
         }
     }
 
     func whoami(token: String) async throws -> BetaDropConfig.User {
         let payload: BetaDropWhoami? = try await send(makeRequest("/api/cli/whoami", token: token))
         guard let user = payload?.user else {
-            throw UploadError.server("Unexpected response from BetaDrop — could not verify token.")
+            throw ShareError.server("Unexpected response from BetaDrop — could not verify token.")
         }
         return user
     }
@@ -91,7 +91,7 @@ struct BetaDropAPI {
             body: ["client_name": clientName, "scope": "publish read"])
         let (data, status) = try await perform(request)
         guard (200..<300).contains(status) else {
-            throw UploadError.server(
+            throw ShareError.server(
                 "BetaDrop returned an error (HTTP \(status)). Try again, or use an API token.")
         }
         guard let code = try? JSONDecoder().decode(BetaDropDeviceCode.self, from: data) else {
@@ -169,8 +169,8 @@ struct BetaDropAPI {
             .hasErrorDetail != true
     }
 
-    private static func unexpectedResponse(_ status: Int) -> UploadError {
-        UploadError.server("Unexpected response from BetaDrop (HTTP \(status)).")
+    private static func unexpectedResponse(_ status: Int) -> ShareError {
+        ShareError.server("Unexpected response from BetaDrop (HTTP \(status)).")
     }
 
     private func makeRequest(
@@ -178,7 +178,7 @@ struct BetaDropAPI {
         timeout: TimeInterval = 30
     ) throws -> URLRequest {
         guard let url = URL(string: baseURL + path) else {
-            throw UploadError.server("Invalid BetaDrop API URL: \(baseURL)")
+            throw ShareError.server("Invalid BetaDrop API URL: \(baseURL)")
         }
         var request = URLRequest(url: url, timeoutInterval: timeout)
         request.httpMethod = method
@@ -206,7 +206,7 @@ struct BetaDropAPI {
             }
             return (data, (response as? HTTPURLResponse)?.statusCode ?? 0)
         } catch let error as URLError {
-            throw UploadError.from(
+            throw ShareError.from(
                 error, service: "BetaDrop", stallTimeout: file != nil ? stallTimeout : nil)
         }
     }
@@ -220,14 +220,14 @@ struct BetaDropAPI {
         -> Payload?
     {
         if status == 401 {
-            throw UploadError.sessionExpired
+            throw ShareError.sessionExpired
         }
         guard let envelope = try? JSONDecoder().decode(BetaDropEnvelope<Payload>.self, from: data)
         else {
             throw BetaDropAPI.unexpectedResponse(status)
         }
         if !(200..<300).contains(status) || envelope.isSuccess == false {
-            throw UploadError.server(envelope.errorText ?? "\(fallback) (HTTP \(status)).")
+            throw ShareError.server(envelope.errorText ?? "\(fallback) (HTTP \(status)).")
         }
         return envelope.data
     }
@@ -267,7 +267,7 @@ struct BetaDropAPI {
         let body = temporaryDirectory.appendingPathComponent(
             BetaDropAPI.uploadBodyPrefix + UUID().uuidString)
         guard FileManager.default.createFile(atPath: body.path, contents: Data(header.utf8)) else {
-            throw UploadError.invalidFile(
+            throw ShareError.invalidFile(
                 "Could not prepare the upload in \(temporaryDirectory.path).")
         }
         do {
@@ -289,7 +289,7 @@ struct BetaDropAPI {
             try output.write(contentsOf: Data(footer.utf8))
         } catch {
             try? FileManager.default.removeItem(at: body)
-            throw UploadError.invalidFile(
+            throw ShareError.invalidFile(
                 "Could not prepare the upload: \(error.localizedDescription)")
         }
         return body

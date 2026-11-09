@@ -47,7 +47,7 @@ extension SerialTests {
         @Test func browserSignInSavesTheAccount() async throws {
             let notifications = Collector<Int>()
             let observer = NotificationCenter.default.addObserver(
-                forName: .uploadAccountDidChange, object: nil, queue: nil
+                forName: .shareAccountDidChange, object: nil, queue: nil
             ) { _ in notifications.append(1) }
             defer { NotificationCenter.default.removeObserver(observer) }
             let service = service("approve~service")
@@ -70,11 +70,11 @@ extension SerialTests {
 
         @Test func browserSignInReportsFailures() async {
             await #expect(
-                throws: UploadError.server("Sign-in was denied in the browser."),
+                throws: ShareError.server("Sign-in was denied in the browser."),
                 "service.browser.denied"
             ) { try await service("deny").signInWithBrowser { _ in } }
             await #expect(
-                throws: UploadError.server("The code expired. Try again."),
+                throws: ShareError.server("The code expired. Try again."),
                 "service.browser.expired"
             ) { try await service("expire").signInWithBrowser { _ in } }
         }
@@ -104,7 +104,7 @@ extension SerialTests {
         @Test func tokenSignInChecksThePrefixAndSaves() async throws {
             let tokenService = service("ok~service")
             await #expect(
-                throws: UploadError.server(
+                throws: ShareError.server(
                     "That doesn't look like a BetaDrop token (expected to start with bd_live_)."),
                 "service.token.prefix"
             ) {
@@ -117,7 +117,7 @@ extension SerialTests {
         }
 
         @Test func rejectedTokenSavesNothing() async {
-            await #expect(throws: UploadError.sessionExpired, "service.token.rejected") {
+            await #expect(throws: ShareError.sessionExpired, "service.token.rejected") {
                 try await service("unauthorized").signIn(token: "bd_live_bad")
             }
             #expect(!isConfigSaved, "service.token.rejectedSavesNothing")
@@ -142,16 +142,16 @@ extension SerialTests {
         @Test func uploadNeedsASession() async throws {
             let file = ipa()
             let tokenService = service("ok~service")
-            await #expect(throws: UploadError.sessionExpired, "service.upload.signedOut") {
-                try await tokenService.upload(file) { _ in }
+            await #expect(throws: ShareError.sessionExpired, "service.upload.signedOut") {
+                try await tokenService.share(file) { _ in }
             }
             try storeConfig(
                 scenario: "ok", token: "bd_live_abc",
                 user: .init(id: "1", email: "dev@example.com", role: nil))
-            let uploaded = try? await tokenService.upload(file) { _ in }
+            let uploaded = try? await tokenService.share(file) { _ in }
             #expect(
                 uploaded
-                    == UploadResult(
+                    == ShareResult(
                         link: URL(string: "https://betadrop.app/install/?i=abc123"), warnings: []),
                 "service.upload.link")
         }
@@ -159,15 +159,15 @@ extension SerialTests {
         @Test func expiredSessionClearsTheAccount() async throws {
             let notifications = Collector<Int>()
             let observer = NotificationCenter.default.addObserver(
-                forName: .uploadAccountDidChange, object: nil, queue: nil
+                forName: .shareAccountDidChange, object: nil, queue: nil
             ) { _ in notifications.append(1) }
             defer { NotificationCenter.default.removeObserver(observer) }
             let file = ipa()
             let tokenService = service("ok~service")
             try storeConfig(scenario: "unauthorized", token: "bd_live_revoked")
             #expect(tokenService.accountName == "unknown account", "service.account.unknownEmail")
-            await #expect(throws: UploadError.sessionExpired, "service.upload.expired") {
-                try await tokenService.upload(file) { _ in }
+            await #expect(throws: ShareError.sessionExpired, "service.upload.expired") {
+                try await tokenService.share(file) { _ in }
             }
             #expect(
                 !isConfigSaved && notifications.all.count == 1, "service.upload.expiredClearsConfig"

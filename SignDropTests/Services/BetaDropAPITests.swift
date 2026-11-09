@@ -33,7 +33,7 @@ extension SerialTests {
             #expect(
                 mock.stats["ok"]["authorization"] as? String == "Bearer bd_live_abc",
                 "api.whoami.bearer")
-            await #expect(throws: UploadError.sessionExpired, "api.whoami.unauthorized") {
+            await #expect(throws: ShareError.sessionExpired, "api.whoami.unauthorized") {
                 try await api("unauthorized").whoami(token: "bd_live_bad")
             }
         }
@@ -57,7 +57,7 @@ extension SerialTests {
             #expect(codeStats["scope"] as? String == "publish read", "api.deviceCode.body")
             #expect(codeStats["hasProviderHint"] as? Bool == false, "api.deviceCode.body")
             await #expect(
-                throws: UploadError.server(
+                throws: ShareError.server(
                     "BetaDrop returned an error (HTTP 500). Try again, or use an API token."),
                 "api.deviceCode.httpError"
             ) {
@@ -84,13 +84,13 @@ extension SerialTests {
 
         @Test func reportsUnusableServers() async {
             await #expect(
-                throws: UploadError.network("Could not reach BetaDrop. Check your connection."),
+                throws: ShareError.network("Could not reach BetaDrop. Check your connection."),
                 "api.unreachable"
             ) {
                 try await BetaDropAPI(baseURL: "http://127.0.0.1:1").whoami(token: "x")
             }
             await #expect(
-                throws: UploadError.server("Invalid BetaDrop API URL: http://exa mple.com"),
+                throws: ShareError.server("Invalid BetaDrop API URL: http://exa mple.com"),
                 "api.invalidBaseURL"
             ) {
                 try await BetaDropAPI(baseURL: "http://exa mple.com").whoami(token: "x")
@@ -100,23 +100,23 @@ extension SerialTests {
         @Test func validatesBuildsBeforeUploading() throws {
             let folder = try work.directory("folder.ipa")
             #expect(
-                throws: UploadError.invalidFile("Unsupported file type \".txt\". Expected .ipa."),
+                throws: ShareError.invalidFile("Unsupported file type \".txt\". Expected .ipa."),
                 "publish.validate.extension"
             ) {
                 try BetaDropAPI.validateBuild(work.file("notes.txt", Self.validIPA))
             }
             #expect(
-                throws: UploadError.invalidFile("File not found: \(work.path)/absent.ipa"),
+                throws: ShareError.invalidFile("File not found: \(work.path)/absent.ipa"),
                 "publish.validate.missing"
             ) { try BetaDropAPI.validateBuild(work.child("absent.ipa")) }
             #expect(
-                throws: UploadError.invalidFile("Not a file: \(work.path)/folder.ipa"),
+                throws: ShareError.invalidFile("Not a file: \(work.path)/folder.ipa"),
                 "publish.validate.directory"
             ) { try BetaDropAPI.validateBuild(folder) }
-            #expect(throws: UploadError.invalidFile("The file is empty."), "publish.validate.empty")
+            #expect(throws: ShareError.invalidFile("The file is empty."), "publish.validate.empty")
             { try BetaDropAPI.validateBuild(work.file("empty.ipa", Data())) }
             #expect(
-                throws: UploadError.invalidFile(
+                throws: ShareError.invalidFile(
                     "This file does not appear to be a valid iOS build. Please upload a valid IPA file."
                 ),
                 "publish.validate.magic"
@@ -180,7 +180,7 @@ extension SerialTests {
             #expect(Date().timeIntervalSince(start) >= 3, "publish.retry.backoff")
             #expect(mock.stats["html5xx-then-ok"]["publish"] as? Int == 3, "publish.retry.count")
             await #expect(
-                throws: UploadError.server("Unexpected response from BetaDrop (HTTP 502)."),
+                throws: ShareError.server("Unexpected response from BetaDrop (HTTP 502)."),
                 "publish.retry.exhausted"
             ) {
                 try await api("html5xx-always").publish(file: file, token: "t") { _ in }
@@ -192,17 +192,17 @@ extension SerialTests {
 
         @Test func doesNotRetryServerAnswers() async {
             let file = ipa()
-            await #expect(throws: UploadError.server("Storage is down"), "publish.json5xx.noRetry")
+            await #expect(throws: ShareError.server("Storage is down"), "publish.json5xx.noRetry")
             { try await api("json5xx").publish(file: file, token: "t") { _ in } }
             #expect(mock.stats["json5xx"]["publish"] as? Int == 1, "publish.json5xx.count")
             await #expect(
-                throws: UploadError.server("Upload failed (HTTP 500)."),
+                throws: ShareError.server("Upload failed (HTTP 500)."),
                 "publish.json5xxObject.message"
             ) { try await api("json5xx-object").publish(file: file, token: "t") { _ in } }
             #expect(
                 mock.stats["json5xx-object"]["publish"] as? Int == 1,
                 "publish.json5xxObject.noRetry")
-            await #expect(throws: UploadError.sessionExpired, "publish.unauthorized") {
+            await #expect(throws: ShareError.sessionExpired, "publish.unauthorized") {
                 try await api("unauthorized").publish(file: file, token: "t") { _ in }
             }
             #expect(
@@ -212,22 +212,22 @@ extension SerialTests {
         @Test func explainsRejectedUploads() async {
             let file = ipa()
             await #expect(
-                throws: UploadError.server("Unexpected response from BetaDrop (HTTP 200)."),
+                throws: ShareError.server("Unexpected response from BetaDrop (HTTP 200)."),
                 "publish.notJSON"
             ) { try await api("not-json").publish(file: file, token: "t") { _ in } }
-            await #expect(throws: UploadError.server("Plan limit reached"), "publish.successFalse")
+            await #expect(throws: ShareError.server("Plan limit reached"), "publish.successFalse")
             { try await api("success-false").publish(file: file, token: "t") { _ in } }
             await #expect(
-                throws: UploadError.server("Upload failed (HTTP 422)."), "publish.errorNoMessage"
+                throws: ShareError.server("Upload failed (HTTP 422)."), "publish.errorNoMessage"
             ) { try await api("error-no-message").publish(file: file, token: "t") { _ in } }
             await #expect(
-                throws: UploadError.server("Upload failed (HTTP 422)."), "publish.errorObject"
+                throws: ShareError.server("Upload failed (HTTP 422)."), "publish.errorObject"
             ) { try await api("error-object").publish(file: file, token: "t") { _ in } }
-            await #expect(throws: UploadError.server("Too many uploads"), "publish.rateLimit") {
+            await #expect(throws: ShareError.server("Too many uploads"), "publish.rateLimit") {
                 try await api("rate-limit").publish(file: file, token: "t") { _ in }
             }
             await #expect(
-                throws: UploadError.server("Unexpected response from BetaDrop (HTTP 200)."),
+                throws: ShareError.server("Unexpected response from BetaDrop (HTTP 200)."),
                 "publish.missingShortID"
             ) {
                 try await api("missing-short-id").publish(file: file, token: "t") { _ in }
@@ -236,7 +236,7 @@ extension SerialTests {
 
         @Test func reportsAStalledUpload() async {
             await #expect(
-                throws: UploadError.network(
+                throws: ShareError.network(
                     "Upload stalled — no data for 2s. Check your connection."), "publish.stall"
             ) {
                 try await api("stall").publish(file: ipa(), token: "t") { _ in }
@@ -270,7 +270,7 @@ extension SerialTests {
             noDisk.temporaryDirectory = URL(fileURLWithPath: "/nonexistent-signdrop-dir")
             let file = ipa()
             await #expect(
-                throws: UploadError.invalidFile(
+                throws: ShareError.invalidFile(
                     "Could not prepare the upload in /nonexistent-signdrop-dir."),
                 "publish.bodyDirectoryUnwritable"
             ) {

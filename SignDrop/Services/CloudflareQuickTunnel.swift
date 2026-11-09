@@ -1,9 +1,9 @@
 import Foundation
 
 extension CommandLineTunnel {
-    static func cloudflare() -> CommandLineTunnel {
+    static func cloudflareQuickTunnel() -> CommandLineTunnel {
         CommandLineTunnel(
-            name: "Cloudflare Tunnel",
+            name: "Cloudflare Quick Tunnel",
             executable: "cloudflared",
             brewPackage: "cloudflared",
             installPage: URL(

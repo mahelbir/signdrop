@@ -205,7 +205,7 @@ final class CommandLineTunnel: Tunnel {
 
     func open(port: UInt16) async throws -> OpenTunnel {
         guard let path = executablePath else {
-            throw UploadError.server("\(name) needs \(executable). Install it and try again.")
+            throw ShareError.server("\(name) needs \(executable). Install it and try again.")
         }
         let deadline = Date().addingTimeInterval(startTimeout)
         let process = Process()
@@ -219,7 +219,7 @@ final class CommandLineTunnel: Tunnel {
         do {
             try process.run()
         } catch {
-            throw UploadError.server("Could not start \(executable): \(error.localizedDescription)")
+            throw ShareError.server("Could not start \(executable): \(error.localizedDescription)")
         }
         let launch = Launch(name: name, log: log) {
             try? input.fileHandleForWriting.close()
@@ -254,7 +254,7 @@ final class CommandLineTunnel: Tunnel {
         do {
             while true {
                 if let closeReason {
-                    throw UploadError.server(closeReason)
+                    throw ShareError.server(closeReason)
                 }
                 let answer = await hostnameAnswer(host)
                 if answer != lastAnswer {
@@ -275,7 +275,7 @@ final class CommandLineTunnel: Tunnel {
                                 max(0, min(unreachableDNSDelay, deadline.timeIntervalSinceNow))
                                     * 1_000_000_000))
                         if let closeReason {
-                            throw UploadError.server(closeReason)
+                            throw ShareError.server(closeReason)
                         }
                         return
                     }
@@ -283,7 +283,7 @@ final class CommandLineTunnel: Tunnel {
                     break
                 }
                 guard Date() < deadline else {
-                    throw UploadError.server("The tunnel address was not published in time.")
+                    throw ShareError.server("The tunnel address was not published in time.")
                 }
                 try await Task.sleep(nanoseconds: 500_000_000)
             }
@@ -338,14 +338,14 @@ final class CommandLineTunnel: Tunnel {
                     lastLine.isEmpty ? "\(name) closed unexpectedly." : lastLine)
             } else {
                 fail(
-                    UploadError.server(
+                    ShareError.server(
                         lastLine.isEmpty ? "\(name) stopped before it was ready." : lastLine))
             }
         }
 
         func timeOut() {
             fail(
-                UploadError.server(
+                ShareError.server(
                     lastLine.isEmpty
                         ? "The tunnel did not start in time."
                         : "The tunnel did not start in time. Last output: \(lastLine)"))

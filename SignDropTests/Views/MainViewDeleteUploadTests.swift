@@ -22,12 +22,12 @@ extension SerialTests {
             harness.mock.baseURL
         }
 
-        private var betaDrop: UploadService {
-            UploadServices.all[0]
+        private var betaDrop: ShareService {
+            ShareServices.all[0]
         }
 
-        private var streamShare: UploadService {
-            UploadServices.all[1]
+        private var streamShare: ShareService {
+            ShareServices.all[1]
         }
 
         private func deletion(_ scenario: String) -> [URLRequest] {
@@ -41,7 +41,7 @@ extension SerialTests {
 
         private func report(_ scenario: String) {
             view.reportUpload(
-                UploadResult(link: link, warnings: [], deletionRequests: deletion(scenario)),
+                ShareResult(link: link, warnings: [], deletionRequests: deletion(scenario)),
                 from: streamShare)
         }
 
@@ -57,7 +57,7 @@ extension SerialTests {
         }
 
         @Test func buttonNeedsDeletionRequests() {
-            view.reportUpload(UploadResult(link: link, warnings: []), from: betaDrop)
+            view.reportUpload(ShareResult(link: link, warnings: []), from: betaDrop)
             #expect(view.deleteUploadButton.isHidden, "deleteUpload.hiddenWithoutRequests")
         }
 
@@ -138,7 +138,7 @@ extension SerialTests {
             request.httpMethod = "DELETE"
             request.setValue("Bearer t", forHTTPHeaderField: "Authorization")
             #expect(
-                UploadServices.deletionCommand([request])
+                ShareServices.deletionCommand([request])
                     == "curl -X DELETE -H 'Authorization: Bearer t' 'https://example.com/it'\\''s'",
                 "deleteUpload.copyCommandQuoted")
         }
@@ -203,9 +203,9 @@ extension SerialTests {
         private func showUploaded() {
             let deletion = URLRequest(url: URL(string: "https://example.com/delete")!)
             view.reportUpload(
-                UploadResult(
+                ShareResult(
                     link: URL(string: "https://tinyurl.com/example")!, warnings: [],
-                    deletionRequests: [deletion]), from: UploadServices.all[1])
+                    deletionRequests: [deletion]), from: ShareServices.all[1])
         }
 
         private var isReset: Bool {

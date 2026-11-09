@@ -17,7 +17,7 @@ struct StreamShareAPI {
 
     var baseURL = URL(string: "https://streamshare.wireway.ch")!
     var socketURL = URL(string: "wss://streamshare.wireway.ch")!
-    var session = UploadServices.session
+    var session = ShareServices.session
     var stallTimeout: TimeInterval = 60
 
     func downloadURL(for file: StreamShareFile) -> URL {
@@ -36,7 +36,7 @@ struct StreamShareAPI {
         guard let stream = InputStream(url: file),
             let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize
         else {
-            throw UploadError.invalidFile("Could not read file: \(file.path)")
+            throw ShareError.invalidFile("Could not read file: \(file.path)")
         }
         return try await upload(
             stream, name: file.lastPathComponent, size: size, progress: progress)
@@ -47,7 +47,7 @@ struct StreamShareAPI {
     }
 
     func delete(_ file: StreamShareFile) async throws {
-        try await UploadServices.delete(
+        try await ShareServices.delete(
             [deletionRequest(for: file)], service: StreamShareAPI.serviceName, session: session)
     }
 
@@ -68,12 +68,12 @@ struct StreamShareAPI {
             while true {
                 let count = stream.read(&buffer, maxLength: buffer.count)
                 guard count >= 0 else {
-                    throw UploadError.invalidFile("Could not read \(name).")
+                    throw ShareError.invalidFile("Could not read \(name).")
                 }
                 guard count > 0 else { break }
                 guard case .string("ACK") = try await exchange(Data(buffer[..<count]), on: socket)
                 else {
-                    throw UploadError.server("Unexpected response from StreamShare.")
+                    throw ShareError.server("Unexpected response from StreamShare.")
                 }
                 sentCount += count
                 let fraction = min(Double(sentCount) / Double(max(size, 1)), 1)
@@ -84,7 +84,7 @@ struct StreamShareAPI {
         } catch {
             socket.cancel(with: .goingAway, reason: nil)
             try? await delete(file)
-            throw UploadError.from(
+            throw ShareError.from(
                 error, service: StreamShareAPI.serviceName, stallTimeout: stallTimeout)
         }
     }
@@ -122,7 +122,7 @@ struct StreamShareAPI {
         guard (200..<300).contains(status),
             let file = try? JSONDecoder().decode(StreamShareFile.self, from: data)
         else {
-            throw UploadError.server("StreamShare could not start the upload (HTTP \(status)).")
+            throw ShareError.server("StreamShare could not start the upload (HTTP \(status)).")
         }
         return file
     }

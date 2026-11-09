@@ -28,31 +28,31 @@ enum InstallLink {
         let installLink = itmsLink(manifest: manifest)
         let code = Data(installLink.utf8).base64EncodedString()
         guard !code.contains("/"), let link = URL(string: maskerURL + code) else {
-            throw UploadError.server("Could not build a web link for \(installLink)")
+            throw ShareError.server("Could not build a web link for \(installLink)")
         }
         return link
     }
 
     static func shorten(
         _ link: URL, with shorteners: [LinkShortener] = LinkShortener.all,
-        session: URLSession = UploadServices.session
+        session: URLSession = ShareServices.session
     ) async throws -> URL {
         for shortener in shorteners {
             if let shortLink = try await shortener.shorten(link, session: session) {
                 return shortLink
             }
         }
-        throw UploadError.server(
+        throw ShareError.server(
             "Could not shorten the link (\(shorteners.map(\.name).joined(separator: ", "))).")
     }
 
     static func shortenOrKeep(
         _ link: URL, with shorteners: [LinkShortener] = LinkShortener.all,
-        session: URLSession = UploadServices.session
+        session: URLSession = ShareServices.session
     ) async throws -> (link: URL, warnings: [String]) {
         do {
             return (try await shorten(link, with: shorteners, session: session), [])
-        } catch let error as UploadError {
+        } catch let error as ShareError {
             return (link, [error.localizedDescription])
         }
     }

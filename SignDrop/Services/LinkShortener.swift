@@ -63,7 +63,7 @@ struct LinkShortener {
                 return nil
             }
             return shortLink
-        } catch is UploadError {
+        } catch is ShareError {
             return nil
         }
     }

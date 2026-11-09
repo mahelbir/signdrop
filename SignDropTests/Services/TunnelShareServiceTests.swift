@@ -41,7 +41,7 @@ extension SerialTests {
         @Test func keepsALinkThatCannotBeShortened() async {
             let keptLink = URL(string: "https://example.com/page")!
             let kept = try? await InstallLink.shortenOrKeep(
-                keptLink, with: [], session: UploadServices.session)
+                keptLink, with: [], session: ShareServices.session)
             #expect(
                 kept?.link == keptLink && kept?.warnings == ["Could not shorten the link ()."],
                 "link.shortenOrKeep")
@@ -59,7 +59,7 @@ extension SerialTests {
                 tunnel: FakeTunnel(.passthrough), shorteners: [recorder])
             direct.readyTimeout = 2
             direct.log = { _ in }
-            let result = try? await direct.upload(ipa) { _ in }
+            let result = try? await direct.share(ipa) { _ in }
             let installURL = result?.link
             #expect(installURL?.lastPathComponent == "install", "share.installLinkByDefault")
             #expect(
@@ -88,16 +88,16 @@ extension SerialTests {
                 service.name == "Fake Tunnel" && service.isLiveShare && !service.isSignInRequired
                     && service.accountName == nil, "share.identity")
             tunnel.isReady = false
-            #expect(!service.isReadyToUpload, "share.notReadyFollowsTunnel")
+            #expect(!service.isReadyToShare, "share.notReadyFollowsTunnel")
             tunnel.isReady = true
-            #expect(service.isReadyToUpload, "share.readyFollowsTunnel")
+            #expect(service.isReadyToShare, "share.readyFollowsTunnel")
         }
 
         @Test func sharesAndStops() async throws {
             let app = try #require(AppInfo(ipa: ipa.path))
             let ipaData = try Data(contentsOf: ipa)
             let (service, tunnel, logged) = shareService(.passthrough)
-            let result = try await service.upload(ipa) { _ in }
+            let result = try await service.share(ipa) { _ in }
             let share = result.liveShare
             #expect(share?.isActive == true && LiveShare.current === share, "share.live")
             #expect(result.warnings == ["Could not shorten the link ()."], "share.shortenWarning")
@@ -139,7 +139,7 @@ extension SerialTests {
 
         @Test func endsWhenTheTunnelDrops() async {
             let (service, tunnel, _) = shareService(.passthrough)
-            let result = try? await service.upload(ipa) { _ in }
+            let result = try? await service.share(ipa) { _ in }
             let reasons = Collector<String>()
             result?.liveShare?.onEnd = { reasons.append($0) }
             tunnel.tunnel?.reportUnexpectedClose("ERR lost")
@@ -153,8 +153,8 @@ extension SerialTests {
         }
 
         @Test func aNewShareReplacesThePreviousOne() async {
-            let first = try? await shareService(.passthrough).service.upload(ipa) { _ in }
-            let second = try? await shareService(.passthrough).service.upload(ipa) { _ in }
+            let first = try? await shareService(.passthrough).service.share(ipa) { _ in }
+            let second = try? await shareService(.passthrough).service.share(ipa) { _ in }
             #expect(
                 first?.liveShare?.isActive == false && second?.liveShare?.isActive == true
                     && LiveShare.current === second?.liveShare, "share.replacesPrevious")
@@ -170,7 +170,7 @@ extension SerialTests {
             }
             var message: String?
             do {
-                _ = try await service.upload(ipa) { _ in }
+                _ = try await service.share(ipa) { _ in }
             } catch {
                 message = error.localizedDescription
             }
@@ -184,7 +184,7 @@ extension SerialTests {
 
         @Test func logsWhyTheLinkCheckFailed() async {
             let (service, _, logged) = shareService(.unreachable)
-            _ = try? await service.upload(ipa) { _ in }
+            _ = try? await service.share(ipa) { _ in }
             let lines = logged.all.filter { $0.hasPrefix("Fake Tunnel: link check ") }
             #expect(
                 lines.count == 1 && lines[0].contains("NSURLErrorDomain -1004"),
@@ -194,7 +194,7 @@ extension SerialTests {
         @Test func checksAFreshHostnameWithoutTheSystemResolver() async {
             let (service, _, logged) = shareService(.pinned)
             service.linkStyle = .installRedirect
-            let result = try? await service.upload(ipa) { _ in }
+            let result = try? await service.share(ipa) { _ in }
             #expect(result?.link?.host == "fresh-host.invalid", "share.pinnedCheckSkipsResolver")
             #expect(
                 logged.all.contains { $0.hasPrefix("Fake Tunnel: link check passed after ") },
@@ -208,7 +208,7 @@ extension SerialTests {
 
         @Test func logsTheCurlExitOfAPinnedCheck() async {
             let (service, _, logged) = shareService(.pinnedUnreachable)
-            _ = try? await service.upload(ipa) { _ in }
+            _ = try? await service.share(ipa) { _ in }
             let lines = logged.all.filter { $0.hasPrefix("Fake Tunnel: link check ") }
             #expect(
                 lines.count == 1 && lines[0].contains("curl exit 7"), "share.pinnedLogsCurlExit")
@@ -216,7 +216,7 @@ extension SerialTests {
 
         @Test func failedSharesCleanUp() async throws {
             let notIPA = work.file("not.ipa", Data("nope".utf8))
-            let cases: [(name: String, mode: FakeTunnel.Mode, file: URL, expected: UploadError)] = [
+            let cases: [(name: String, mode: FakeTunnel.Mode, file: URL, expected: ShareError)] = [
                 ("share.invalidBuild", .passthrough, notIPA, .invalidBuild),
                 ("share.tunnelFails", .fail, ipa, .server("ERR boom")),
                 (
@@ -233,7 +233,7 @@ extension SerialTests {
                 let (service, tunnel, _) = shareService(item.mode)
                 let started = Date()
                 await #expect(throws: item.expected, "\(item.name)") {
-                    try await service.upload(item.file) { _ in }
+                    try await service.share(item.file) { _ in }
                 }
                 var isServerClosed = true
                 if let port = tunnel.openedPort {
@@ -249,21 +249,23 @@ extension SerialTests {
 
         @Test func resultsCompareTheirLiveShare() {
             let equalShare = LiveShare {}
-            let sharing = UploadResult(link: nil, warnings: [], liveShare: equalShare)
+            let sharing = ShareResult(link: nil, warnings: [], liveShare: equalShare)
             #expect(
-                sharing == UploadResult(link: nil, warnings: [], liveShare: equalShare),
+                sharing == ShareResult(link: nil, warnings: [], liveShare: equalShare),
                 "share.resultEquatable")
-            #expect(UploadResult(link: nil, warnings: []) != sharing, "share.resultEquatable")
+            #expect(ShareResult(link: nil, warnings: []) != sharing, "share.resultEquatable")
             equalShare.stop()
         }
 
         @Test func otherServicesAreNotLiveShares() {
             #expect(
-                StreamShareService().isReadyToUpload && !StreamShareService().isLiveShare,
+                StreamShareService().isReadyToShare && !StreamShareService().isLiveShare,
                 "share.defaultsForOthers")
             #expect(
-                UploadServices.all.map(\.name) == ["BetaDrop", "StreamShare", "Cloudflare Tunnel"]
-                    && UploadServices.all.last?.isLiveShare == true, "share.registered")
+                ShareServices.all.map(\.name) == [
+                    "BetaDrop", "StreamShare", "Cloudflare Quick Tunnel",
+                ]
+                    && ShareServices.all.last?.isLiveShare == true, "share.registered")
         }
     }
 }

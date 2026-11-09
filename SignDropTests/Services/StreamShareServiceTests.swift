@@ -30,21 +30,23 @@ extension SerialTests {
         }
 
         @Test func isRegisteredAfterBetaDrop() {
-            #expect(UploadServices.all.first?.isSignInRequired == true, "service.betaDropSignIn")
+            #expect(ShareServices.all.first?.isSignInRequired == true, "service.betaDropSignIn")
             #expect(
-                UploadServices.all.map(\.name) == ["BetaDrop", "StreamShare", "Cloudflare Tunnel"],
+                ShareServices.all.map(\.name) == [
+                    "BetaDrop", "StreamShare", "Cloudflare Quick Tunnel",
+                ],
                 "service.registered")
         }
 
         @Test func uploadsTheIPAAndItsManifest() async {
             let ipa = ipa()
             let fractions = Collector<Double>()
-            let result = try? await service("ok~service").upload(ipa) { fractions.append($0) }
+            let result = try? await service("ok~service").share(ipa) { fractions.append($0) }
             _ = await isEventuallyTrue(3) { mock.uploads("ok~service").count == 2 }
             let api = mock.api("ok~service")
             let ipaFile = StreamShareFile(id: "ok~service-1", deletionToken: "tok1")
             let manifestFile = StreamShareFile(id: "ok~service-2", deletionToken: "tok2")
-            let expected = UploadResult(
+            let expected = ShareResult(
                 link: URL(string: "https://ulvis.net/mock-ok~service"),
                 warnings: [],
                 deletionRequests: [
@@ -77,7 +79,7 @@ extension SerialTests {
 
         @Test func keepsTheWebLinkWhenShorteningFails() async {
             let fallbackAPI = mock.api("ok~fallback")
-            let fallback = try? await service("ok~fallback", shortener: "fail-all~service").upload(
+            let fallback = try? await service("ok~fallback", shortener: "fail-all~service").share(
                 ipa()
             ) { _ in }
             let fallbackManifest = StreamShareFile(id: "ok~fallback-2", deletionToken: "tok2")
@@ -99,9 +101,9 @@ extension SerialTests {
         @Test func deletesTheIPAWhenTheManifestFails() async {
             let ipa = ipa()
             await #expect(
-                throws: UploadError.server("StreamShare could not start the upload (HTTP 500)."),
+                throws: ShareError.server("StreamShare could not start the upload (HTTP 500)."),
                 "service.manifestFails"
-            ) { try await service("manifest-fail").upload(ipa) { _ in } }
+            ) { try await service("manifest-fail").share(ipa) { _ in } }
             _ = await isEventuallyTrue(3) { mock.stats["manifest-fail"]["deleted"] != nil }
             #expect(
                 mock.stats["manifest-fail"]["deleted"] as? [String] == ["manifest-fail-1/tok1"],
@@ -111,12 +113,12 @@ extension SerialTests {
         @Test func rejectsAnInvalidIPABeforeUploading() async {
             let fake = work.file("NotAnApp.ipa", Data("hello world".utf8))
             await #expect(
-                throws: UploadError.invalidFile(
+                throws: ShareError.invalidFile(
                     "This file does not appear to be a valid iOS build. Please upload a valid IPA file."
                 ),
                 "service.invalidIPA"
             ) {
-                try await service("ok~invalid").upload(fake) { _ in }
+                try await service("ok~invalid").share(fake) { _ in }
             }
             #expect(mock.stats["ok~invalid"]["create"] == nil, "service.invalidIPA.skipsUpload")
         }

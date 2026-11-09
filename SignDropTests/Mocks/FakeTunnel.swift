@@ -64,7 +64,7 @@ final class FakeTunnel: Tunnel {
     func open(port: UInt16) async throws -> OpenTunnel {
         openedPort = port
         if mode == .fail {
-            throw UploadError.server("ERR boom")
+            throw ShareError.server("ERR boom")
         }
         let host: String
         switch mode {

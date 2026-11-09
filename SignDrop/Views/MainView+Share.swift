@@ -2,27 +2,27 @@ import Cocoa
 
 extension MainView {
 
-    var uploadService: UploadService? {
-        uploadPopup.selectedItem?.representedObject as? UploadService
+    var uploadService: ShareService? {
+        uploadPopup.selectedItem?.representedObject as? ShareService
     }
 
     func configureUploadPopup() {
         uploadPopup.removeAllItems()
         uploadPopup.addItem(withTitle: "None")
         uploadPopup.menu?.addItem(.separator())
-        for service in UploadServices.all {
+        for service in ShareServices.all {
             uploadPopup.addItem(withTitle: service.name)
             uploadPopup.lastItem?.representedObject = service
         }
         uploadPopup.target = self
-        uploadPopup.action = #selector(chooseUploadService(_:))
+        uploadPopup.action = #selector(chooseShareService(_:))
         refreshUploadAccount()
         NotificationCenter.default.addObserver(
-            self, selector: #selector(uploadAccountDidChange(_:)), name: .uploadAccountDidChange,
+            self, selector: #selector(shareAccountDidChange(_:)), name: .shareAccountDidChange,
             object: nil)
     }
 
-    @objc func uploadAccountDidChange(_ notification: Notification) {
+    @objc func shareAccountDidChange(_ notification: Notification) {
         refreshUploadAccount()
     }
 
@@ -35,8 +35,8 @@ extension MainView {
             ?? "Uploads the signed IPA and copies its install link"
     }
 
-    @objc func chooseUploadService(_ sender: NSPopUpButton) {
-        guard let service = uploadService, !service.isReadyToUpload else {
+    @objc func chooseShareService(_ sender: NSPopUpButton) {
+        guard let service = uploadService, !service.isReadyToShare else {
             refreshUploadAccount()
             return
         }
@@ -48,13 +48,13 @@ extension MainView {
         }
     }
 
-    func prepareUpload(for service: UploadService) async -> Bool {
+    func prepareUpload(for service: ShareService) async -> Bool {
         guard let window = window else { return false }
-        return await service.prepareToUpload(in: window)
+        return await service.prepareToShare(in: window)
     }
 
     func startSigningWhenUploadReady() {
-        guard let service = uploadService, !service.isReadyToUpload else {
+        guard let service = uploadService, !service.isReadyToShare else {
             startSigning()
             return
         }
@@ -86,12 +86,12 @@ extension MainView {
         }
     }
 
-    func uploadSignedFile(_ file: URL, to service: UploadService) async {
+    func uploadSignedFile(_ file: URL, to service: ShareService) async {
         setStatus(
             service.isLiveShare ? "Starting \(service.name)…" : "Uploading to \(service.name)…")
         showProgress(service.isLiveShare ? nil : 0)
         do {
-            let result = try await service.upload(file) { [weak self] fraction in
+            let result = try await service.share(file) { [weak self] fraction in
                 self?.showProgress(fraction < 1 ? fraction : nil)
             }
             reportUpload(result, from: service)
@@ -99,7 +99,7 @@ extension MainView {
                 watchSharing(share, file: file)
                 return
             }
-        } catch UploadError.sessionExpired {
+        } catch ShareError.sessionExpired {
             setStatus(
                 "\(service.name) session expired. Sign in again.", isWarning: true, link: file)
         } catch {
@@ -130,7 +130,7 @@ extension MainView {
         ]) { $1 }
     }
 
-    func reportUpload(_ result: UploadResult, from service: UploadService) {
+    func reportUpload(_ result: ShareResult, from service: ShareService) {
         var headline =
             result.liveShare == nil ? "Uploaded to \(service.name)" : "Sharing from this Mac"
         if let link = result.link {
@@ -176,7 +176,7 @@ extension MainView {
         guard let upload = deletableUpload else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(
-            UploadServices.deletionCommand(upload.requests), forType: .string)
+            ShareServices.deletionCommand(upload.requests), forType: .string)
     }
 
     func deleteUpload() {
@@ -186,7 +186,7 @@ extension MainView {
         showProgress(nil)
         Task {
             do {
-                try await UploadServices.delete(upload.requests, service: upload.serviceName)
+                try await ShareServices.delete(upload.requests, service: upload.serviceName)
                 setStatus("Deleted the upload from \(upload.serviceName)")
             } catch {
                 setStatus(

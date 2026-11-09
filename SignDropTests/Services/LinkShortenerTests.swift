@@ -108,7 +108,7 @@ extension SerialTests {
 
         @Test func reportsWhenAllFail() async {
             await #expect(
-                throws: UploadError.server(
+                throws: ShareError.server(
                     "Could not shorten the link (Ulvis, Spoo.me, CleanURI, TinyURL)."),
                 "shorten.allFail"
             ) {

@@ -62,7 +62,7 @@ extension SerialTests {
         @Test func uploadPopupListsTheProviders() {
             #expect(
                 view.uploadPopup.itemTitles == [
-                    "None", "", "BetaDrop", "StreamShare", "Cloudflare Tunnel",
+                    "None", "", "BetaDrop", "StreamShare", "Cloudflare Quick Tunnel",
                 ] && view.uploadPopup.item(at: 1)?.isSeparatorItem == true, "upload.items")
             #expect(
                 (view.uploadPopup.accessibilityTitleUIElement() as? NSTextField)?.stringValue
@@ -86,7 +86,7 @@ extension SerialTests {
 
         @Test func providerWithoutSignInStaysSelected() {
             view.uploadPopup.selectItem(withTitle: "StreamShare")
-            view.chooseUploadService(view.uploadPopup)
+            view.chooseShareService(view.uploadPopup)
             view.refreshUploadAccount()
             #expect(view.uploadService?.name == "StreamShare", "upload.noSignInKept")
         }
@@ -102,7 +102,7 @@ extension SerialTests {
 
     @MainActor
     @Suite(.requiresIsolatedAccountFile)
-    struct UploadAccountMenuTests {
+    struct ShareAccountMenuTests {
         @Test func addsASignOutItemWhileSignedIn() async throws {
             let harness = try await MainViewHarness()
             let view = harness.view
@@ -112,7 +112,7 @@ extension SerialTests {
             menu.addItem(.separator())
             menu.addItem(withTitle: "Quit", action: nil, keyEquivalent: "")
             try harness.signIn("ok~menu")
-            let accountMenu = UploadAccountMenu(services: UploadServices.all, in: menu)
+            let accountMenu = ShareAccountMenu(services: ShareServices.all, in: menu)
             let item = menu.items[3]
             #expect(menu.items.count == 6 && menu.delegate === accountMenu, "menu.position")
             #expect(
