@@ -18,7 +18,8 @@ enum SigningFixtures {
     }()
 
     static let sampleApp: (ipa: String, appex: String)? = buildSampleApp()
-    static let fixedProfile: String? = buildFixedProfile()
+    static let fixedProfile: String? = buildProfile(expiring: "2030-01-01T00:00:00Z")
+    static let expiredProfile: String? = buildProfile(expiring: "2020-01-01T00:00:00Z")
 
     private static func didRun(_ tool: String, _ arguments: [String], in directory: URL? = nil)
         -> Bool
@@ -125,8 +126,8 @@ enum SigningFixtures {
         return isBuilt ? (ipa.path, standalone.path) : nil
     }
 
-    private static func buildFixedProfile() -> String? {
-        let directory = root.appendingPathComponent("profile")
+    private static func buildProfile(expiring expiration: String) -> String? {
+        let directory = root.appendingPathComponent("profile-\(expiration)")
         try? FileManager.default.removeItem(at: directory)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let key = directory.appendingPathComponent("key.pem")
@@ -137,7 +138,7 @@ enum SigningFixtures {
         let contents: [String: Any] = [
             "AppIDName": "Acme Fixed",
             "CreationDate": formatter.date(from: "2026-01-01T00:00:00Z") as Any,
-            "ExpirationDate": formatter.date(from: "2030-01-01T00:00:00Z") as Any,
+            "ExpirationDate": formatter.date(from: expiration) as Any,
             "Name": "SignDrop Test Fixed",
             "TeamIdentifier": ["ABCDE12345"],
             "Entitlements": [

@@ -90,6 +90,28 @@ extension SerialTests {
                 "saved.deletedProfile")
         }
 
+        @Test func aProfileFileThatExpiredLeavesTheAppIDEditable() throws {
+            let path = try profileCopy()
+            view.fileDropped(path)
+            try FileManager.default.removeItem(atPath: path)
+            try FileManager.default.copyItem(
+                atPath: try #require(SigningFixtures.expiredProfile), toPath: path)
+            let next = harness.relaunchedView()
+            #expect(
+                next.profilePopup.indexOfSelectedItem == 0 && next.profileFilename == nil,
+                "saved.expiredProfile")
+            #expect(next.appIDField.isEnabled, "saved.expiredKeepsAppIDEditable")
+            #expect(next.appIDField.stringValue.isEmpty, "saved.expiredLeavesAppIDEmpty")
+        }
+
+        @Test func droppingAnExpiredProfileLeavesTheAppIDEditable() throws {
+            view.fileDropped(try #require(SigningFixtures.expiredProfile))
+            #expect(view.profilePopup.indexOfSelectedItem == 0, "expired.reSignOnly")
+            #expect(view.appIDField.isEnabled, "expired.keepsAppIDEditable")
+            #expect(view.appIDField.stringValue.isEmpty, "expired.leavesAppIDEmpty")
+            #expect(view.statusLabel.stringValue == "Provisioning profile expired", "expired.status")
+        }
+
         @Test func anInstalledProfileIsFoundAgainAfterItIsRenewed() throws {
             let original = try #require(ProvisioningProfile(filename: try profileCopy()))
             view.customProfiles = [original]

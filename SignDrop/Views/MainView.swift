@@ -409,6 +409,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                 profilePopup.selectItem(at: 0)
                 setStatus("Provisioning profile expired")
                 chooseProvisioningProfile(profilePopup)
+                return
             }
             if profile.appID.firstIndex(of: "*") == nil {
                 // Not a wildcard profile
