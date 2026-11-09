@@ -72,7 +72,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
 
     //MARK: Constants
     let signableExtensions = ["dylib", "so", "0", "vis", "pvr", "framework", "appex", "app"]
-    @objc let defaults = UserDefaults()
+    static let firstProfileMenuIndex = 3
+    @objc var defaults = UserDefaults()
     @objc let fileManager = FileManager.default
     @objc let bundleID = Bundle.main.bundleIdentifier
     @objc let arPath = "/usr/bin/ar"
@@ -99,6 +100,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             refreshInputAppID()
         case "mobileprovision":
             selectCustomProfile(filename)
+            saveProfileChoice()
         default:
             break
         }
@@ -203,6 +205,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
                     certificatePopup.selectItem(withTitle: defaultCert)
                 }
             }
+            restoreSavedChoices()
             setStatus("Ready")
             if checkXcodeCLI() == false {
                 if #available(OSX 10.10, *) {
@@ -1352,7 +1355,8 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             }
 
         default:
-            let profile = provisioningProfiles[sender.indexOfSelectedItem - 3]
+            let profile = provisioningProfiles[
+                sender.indexOfSelectedItem - MainView.firstProfileMenuIndex]
             checkProfileID(profile)
         }
 
@@ -1366,7 +1370,7 @@ class MainView: NSView, URLSessionDataDelegate, URLSessionDelegate, URLSessionDo
             populateProvisioningProfiles()
         }
         if let index = provisioningProfiles.firstIndex(where: { $0.filename == filename }) {
-            profilePopup.selectItem(at: index + 3)
+            profilePopup.selectItem(at: index + MainView.firstProfileMenuIndex)
         }
         checkProfileID(profile)
     }

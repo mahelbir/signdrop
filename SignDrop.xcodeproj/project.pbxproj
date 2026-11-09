@@ -42,6 +42,7 @@
 		EFABD11C977599CD7B3FA460 /* LocalFileServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC9DF38AFCE788C59B08A52 /* LocalFileServer.swift */; };
 		D1C49D7B7E3CA8993351B204 /* BetaDropSignInSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */; };
 		82C880DBEB2F5BED99510E96 /* MainView+Share.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A01E59B07D1B730531AFD3D /* MainView+Share.swift */; };
+		A7D3E1F05B2C4A6E8F901B2C /* MainView+SavedChoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8E4F2016C3D5B7F90A12C3D /* MainView+SavedChoices.swift */; };
 		12272F3FE6AFCF5E6AFFD770 /* ShareAccountMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D81186D1098EB931AF550DA /* ShareAccountMenu.swift */; };
 /* End PBXBuildFile section */
 
@@ -101,6 +102,7 @@
 		6DC9DF38AFCE788C59B08A52 /* LocalFileServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileServer.swift; sourceTree = "<group>"; };
 		1F7071B7A1F1124A5207DFB7 /* BetaDropSignInSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BetaDropSignInSheet.swift; sourceTree = "<group>"; };
 		5A01E59B07D1B730531AFD3D /* MainView+Share.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+Share.swift"; sourceTree = "<group>"; };
+		B8E4F2016C3D5B7F90A12C3D /* MainView+SavedChoices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MainView+SavedChoices.swift"; sourceTree = "<group>"; };
 		3D81186D1098EB931AF550DA /* ShareAccountMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareAccountMenu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -181,6 +183,7 @@
 				7AB8F1BFB6D19B16420F4CAA /* MainView+Layout.swift */,
 				4A714DBA2B5591DB9632FAEA /* MainView+AppInfo.swift */,
 				5A01E59B07D1B730531AFD3D /* MainView+Share.swift */,
+				B8E4F2016C3D5B7F90A12C3D /* MainView+SavedChoices.swift */,
 				659734951C65A1E800383D2D /* UpdatesController.swift */,
 				659734931C65A14300383D2D /* Updates.xib */,
 				65311EAD1BF8259000516EFD /* NSMenuLink.swift */,
@@ -382,6 +385,7 @@
 				652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */,
 				13C33FAA9D2FFACC5E6DE749 /* MainView+AppInfo.swift in Sources */,
 				82C880DBEB2F5BED99510E96 /* MainView+Share.swift in Sources */,
+				A7D3E1F05B2C4A6E8F901B2C /* MainView+SavedChoices.swift in Sources */,
 				12272F3FE6AFCF5E6AFFD770 /* ShareAccountMenu.swift in Sources */,
 				3E14F4510B01BCABD25FA539 /* MainView+Layout.swift in Sources */,
 				659734A71C65B94F00383D2D /* fmemopen.c in Sources */,

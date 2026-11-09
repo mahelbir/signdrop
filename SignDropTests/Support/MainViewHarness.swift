@@ -8,6 +8,8 @@ final class MainViewHarness {
     let work: WorkDirectory
     let mock: BetaDropMockServer
     let view = MainView(frame: NSRect(x: 0, y: 0, width: 640, height: 480))
+    private let defaultsSuite = "SignDropTests-\(UUID().uuidString)"
+    private lazy var defaults = UserDefaults(suiteName: defaultsSuite) ?? .standard
     private let savedPasteboard: [[NSPasteboard.PasteboardType: Data]] =
         (NSPasteboard.general.pasteboardItems ?? []).map { item in
             item.types.reduce(into: [:]) { contents, type in
@@ -26,6 +28,7 @@ final class MainViewHarness {
     }
 
     deinit {
+        UserDefaults.standard.removePersistentDomain(forName: defaultsSuite)
         Log.logName = savedLogName
         BetaDropConfig.clear(at: BetaDropConfig.fileURL())
         NSPasteboard.general.clearContents()
@@ -42,11 +45,20 @@ final class MainViewHarness {
     }
 
     func prepare(_ target: MainView, isCertificateLoaded: Bool) {
+        target.defaults = defaults
         target.setUpLayout()
         target.populateProvisioningProfiles()
         if isCertificateLoaded {
             target.populateCodesigningCerts()
         }
+    }
+
+    func relaunchedView(profiles: [ProvisioningProfile] = []) -> MainView {
+        let next = MainView(frame: view.frame)
+        next.customProfiles = profiles
+        prepare(next, isCertificateLoaded: false)
+        next.restoreSavedChoices()
+        return next
     }
 
     func isBesideStatus(_ button: NSView) -> Bool {

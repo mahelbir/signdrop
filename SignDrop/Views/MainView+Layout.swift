@@ -72,7 +72,7 @@ extension MainView {
         certificatePopup.target = self
         certificatePopup.action = #selector(chooseSigningCertificate(_:))
         profilePopup.target = self
-        profilePopup.action = #selector(chooseProvisioningProfile(_:))
+        profilePopup.action = #selector(chooseAndSaveProvisioningProfile(_:))
         entitlementsField.placeholderString = "Optional, overrides the profile's entitlements"
         [appIDField, displayNameField, versionField, buildField].forEach {
             $0.placeholderString = "Unchanged"
@@ -82,6 +82,10 @@ extension MainView {
             "Don't add the get-task-allow entitlement, as it might break some apps"
         ignorePluginsCheckbox.toolTip =
             "Don't re-sign extension bundles, as they might have their own code signature"
+        [noGetTaskAllowCheckbox, ignorePluginsCheckbox].forEach {
+            $0.target = self
+            $0.action = #selector(saveOptionChoices(_:))
+        }
         configureUploadPopup()
         signButton.keyEquivalent = "\r"
         signButton.target = self
