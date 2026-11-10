@@ -48,6 +48,7 @@ final class ShareWindowController: NSWindowController, NSWindowDelegate {
         grid.columnSpacing = 12
         grid.yPlacement = .center
         rows.forEach { grid.addRow(with: [$0.nameLabel, $0.detailView, $0.actionsView]) }
+        grid.column(at: 0).xPlacement = .fill
         grid.column(at: 1).xPlacement = .fill
         grid.column(at: 2).xPlacement = .trailing
         grid.translatesAutoresizingMaskIntoConstraints = false

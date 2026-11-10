@@ -78,7 +78,8 @@ final class ShareRow: NSObject {
         ).target = self
         progress.bar.setAccessibilityLabel("\(job.service.name) progress")
         progress.busyIndicator.setAccessibilityLabel("\(job.service.name) progress")
-        [progress.label, progress.busyIndicator, progress.bar].forEach {
+        progress.label.alignment = .left
+        [progress.busyIndicator, progress.bar, progress.label].forEach {
             progressRow.addArrangedSubview($0)
         }
         NSLayoutConstraint.activate([

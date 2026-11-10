@@ -132,6 +132,40 @@ extension SerialTests {
                     && hostedRow.progress.busyIndicator.isIndeterminate, "row.neverSwitchesMode")
         }
 
+        private func leadingEdge(_ view: NSView) -> CGFloat {
+            controller.window?.contentView?.layoutSubtreeIfNeeded()
+            let frame = view.alignmentRect(forFrame: view.frame)
+            return view.superview?.convert(frame, to: nil).minX ?? 0
+        }
+
+        @Test func progressKeepsItsPlaceUntilTheLinkReplacesIt() async {
+            controller.window?.orderFront(nil)
+            defer { controller.window?.orderOut(nil) }
+            await start(hostedRow, hosted)
+            defer { hostedRow.job.cancel() }
+            let edge = leadingEdge(hostedRow.progress.bar)
+            let namesEnd =
+                controller.rows.map {
+                    leadingEdge($0.nameLabel)
+                        + $0.nameLabel.alignmentRect(forFrame: $0.nameLabel.frame).width
+                }.max() ?? 0
+            #expect(abs(edge - (namesEnd + 12)) <= 1, "row.progressStartsAfterTheNames")
+            #expect(leadingEdge(hostedRow.progress.label) > edge, "row.percentFollowsBar")
+            hosted.progress?(1)
+            _ = await isEventuallyTrue(1) { !hostedRow.progress.busyIndicator.isHidden }
+            #expect(leadingEdge(hostedRow.progress.busyIndicator) == edge, "row.busyInPlace")
+            await finish(
+                liveRow, live,
+                with: ShareResult(
+                    link: link, warnings: [], deletionRequests: deletion("ok~place"),
+                    liveShare: LiveShare {}))
+            defer { liveRow.job.stopSharing() }
+            #expect(
+                leadingEdge(hostedRow.progress.busyIndicator) == edge,
+                "row.busyStaysWhenAnotherFinishes")
+            #expect(leadingEdge(liveRow.linkLabel) == edge, "row.linkTakesTheProgressPlace")
+        }
+
         @Test func rowsKeepTheirOwnProgress() async {
             await start(hostedRow, hosted)
             let other = ControlledShareService(name: "Other")
