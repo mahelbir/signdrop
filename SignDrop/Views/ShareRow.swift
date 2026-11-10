@@ -136,7 +136,7 @@ final class ShareRow: NSObject {
         }
         buttons.forEach { $0.isHidden = !visibleButtons.contains($0) }
         if isLosingFocus {
-            window?.makeFirstResponder(visibleButtons.first)
+            window?.makeFirstResponder(nil)
         }
         if let fraction {
             progress.show(fraction)

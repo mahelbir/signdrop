@@ -34,6 +34,11 @@ final class ShareWindowController: NSWindowController, NSWindowDelegate {
         nil
     }
 
+    override func showWindow(_ sender: Any?) {
+        super.showWindow(sender)
+        window?.makeFirstResponder(nil)
+    }
+
     var hasActiveWork: Bool {
         rows.contains { $0.job.isActive }
     }

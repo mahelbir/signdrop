@@ -270,14 +270,22 @@ extension SerialTests {
             hostedRow.job.cancel()
         }
 
-        @Test func focusStaysInTheRowWhenItsButtonDisappears() async throws {
+        @Test func openingTheWindowFocusesNothing() throws {
+            guard NSApp.isFullKeyboardAccessEnabled else { return }
+            let window = try #require(controller.window)
+            controller.showWindow(nil)
+            defer { window.orderOut(nil) }
+            #expect(window.firstResponder === window, "focus.nothingOnOpen")
+        }
+
+        @Test func focusIsClearedWhenItsButtonDisappears() async throws {
             guard NSApp.isFullKeyboardAccessEnabled else { return }
             let window = try #require(controller.window)
             await finish(hostedRow, hosted, with: ShareResult(link: link, warnings: []))
             #expect(window.makeFirstResponder(liveRow.shareButton), "focus.setUp")
             await start(liveRow, live)
             defer { liveRow.job.cancel() }
-            #expect(window.firstResponder === liveRow.cancelButton, "focus.staysInRow")
+            #expect(window.firstResponder === window, "focus.clearedWhenReplaced")
         }
 
         @Test func aRowThatWasNotFocusedLeavesTheFocusAlone() async throws {
@@ -287,6 +295,22 @@ extension SerialTests {
             await start(liveRow, live)
             defer { liveRow.job.cancel() }
             #expect(window.firstResponder === hostedRow.shareButton, "focus.leftAlone")
+        }
+
+        @Test func anEndedShareDoesNotPullFocusOntoItsButtons() async throws {
+            guard NSApp.isFullKeyboardAccessEnabled else { return }
+            let window = try #require(controller.window)
+            await start(hostedRow, hosted)
+            #expect(window.makeFirstResponder(hostedRow.cancelButton), "focus.setUp")
+            let result = ShareResult(link: link, warnings: [])
+            hosted.complete(.success(result))
+            _ = await isEventuallyTrue(2) { hostedRow.job.state == .finished(result) }
+            #expect(window.firstResponder === window, "focus.clearedWhenFinished")
+            await start(liveRow, live)
+            #expect(window.makeFirstResponder(liveRow.cancelButton), "focus.setUp")
+            live.complete(.failure(ShareError.server("Nope")))
+            _ = await isEventuallyTrue(2) { liveRow.job.state == .failed("Nope") }
+            #expect(window.firstResponder === window, "focus.clearedWhenFailed")
         }
 
         private func isNoteFullyShown(_ row: ShareRow, in window: NSWindow) -> Bool {
