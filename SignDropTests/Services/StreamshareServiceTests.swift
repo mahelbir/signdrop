@@ -47,7 +47,7 @@ extension SerialTests {
             let ipaFile = StreamshareFile(id: "ok~service-1", deletionToken: "tok1")
             let manifestFile = StreamshareFile(id: "ok~service-2", deletionToken: "tok2")
             let expected = ShareResult(
-                link: URL(string: "https://ulvis.net/mock-ok~service"),
+                link: URL(string: "https://spoo.me/mock-ok~service"),
                 warnings: [],
                 itmsLink: InstallLink.itmsLink(manifest: api.downloadURL(for: manifestFile)),
                 deletionRequests: [
@@ -71,7 +71,7 @@ extension SerialTests {
                     && manifest.metadata?["title"] == "Sample App",
                 "service.upload.manifestMetadata")
             #expect(
-                stats["ulvisUrl"] as? String
+                stats["spooUrl"] as? String
                     == (try? InstallLink.webLink(manifest: api.downloadURL(for: manifestFile)))?
                     .absoluteString, "service.upload.shortensWebLink")
             #expect(fractions.all.last == 1, "service.upload.progress")
@@ -90,9 +90,8 @@ extension SerialTests {
                         manifest: fallbackAPI.downloadURL(for: fallbackManifest))),
                 "service.shortenFails.webLink")
             #expect(
-                fallback?.warnings == [
-                    "Could not shorten the link (Ulvis, Spoo.me, CleanURI, TinyURL)."
-                ], "service.shortenFails.warning")
+                fallback?.warnings == ["Could not shorten the link (Spoo.me, TinyURL)."],
+                "service.shortenFails.warning")
             #expect(
                 fallback?.deletionRequests.count == 2
                     && mock.stats["ok~fallback"]["deleted"] == nil,

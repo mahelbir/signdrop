@@ -73,20 +73,6 @@ final class StreamshareMockServer {
             defer { lock.unlock() }
             return files[parts[3]].map { .data(200, $0) } ?? .text(404, "Not found")
         }
-        if parts.count == 3, parts[0] == "s", parts[2] == "ulvis" {
-            let scenario = parts[1]
-            stats.bump(
-                scenario, "ulvis",
-                [
-                    "ulvisQuery": request.query, "ulvisType": Self.formValue(request.query, "type"),
-                    "ulvisUrl": Self.formValue(request.query, "url"),
-                ])
-            if Self.isFailing(scenario, "ulvis") {
-                return .json(200, ["success": false, "error": ["code": 1, "msg": "invalid url"]])
-            }
-            return .json(
-                200, ["success": true, "data": ["url": "https://ulvis.net/mock-\(scenario)"]])
-        }
         if parts.count == 3, parts[0] == "s", parts[2] == "tinyurl" {
             let scenario = parts[1]
             stats.bump(
@@ -129,18 +115,6 @@ final class StreamshareMockServer {
                     "alias": "mock", "short_url": "https://spoo.me/mock-\(scenario)",
                     "long_url": longURL ?? "",
                 ])
-        }
-        if parts.count == 3, parts[0] == "s", parts[2] == "cleanuri" {
-            let scenario = parts[1]
-            let body = request.bodyText
-            stats.bump(
-                scenario, "cleanuri",
-                [
-                    "cleanuriContentType": request.header("Content-Type"), "cleanuriBody": body,
-                    "cleanuriUrl": Self.formValue(body, "url"),
-                ])
-            let scheme = Self.isFailing(scenario, "cleanuri") ? "http" : "https"
-            return .json(200, ["result_url": "\(scheme)://cleanuri.com/mock-\(scenario)"])
         }
         return .text(404, "Not found")
     }

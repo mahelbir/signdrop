@@ -3,14 +3,16 @@
 [![Latest Release](https://img.shields.io/github/v/release/mahelbir/signdrop)](https://github.com/mahelbir/signdrop/releases)
 [![License](https://img.shields.io/github/license/mahelbir/signdrop)](LICENSE.txt)
 
-A macOS app that re-signs iPhone and iPad apps with your own certificate and provisioning profile, and shares the signed IPA as an
+A macOS app that re-signs iPhone and iPad apps with your own certificate and provisioning profile, and shares the signed
+IPA as an
 install link.
 
 <img src="docs/images/main-window.jpg" width="640" alt="main window">
 
 ## Features
 
-- Re-signs iOS and iPadOS apps from `.ipa`, `.app`, `.appex` and `.xcarchive` files, jailbreak `.deb` packages that contain an
+- Re-signs iOS and iPadOS apps from `.ipa`, `.app`, `.appex` and `.xcarchive` files, jailbreak `.deb` packages that
+  contain an
   app, or an IPA URL
 - Uses any signing certificate in your Keychain with an installed or custom provisioning profile
 - Overrides the profile's entitlements with your own file
@@ -57,11 +59,11 @@ an iPhone or iPad listed in the provisioning profile.
 
 For Streamshare and Cloudflare Quick Tunnel, right-click **Copy Link** to copy the raw `itms-services` link.
 
-| Service                 | Requirements                              | Link                                            |
-|-------------------------|-------------------------------------------|-------------------------------------------------|
-| BetaDrop                | BetaDrop account, sign in from SignDrop   | BetaDrop install page                           |
-| Streamshare             | None                                      | Short link that opens the install prompt        |
-| Cloudflare Quick Tunnel | `cloudflared` installed on your Mac       | Link served from your Mac that opens the prompt |
+| Service                 | Requirements                            | Link                                            |
+|-------------------------|-----------------------------------------|-------------------------------------------------|
+| BetaDrop                | BetaDrop account, sign in from SignDrop | BetaDrop install page                           |
+| Streamshare             | None                                    | Short link that opens the install prompt        |
+| Cloudflare Quick Tunnel | `cloudflared` installed on your Mac     | Link served from your Mac that opens the prompt |
 
 **BetaDrop** signs you in through your browser, or with a pasted API token. SignDrop shares its session with the
 [BetaDrop CLI](https://github.com/betadrop-app/betadrop-cli), so signing in to one signs in the other. Sign out from
@@ -81,15 +83,10 @@ uploaded. SignDrop shows how to install `cloudflared` if it is missing.
 ## Credits
 
 SignDrop is based on [iOS App Signer](https://github.com/DanTheMan827/ios-app-signer) by Daniel Radtke. BetaDrop uploads
-follow the official [BetaDrop CLI](https://github.com/betadrop-app/betadrop-cli).
-
-Install links are hosted by [Streamshare](https://streamshare.wireway.ch), turned into web links by
-[Urlmskr](https://axorax.github.io/urlmskr/), and shortened by [Ulvis](https://ulvis.net),
-[Spoo.me](https://spoo.me), [CleanURI](https://cleanuri.com) or [TinyURL](https://tinyurl.com).
-
-Shares from your Mac run through [Cloudflare Quick Tunnel](https://try.cloudflare.com).
-
-SignDrop is not affiliated with these services.
+follow the official [BetaDrop CLI](https://github.com/betadrop-app/betadrop-cli). Install links are hosted
+by [Streamshare](https://streamshare.wireway.ch), turned into web links by [Urlmskr](https://axorax.github.io/urlmskr/),
+and shortened by [Spoo.me](https://spoo.me) or [TinyURL](https://tinyurl.com). Shares from your Mac run
+through [Cloudflare Quick Tunnel](https://try.cloudflare.com). SignDrop is not affiliated with these services.
 
 ## Support
 

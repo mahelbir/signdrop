@@ -19,8 +19,7 @@ struct AboutPanelTests {
     @Test func creditsEveryServiceAndProject() throws {
         let text = try credits().string
         let mentions = [
-            "BetaDrop", "Streamshare", "Cloudflare Quick Tunnel", "Urlmskr", "Ulvis", "Spoo.me",
-            "CleanURI", "TinyURL",
+            "BetaDrop", "Streamshare", "Cloudflare Quick Tunnel", "Urlmskr", "Spoo.me", "TinyURL",
             "iOS App Signer © 2015-2025 Daniel Radtke", "GPL-3.0", "NimbusKit",
             "Apache License 2.0",
             "not affiliated", "public",
@@ -46,8 +45,7 @@ struct AboutPanelTests {
             links == [
                 "https://betadrop.app", "https://streamshare.wireway.ch",
                 "https://try.cloudflare.com",
-                "https://axorax.github.io/urlmskr/", "https://ulvis.net", "https://spoo.me",
-                "https://cleanuri.com",
+                "https://axorax.github.io/urlmskr/", "https://spoo.me",
                 "https://tinyurl.com", "https://github.com/DanTheMan827/ios-app-signer",
                 "https://github.com/NimbusKit/markdown",
             ],
