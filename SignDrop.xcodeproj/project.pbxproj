@@ -14,6 +14,8 @@
 		652408CE1BE743D4006FA4C6 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 652408CD1BE743D4006FA4C6 /* MainView.swift */; };
 		652408D01BE743D4006FA4C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 652408CF1BE743D4006FA4C6 /* Assets.xcassets */; };
 		CD681A94B3AA1DA7AB6178B2 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 81B39813D80303983BB5DD4C /* Credits.rtf */; };
+		5C1E7A9034D2B86F10A3C4E2 /* Licenses in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E7A9034D2B86F10A3C4E1 /* Licenses */; };
+		5C1E7A9034D2B86F10A3C4E4 /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 5C1E7A9034D2B86F10A3C4E3 /* LICENSE.txt */; };
 		65311EAE1BF8259000516EFD /* NSMenuLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65311EAD1BF8259000516EFD /* NSMenuLink.swift */; };
 		65311EB01BF835F100516EFD /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65311EAF1BF835F100516EFD /* Log.swift */; };
 		65311EB61BF88EB800516EFD /* Application.xib in Resources */ = {isa = PBXBuildFile; fileRef = 65311EB51BF88EB800516EFD /* Application.xib */; };
@@ -71,6 +73,8 @@
 		652408CD1BE743D4006FA4C6 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		652408CF1BE743D4006FA4C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		81B39813D80303983BB5DD4C /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		5C1E7A9034D2B86F10A3C4E1 /* Licenses */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Licenses; sourceTree = "<group>"; };
+		5C1E7A9034D2B86F10A3C4E3 /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = SOURCE_ROOT; };
 		652408D41BE743D4006FA4C6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		65311EAD1BF8259000516EFD /* NSMenuLink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NSMenuLink.swift; sourceTree = "<group>"; };
 		65311EAF1BF835F100516EFD /* Log.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -256,6 +260,8 @@
 				652408CF1BE743D4006FA4C6 /* Assets.xcassets */,
 				06AECADAC38DA7499DD63960 /* AppIcon.icon */,
 				81B39813D80303983BB5DD4C /* Credits.rtf */,
+				5C1E7A9034D2B86F10A3C4E1 /* Licenses */,
+				5C1E7A9034D2B86F10A3C4E3 /* LICENSE.txt */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -388,6 +394,8 @@
 				652408D01BE743D4006FA4C6 /* Assets.xcassets in Resources */,
 				1F43C2829E7ACBA6A6B9B9DD /* AppIcon.icon in Resources */,
 				CD681A94B3AA1DA7AB6178B2 /* Credits.rtf in Resources */,
+				5C1E7A9034D2B86F10A3C4E2 /* Licenses in Resources */,
+				5C1E7A9034D2B86F10A3C4E4 /* LICENSE.txt in Resources */,
 				659734941C65A14300383D2D /* Updates.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

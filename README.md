@@ -7,7 +7,7 @@ A macOS app that re-signs iPhone and iPad apps with your own certificate and pro
 IPA as an
 install link.
 
-<img src="docs/images/main-window.jpg" width="640" alt="main window">
+<img src="docs/images/main-window.jpg" width="692" alt="main window">
 
 ## Features
 
@@ -83,10 +83,20 @@ uploaded. SignDrop shows how to install `cloudflared` if it is missing.
 ## Credits
 
 SignDrop is based on [iOS App Signer](https://github.com/DanTheMan827/ios-app-signer) by Daniel Radtke. BetaDrop uploads
-follow the official [BetaDrop CLI](https://github.com/betadrop-app/betadrop-cli). Install links are hosted
+follow the official [BetaDrop CLI](https://github.com/betadrop-app/betadrop-cli). Shares from your Mac run
+through [Cloudflare Quick Tunnel](https://try.cloudflare.com). Install links are hosted
 by [Streamshare](https://streamshare.wireway.ch), turned into web links by [Urlmskr](https://axorax.github.io/urlmskr/),
-and shortened by [Spoo.me](https://spoo.me) or [TinyURL](https://tinyurl.com). Shares from your Mac run
-through [Cloudflare Quick Tunnel](https://try.cloudflare.com). SignDrop is not affiliated with these services.
+and shortened by [Spoo.me](https://spoo.me) or [TinyURL](https://tinyurl.com). SignDrop is not affiliated with these services.
+
+## License
+
+SignDrop is free software under the [GNU General Public License v3.0](LICENSE.txt) and comes with no warranty. It is a
+modified version of [iOS App Signer](https://github.com/DanTheMan827/ios-app-signer), changed since 2026.
+
+[NimbusKit Markdown](https://github.com/NimbusKit/markdown) and
+[Memory Mapping](https://github.com/NimbusKit/memorymapping), in `NimbusKit/`, are under the Apache License 2.0. Two of
+these files are modified and say so in their headers. Their license texts are in
+[`SignDrop/Resources/Licenses`](SignDrop/Resources/Licenses) and ship inside the app.
 
 ## Support
 
